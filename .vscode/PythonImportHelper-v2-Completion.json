@@ -1,0 +1,37 @@
+[
+    {
+        "label": "gradio",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "gradio",
+        "description": "gradio",
+        "detail": "gradio",
+        "documentation": {}
+    },
+    {
+        "label": "InferenceClient",
+        "importPath": "huggingface_hub",
+        "description": "huggingface_hub",
+        "isExtraImport": true,
+        "detail": "huggingface_hub",
+        "documentation": {}
+    },
+    {
+        "label": "respond",
+        "kind": 2,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "def respond(\n    message,\n    history: list[dict[str, str]],\n    system_message,\n    max_tokens,\n    temperature,\n    top_p,\n    hf_token: gr.OAuthToken,\n):\n    \"\"\"",
+        "detail": "app",
+        "documentation": {}
+    },
+    {
+        "label": "chatbot",
+        "kind": 5,
+        "importPath": "app",
+        "description": "app",
+        "peekOfCode": "chatbot = gr.ChatInterface(\n    respond,\n    type=\"messages\",\n    additional_inputs=[\n        gr.Textbox(value=\"You are a friendly Chatbot.\", label=\"System message\"),\n        gr.Slider(minimum=1, maximum=2048, value=512, step=1, label=\"Max new tokens\"),\n        gr.Slider(minimum=0.1, maximum=4.0, value=0.7, step=0.1, label=\"Temperature\"),\n        gr.Slider(\n            minimum=0.1,\n            maximum=1.0,",
+        "detail": "app",
+        "documentation": {}
+    }
+]
