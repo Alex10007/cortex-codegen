@@ -127,8 +127,8 @@ def make_batch(recs: list[dict[str, Any]], tok, seq_len: int):
         labels = [-100] * len(prompt) + completion[:]
         ids = ids + [pad_id] * (seq_len - len(ids))
         labels = labels + [-100] * (seq_len - len(labels))
-        batch_ids.append(ids)
-        batch_labels.append(labels)
+        batch_ids.append(ids[:-1])
+        batch_labels.append(labels[1:])
     if not batch_ids:
         return None, None
     return (torch.tensor(batch_ids, dtype=torch.long),

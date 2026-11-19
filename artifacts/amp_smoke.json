@@ -1,0 +1,14 @@
+{
+  "config": "cortex-demo",
+  "precision": "bf16-cpu",
+  "amp_used": true,
+  "steps": 20,
+  "losses_finite": true,
+  "loss_first": 10.3988,
+  "loss_last": 8.8186,
+  "checkpoint_saved_and_reloaded": true,
+  "params": 8071296,
+  "wall_time_s": 6.25,
+  "metrics_path": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/amp-smoke/amp_smoke.jsonl",
+  "note": "real executed run; proves precision path + checkpoint round-trip"
+}

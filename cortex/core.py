@@ -83,7 +83,8 @@ class CortexAgent:
         ids = torch.tensor([self.tokenizer.encode(self.tokenizer.EOT + "\n" + prompt)],
                            dtype=torch.long)
         out = self.model.generate(ids, max_new_tokens=max_new_tokens,
-                                  temperature=temperature)
+                                  temperature=temperature,
+                                  eot_id=self.tokenizer.eot_id)
         text = self.tokenizer.decode(out[0].tolist())
         return text
 

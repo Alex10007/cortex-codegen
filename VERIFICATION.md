@@ -219,14 +219,14 @@ Instruments (`cortex/evaluation/inference.py`), all executed:
    **0.0104**, SFT checkpoint **0.6626** (64x gain). The model demonstrably
    learned to predict verified code when reading it.
 
-**Conclusion**: the limitation is model capacity / free-run decoding
-degeneration of the 8.07M-parameter demo model, not tokenizer, data,
-eval-compatibility, prompts or decoding. Teacher-forced it predicts held-out
-code with 66% token accuracy; left to free-run, the tiny model's
-autoregressive continuation collapses to the highest-frequency tokens
-(whitespace). Closing pass@1 requires greater physical capacity
-(pretraining scale-up of the declared architecture) and more verified data —
-explicitly not achievable on this 5.9 GB-RAM CPU host (see section 3).
+**Conclusion (stage-3, SUPERSEDED)**: originally attributed to model
+capacity / free-run decoding degeneration. **Erratum (stage 4)**: instrumented
+next-token analysis proved the model was copying the last prompt token
+(p = 0.93–0.99 at every step): the SFT batch builder aligned labels to the
+same positions as the inputs (no shift), so fine-tuning trained a
+"repeat current token" task on top of a properly pre-trained (shifted) base.
+Stage-3 SFT checkpoints actively corrupted the base model's generation into
+whitespace copy loops. The corrected diagnosis and the fix are in section 13.
 
 ### 12.5 Benchmark fingerprint and regression protection (requirement 6)
 
@@ -271,3 +271,140 @@ explicitly not achievable on this 5.9 GB-RAM CPU host (see section 3).
    gate blocks checkpoint adoption until measurable correctness gains exist.
 4. Harvest is Python-only; multi-language verified harvesting open.
 5. Tokenizer/eval paths verified; no unverified capability is claimed.
+
+## 13. Stage 4: 2B model foundation & autoregressive intelligence (executed)
+
+Everything below is from the executed pipeline
+`scripts/stage4_run.py` recording into `artifacts/stage4_report.json`
+plus artifacts written per stage. No simulated numbers.
+
+### 13.1 Architecture audit findings (requirement 1)
+
+- **Critical bug found and fixed** (`cortex/training/sft.py::make_batch`):
+  labels were aligned to the same positions as inputs (missing
+  next-token shift). The causal shift exists in the pretraining engine
+  (`engine.get_batch` uses shifted windows) but not in SFT — so every SFT
+  checkpoint before stage 4 (stage-2 `cortex-sft`, stage-3
+  `cortex-sft-expansion`) was trained to repeat the current token instead
+  of predicting the next one. Instrumented proof: at every decoding step the
+  buggy checkpoints emitted the last prompt token with p = 0.93–0.99
+  ('.' -> '.', '\n' -> '\n') — this was the true root cause of the
+  whitespace-only generation and pass@1 = 0.0, not model capacity alone.
+  The stage-3 diagnostic conclusion in section 12.4 has an erratum above.
+- Preflight of the corrected behavior: after the fix, all stage-4 SFT
+  checkpoints generate non-empty, Python-shaped autoregressive output
+  (measured non-empty rate 1.0 on v1 tasks).
+- `CortexTransformer.generate` previously never stopped at EOT; it now
+  accepts `eot_id` and stops when sampled (validated by unit test and used
+  by the agent's `generate`).
+
+### 13.2 Exact 2B architecture, parameter count verified (requirement 3)
+
+- Config `cortex-2b`: vocab 32,768 (code-specialized BPE), dim 2560,
+  24 layers, 20 heads (head_dim 128), max_seq_len 8192, FFN 4x (d_ff 10,240),
+  untied embeddings, RoPE with pre-LN.
+- **Verified parameter count: 2,056,012,800 trainable parameters.**
+  Instantiated on the meta device (no memory allocation), live count equals
+  the closed-form `ModelConfig.theoretical_param_count()` exactly
+  (breakdown in `artifacts/model_2b_arch.json`: embeddings 83,886,080 +
+  head 83,886,080 + 24 layers x 78,676,480 + final LN 5,120).
+- **Training status: DECLARED-NOT-TRAINED.** No production model status was
+  changed; `record_training_run`/`MODEL_STATUS` promotion hardware-gates still
+  prevent declaring this trained without a real run.
+
+### 13.3 Hardware requirements and scalable training pipeline (requirement 4)
+
+- Measured profile (`cortex/training/scaling.py::hardware_profile`,
+  artifact `artifacts/scaling_plan_2b.json`): 6.36 GB RAM (5 useful),
+  5 CPU cores, no CUDA, bf16 autocast executable on CPU.
+- 2B full-state memory estimate: parameters fp32 8.22 GB + grads 8.22 GB +
+  AdamW states 16.45 GB + activations (batch 8, seq 8192) est. ≈ 226 GB
+  total → measured host CANNOT host the full state; plan output:
+  **ZeRO-3 / FSDP full sharding across ~2 x 40 GB GPUs** (DDP world),
+  gradient checkpointing advised.
+- Executed validation of the scalable path (real run, not a dry-run):
+  20 real training steps with bf16 autocast on the demo config
+  (`artifacts/runs/amp-smoke/amp-validated.pt`), loss 10.3988 -> 8.8186,
+  all steps finite, checkpoint saved and reloaded successfully
+  (`artifacts/amp_smoke.json`).
+- Existing fault-recovery resume (checkpoint rotation + resume-from-latest)
+  is covered by tests. DDP world support is sized in the plan; the
+  multi-process path itself is NOT executed in this environment
+  (single-node CPU) — documented, not claimed.
+
+### 13.4 Dataset expansion (requirement 5)
+
+- Dataset v3 = dataset v2 (237/26/65, verified pairs from stage 3) +
+  **4 new verified multi-file repo examples**
+  (`cortex/learning/multifile_examples.py`): small Python packages with
+  genuine cross-module imports; every module's doctests executed in the
+  sandbox before acceptance (14 cross-file doctests passed; a 5th package
+  was auto-rejected by the same gate until its doctest was fixed — the
+  gate demonstrably gates).
+- Result: **train 241 / val 26 / held-out 65**; held-out and validation
+  fingerprints are byte-identical to the v2 manifest
+  (`heldout_unchanged: True, val_unchanged: True`); dataset committed as
+  `artifacts/sft/dataset_v3.jsonl` with manifest `v3_manifest.json`.
+
+### 13.5 Corrected SFT, per-epoch autoregressive measurement (requirements 6–8)
+
+Warm start from the pre-trained base; completion-only masking kept (prompt
+-100, now with CORRECT next-token alignment); 4 epochs. All generation is
+free-running (no teacher forcing), graded by executing hidden pytest suites
+in the sandbox (identical conditions every time):
+
+| checkpoint | held-out loss (true next-token CE) | v1 pass@1 | v2 pass@1 | v2 compile_ok |
+|---|---|---|---|---|
+| baseline: pretrained base `runs/cortex-demo/final.pt` | 7.842* | 0.0 | 0.0 | 0.0 |
+| stage-2 SFT (`runs/cortex-sft/sft-final.pt`, buggy labels) | n/a (labels unsound) | 0.0 (whitespace-only) | 0.0 | n/a |
+| stage-3 SFT (`.../sft-expansion-epoch-003.pt`, buggy labels) | n/a (labels unsound) | 0.0 (whitespace-only) | 0.0 | 0.0 |
+| stage-4 epoch 1 `runs/cortex-sft-stage4/stage4-epoch-001.pt` | 3.934 | 0.0 | 0.0 | 0.2 |
+| stage-4 epoch 2 `.../stage4-epoch-002.pt` | 3.772 | 0.0 | 0.0 | 0.2 |
+| stage-4 epoch 3 `.../stage4-epoch-003.pt` | 3.654 | 0.0 | 0.0 | 0.2 |
+| stage-4 epoch 4 `.../stage4-epoch-004.pt` | 3.564 | 0.0 | 0.0 | 0.2 |
+
+(*) The pre-fix held-out 7.842 for the base checkpoint is the same quantity
+measured with the same (now fixed) evaluator.
+
+Measured character of change vs stage 3: training integrity restored
+(generation changed from whitespace-copying to real Python token streams,
+non-empty rate 1.0; e.g. `artifacts/stage4_sample_generation.txt`). Honor
+requirement: the stage-4 v2 pass@1 = 0.0, so per the promotion gate the
+checkpoint is **NOT promoted** (`artifacts/stage4_report.json`,
+`promotion.promoted = False`).
+
+### 13.6 Retrieval-assisted generation A/B (requirement 10)
+
+Executed on the stage-4 final checkpoint against the immutable v1 suite:
+without retrieval pass@1 = 0.0; with a top-1 pattern retrieved from the
+execution-verified pattern store (kind=pattern, verified=1) prepended to the
+prompt, pass@1 = 0.0. Retrieval works mechanically (verified pattern found
+for 1/3 tasks) but does not rescue generation at 8M scale. Measured
+distinction maintained: retrieval accesses verified knowledge (the store);
+it does not add neural capability, and neither is conflated.
+
+### 13.7 Acceptance criteria status (honest)
+
+| criterion | status |
+|---|---|
+| 1. Actual 2B architecture implemented, count verified | **met** (2,056,012,800, meta == formula) |
+| 2. Training pipeline executes reproducibly | **met** (bf16 smoke + resume round-trip executed; seeded) |
+| 3. Model produces non-empty valid autoregressive code | **met for non-empty, syntactically Python output**; capacity-limiting degeneration remains (looping) |
+| 4. Generated code compiles and executes on independent tasks | **not met** (pass@1 = 0.0 at 8M scale) |
+| 5. pass@1 measurable improvement over baseline | **not met** (0.0 -> 0.0); promotion gate correctly blocked |
+| 6. No benchmark integrity/regression violations | **met** (v1 integrity `unmodified`, fingerprint unchanged) |
+| 7. All tests pass, results documented | **met** (`pytest -q tests/`: 78 passed, 52 -> 66 -> 78) |
+
+### 13.8 Remaining limitations (explicit)
+
+1. The 2B config is implemented and parameter-verified but NOT trained —
+   this host measured 6.36 GB RAM / 5 CPU cores / no GPU; full-state
+   requirement ≈ 226 GB CPU or ≈ 2 x 40 GB GPU. The scalable plan is
+   written and its numeric path (bf16, checkpoint round-trip) executed.
+2. At 8M scale, free-running generation is Python-shaped but degenerate
+   (loops of plausible fragments); execution-correct producing of complete
+   functions requires the targeted physical scale-up and more verified data.
+3. Default deliverable multi-file eval targets remain small (4 packages);
+   broad multi-file mining is future work.
+4. The 500B virtual knowledge target is not claimed complete; measured
+   tiers remain in sections 5/12.7.

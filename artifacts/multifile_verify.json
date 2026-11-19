@@ -1,0 +1,50 @@
+{
+  "cortexpkg_statutils": {
+    "cortexpkg_statutils.valid.is_sorted": {
+      "ok": true,
+      "attempted": 2,
+      "failed": 0
+    },
+    "cortexpkg_statutils.rank.percentile_sorted": {
+      "ok": true,
+      "attempted": 2,
+      "failed": 0
+    }
+  },
+  "cortexpkg_textools": {
+    "cortexpkg_textools.clean.normalize_ws": {
+      "ok": true,
+      "attempted": 2,
+      "failed": 0
+    },
+    "cortexpkg_textools.count.word_frequency": {
+      "ok": true,
+      "attempted": 2,
+      "failed": 0
+    }
+  },
+  "cortexpkg_shapes": {
+    "cortexpkg_shapes.geom.hypotenuse": {
+      "ok": true,
+      "attempted": 1,
+      "failed": 0
+    },
+    "cortexpkg_shapes.units.diagonal_width": {
+      "ok": true,
+      "attempted": 2,
+      "failed": 0
+    }
+  },
+  "cortexpkg_queueops": {
+    "cortexpkg_queueops.priority.prioritize": {
+      "ok": true,
+      "attempted": 1,
+      "failed": 0
+    },
+    "cortexpkg_queueops.runner.execution_order": {
+      "ok": true,
+      "attempted": 2,
+      "failed": 0
+    }
+  }
+}

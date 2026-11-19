@@ -120,7 +120,8 @@ class CortexTransformer(nn.Module):
         return logits, loss
 
     def generate(self, tokens: torch.Tensor, max_new_tokens: int,
-                 temperature: float = 1.0, top_k: int = 50) -> torch.Tensor:
+                 temperature: float = 1.0, top_k: int = 50,
+                 eot_id: int | None = None) -> torch.Tensor:
         for _ in range(max_new_tokens):
             ctx = tokens[:, -self.cfg.max_seq_len:]
             logits, _ = self(ctx)
@@ -131,6 +132,8 @@ class CortexTransformer(nn.Module):
             probs = F.softmax(logits, dim=-1)
             nxt = torch.multinomial(probs, num_samples=1)
             tokens = torch.cat([tokens, nxt], dim=1)
+            if eot_id is not None and int(nxt) == eot_id:
+                break
         return tokens
 
     def actual_param_count(self) -> int:

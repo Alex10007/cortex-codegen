@@ -1,0 +1,34 @@
+{
+  "config": "cortex-2b",
+  "params": 2056012800,
+  "human": "2,056,012,800 (2.056B)",
+  "batch_size": 8,
+  "seq_len": 8192,
+  "amp_bf16": true,
+  "memory": {
+    "params": 2056012800,
+    "param_bytes": 8224051200,
+    "grad_bytes": 8224051200,
+    "optimizer_bytes": 16448102400,
+    "activation_bytes_est": 193273528320,
+    "total_bytes_est": 226169733120,
+    "total_gb_est": 226.17,
+    "note": "parameters and AdamW states dominate; activation estimate uses 12 x dim per token per layer including MLP, fp32"
+  },
+  "host": {
+    "cores": 5,
+    "ram_bytes": 6359416832,
+    "ram_gb": 6.36,
+    "disk_free_gb": 5869.21,
+    "cuda": {
+      "available": false,
+      "device_count": 0,
+      "names": [],
+      "bf16_supported": false
+    },
+    "cpu_bf16_autocast_executed_ok": true
+  },
+  "host_fits_full_state": false,
+  "strategy": "multi-GPU: ZeRO-3 / FSDP full sharding across ~2 x 40GB devices (DDP world); CPU-offload optimizer optional",
+  "gradient_checkpointing_advised": true
+}

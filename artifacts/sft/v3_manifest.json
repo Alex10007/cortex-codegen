@@ -1,0 +1,28 @@
+{
+  "path": "/workspace/github__Alex10007__cortex-codegen/artifacts/sft/dataset_v3.jsonl",
+  "counts": {
+    "train": 241,
+    "val": 26,
+    "heldout": 65
+  },
+  "stats": {
+    "v2_records": 328,
+    "extra_input": 4,
+    "extra_deduped_vs_v2": 0,
+    "added_to_train": 4
+  },
+  "seeds": {
+    "split": 1337,
+    "val_carve": 1338
+  },
+  "fingerprints": {
+    "full": "c6f0868a64d3532b2b8f25a58f9e8cb56ad25d0bc169cdc9030541573d6f5631",
+    "train": "f9cc3aec5cfc34480899da8ebd845de4077306c241c390d6633cb57b4feb9dca",
+    "val": "5ddc9366ea09995df7ec0d28fd985f70e80d7324fb171c099adff1fd3a61c1eb",
+    "heldout": "95ced4a256f5d75f3558a1269c30bb2f80130b7e28701f495f7f841061cde726"
+  },
+  "heldout_val_immutability": {
+    "heldout_unchanged": true,
+    "val_unchanged": true
+  }
+}

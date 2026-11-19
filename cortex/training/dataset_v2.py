@@ -86,3 +86,84 @@ def load_split_v2(jsonl_path: str, split: str,
                 f"({current} != {recorded}); results are not comparable"
             )
     return recs
+
+
+def build_dataset_v3(v2_jsonl: str, extra_pairs: Iterable[dict[str, Any]],
+                     out_jsonl: str,
+                     manifest_path: str | None = None) -> dict[str, Any]:
+    """Dataset v3 = v2 records (splits preserved verbatim) + extra pairs that
+    are gated through the same dedup/license/contamination gates and forced to
+    TRAIN only. The held-out and validation sets are byte-identical to v2's,
+    so their fingerprints are unchanged by construction and remain verifiable
+    against both manifests.
+    """
+    import tempfile
+
+    v2_records = [json.loads(l) for l in
+                  Path(v2_jsonl).read_text(encoding="utf-8").splitlines()]
+    existing_hashes = {r.get("content_sha256") for r in v2_records
+                       if r.get("content_sha256")}
+
+    with tempfile.TemporaryDirectory(prefix="cortex-ds-v3-") as td:
+        gated_path = str(Path(td) / "gated.jsonl")
+        build_dataset(extra_pairs, gated_path, held_out_fraction=0.0)
+        gated = [json.loads(l) for l in
+                 Path(gated_path).read_text(encoding="utf-8").splitlines()]
+
+    added, stats_extra = [], {"input": 0, "deduped": 0}
+    for rec in gated:
+        stats_extra["input"] += 1
+        h = rec["content_sha256"]
+        if h in existing_hashes:
+            stats_extra["deduped"] += 1
+            continue
+        existing_hashes.add(h)
+        rec["split"] = "train"
+        added.append(rec)
+
+    final = v2_records + added
+    with open(out_jsonl, "w", encoding="utf-8") as fh:
+        for r in final:
+            fh.write(json.dumps(r) + "\n")
+
+    def _fp(split: str) -> str:
+        return _canonical_fingerprint([r for r in final
+                                       if r["split"] == split])
+
+    v2_manifest = json.loads(Path(
+        (manifest_path or "").replace("v3_manifest.json", "v2_manifest.json")
+        if manifest_path else str(Path(v2_jsonl).with_name("v2_manifest.json"))
+    ).read_text(encoding="utf-8"))
+    fingerprint_check = {
+        "heldout_unchanged": _fp("heldout")
+        == v2_manifest["fingerprints"]["heldout"],
+        "val_unchanged": _fp("val") == v2_manifest["fingerprints"]["val"],
+    }
+
+    manifest = {
+        "path": str(out_jsonl),
+        "counts": {s: sum(1 for r in final if r["split"] == s)
+                   for s in ("train", "val", "heldout")},
+        "stats": {"v2_records": len(v2_records),
+                  "extra_input": stats_extra["input"],
+                  "extra_deduped_vs_v2": stats_extra["deduped"],
+                  "added_to_train": len(added)},
+        "seeds": {"split": v2_manifest["seeds"]["split"],
+                  "val_carve": v2_manifest["seeds"]["val_carve"]},
+        "fingerprints": {
+            "full": _canonical_fingerprint(final),
+            "train": _fp("train"),
+            "val": _fp("val"),
+            "heldout": _fp("heldout"),
+        },
+        "heldout_val_immutability": fingerprint_check,
+    }
+    if manifest_path:
+        Path(manifest_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(manifest_path).write_text(json.dumps(manifest, indent=2),
+                                       encoding="utf-8")
+    if not all(fingerprint_check.values()):
+        raise RuntimeError(
+            "dataset v3 construction violated split immutability: "
+            f"{fingerprint_check}")
+    return manifest
