@@ -104,6 +104,34 @@ outcome is offered as trusted knowledge (tested). Failed attempts are stored
 as negative evidence, never marked verified, and patterns dedupe by content
 hash.
 
+## 10b. Fine-tuning from verified outcomes (executed)
+
+Full pipeline run recorded in `artifacts/sft_report.json`
+(`python scripts/fine_tune_verified.py`):
+
+1. **Harvest**: 226 instruction->code pairs whose doctests (909 example
+   executions total) actually passed inside the sandbox against the real
+   module namespace. Functions with missing/failing doctests are excluded by
+   construction — a pair exists only if executed and verified.
+2. **Dataset gates**: 42 duplicates removed by content hash; license gate
+   (PSF/project-local/Apache-2.0/MIT only); contamination filter against the
+   evaluation task set (0 flagged); deterministic 148 train / 36 held-out
+   split (seed 1337). Dataset committed: `artifacts/sft/dataset.jsonl`.
+3. **SFT**: completion-only loss masking (prompt tokens = -100), warm start
+   from the pretrained demo checkpoint, checkpoint rotation, JSONL metrics.
+   Train loss 7.93 -> 2.44; **held-out loss 7.77 (before SFT) -> 2.63
+   (after)** — the improvement is measured on examples the model never
+   trained on.
+4. **Benchmarks**: task-set fingerprint recorded
+   (`artifacts/benchmarks.json`), integrity check `unmodified`; pass@1
+   history appended (`artifacts/eval_history.jsonl`); regression detector
+   active. Execution-graded pass@1 of the SFT checkpoint remains 0.0 at this
+   scale — recorded as measured; rising it requires the declared larger
+   training runs, not grader changes.
+5. **Knowledge store**: 184 unique verified patterns ingested with
+   provenance; the knowledge engine's `validated` capacity tier moved from
+   **0 to 184** (measured: stored 78,889, validated 184).
+
 ## 11. Outstanding work (explicitly not done)
 
 1. **2B-class pretraining** — requires GPU cluster; config + training path
@@ -113,7 +141,8 @@ hash.
    larger scale to lift retrievable capacity.
 3. Knowledge-graph-driven cross-repo dependency reasoning beyond the indexed
    stdlib tree.
-4. Continuous-learning pipelines wired to real fine-tuning runs (currently
-   verified-outcome curation + memory; fine-tuning loop unexercised).
-5. Multi-language corpus ingestion beyond Python (indexer currently parses
-   Python ASTs; other languages ingest as module/doc items).
+4. Raising SFT scale: 226 verified pairs (from Python doctests) demonstrate
+   the loop end-to-end; production capability needs larger verified corpora
+   and the declared larger models.
+5. Preference optimization (Phase D) and multi-language harvest/indexing
+   beyond Python ASTs.

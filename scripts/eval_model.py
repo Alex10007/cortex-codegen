@@ -21,8 +21,6 @@ from cortex.core import CortexAgent  # noqa: E402
 from cortex.evaluation.runner import grade_single  # noqa: E402
 from cortex.evaluation.tasks import TASKS  # noqa: E402
 
-ART = ROOT / "artifacts"
-
 
 def extract_code(text: str) -> str:
     fences = re.findall(r"```(?:python|py)?\n(.*?)```", text, flags=re.S)
@@ -31,18 +29,21 @@ def extract_code(text: str) -> str:
     return text
 
 
-def main() -> None:
+def evaluate_checkpoint(art: Path, checkpoint_path: Path | str,
+                        temperature: float = 0.2,
+                        max_new_tokens: int = 180) -> dict:
     agent = CortexAgent(
-        state_dir=str(ART / "cortex-state"),
-        tokenizer_path=str(ART / "tokenizer" / "tokenizer.json"),
-        checkpoint_path=str(ART / "runs" / "cortex-demo" / "final.pt"),
+        state_dir=str(art / "cortex-state"),
+        tokenizer_path=str(art / "tokenizer" / "tokenizer.json"),
+        checkpoint_path=str(checkpoint_path),
     )
     per_task = []
     for task in TASKS:
         prompt = agent.tokenizer.EOT + "\n" + "# Task: " + task.instruction + "\n"
         ids = agent.tokenizer.encode(prompt)
         x = torch.tensor([ids[:200]], dtype=torch.long)
-        out = agent.model.generate(x, max_new_tokens=180, temperature=0.2)
+        out = agent.model.generate(x, max_new_tokens=max_new_tokens,
+                                   temperature=temperature)
         text = agent.tokenizer.decode(out[0].tolist()[len(ids[:200]) - 1:])
         candidate = extract_code(text)
         rec = grade_single(task, candidate)
@@ -51,17 +52,25 @@ def main() -> None:
         print(f"[eval] {task.task_id}: passed={rec['passed']}")
 
     passed = sum(1 for r in per_task if r["passed"])
-    report = {
+    return {
         "model_config": "cortex-demo",
-        "checkpoint": str(ART / "runs" / "cortex-demo" / "final.pt"),
+        "checkpoint": str(checkpoint_path),
         "pass_at_1": round(passed / len(per_task), 4),
         "n_tasks": len(per_task),
         "per_task": per_task,
         "grading": "execution of hidden pytest suite inside sandbox",
-        "note": ("measured on the demo-scale checkpoint after 600 CPU training "
-                 "steps; this is NOT the 2B-class target config"),
+        "note": ("measured on the demo-scale checkpoint trained on CPU; "
+                 "this is NOT the 2B-class target config"),
     }
-    (ART / "eval_model.json").write_text(json.dumps(report, indent=2))
+
+
+def main() -> None:
+    art = ROOT / "artifacts"
+    checkpoint = art / "runs" / "cortex-demo" / "final.pt"
+    if len(sys.argv) > 1:
+        checkpoint = Path(sys.argv[1])
+    report = evaluate_checkpoint(art, checkpoint)
+    (art / "eval_model.json").write_text(json.dumps(report, indent=2))
     print("model pass@1:", report["pass_at_1"], "-> artifacts/eval_model.json")
 
 

@@ -1,0 +1,62 @@
+{
+  "harvest": {
+    "pairs": 226,
+    "doctests": 909
+  },
+  "dataset": {
+    "path": "/workspace/github__Alex10007__cortex-codegen/artifacts/sft/dataset.jsonl",
+    "train": 148,
+    "heldout": 36,
+    "stats": {
+      "input": 226,
+      "deduped": 42,
+      "license_rejected": 0,
+      "contamination_dropped": 0
+    },
+    "seed": 1337
+  },
+  "heldout_loss_before_sft": 7.771426350546525,
+  "sft": {
+    "config": "cortex-demo",
+    "epochs": 3,
+    "train_examples": 148,
+    "heldout_examples": 36,
+    "train_loss_first": 7.932601451873779,
+    "train_loss_last": 2.4385225772857666,
+    "heldout_loss_first_epoch": 3.626250859916429,
+    "heldout_loss_last_epoch": 2.632108742005962,
+    "param_count": 8071296,
+    "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft/sft-final.pt",
+    "metrics": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft/metrics.jsonl"
+  },
+  "sft_eval": {
+    "model_config": "cortex-demo",
+    "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft/sft-final.pt",
+    "pass_at_1": 0.0,
+    "n_tasks": 3,
+    "grading": "execution of hidden pytest suite inside sandbox",
+    "note": "measured on the demo-scale checkpoint trained on CPU; this is NOT the 2B-class target config"
+  },
+  "benchmark": {
+    "integrity": {
+      "status": "unmodified",
+      "fingerprint": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177"
+    },
+    "regression": {
+      "current_pass_at_1": 0.0,
+      "best_pass_at_1": 0.0,
+      "regressed": false,
+      "history_entries": 2
+    },
+    "history_entries": 2
+  },
+  "knowledge_capacity_after_validated_ingest": {
+    "stored": 78889,
+    "indexed": 78889,
+    "retrievable": 49700,
+    "retrieval_recall_at_5": 0.63,
+    "probe_attempts": 100,
+    "probe_hits": 63,
+    "validated": 184
+  }
+}

@@ -119,6 +119,18 @@ class CortexTokenizer:
     def vocab_size(self) -> int:
         return self._tok.get_vocab_size()
 
+    @property
+    def pad_id(self) -> int:
+        tid = self._tok.token_to_id(self.PAD)
+        assert tid is not None, "tokenizer is missing the pad special token"
+        return tid
+
+    @property
+    def eot_id(self) -> int:
+        tid = self._tok.token_to_id(self.EOT)
+        assert tid is not None, "tokenizer is missing the EOT special token"
+        return tid
+
     def encode(self, text: str) -> list[int]:
         return self._tok.encode(text).ids
 
