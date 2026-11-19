@@ -1,0 +1,103 @@
+{
+  "hardware": {
+    "cpu_cores": 5,
+    "ram_total_gb": 5.92,
+    "ram_available_gb": 5.55,
+    "disk_free_gb": 5459.39,
+    "has_cuda": false,
+    "gpu_name": "none",
+    "platform": "Linux x86_64",
+    "python_version": "3.12.14",
+    "torch_version": "2.15.0+cpu",
+    "can_train_2b_locally": false,
+    "reason": "needs ~46.0 GB RAM (16 B/param x1.5 activations headroom), available 5.5 GB"
+  },
+  "corpus": {
+    "tokens": 4256723,
+    "files": 174,
+    "path": "/workspace/github__Alex10007__cortex-codegen/artifacts/data/tokens.npy"
+  },
+  "configs": {
+    "cortex-demo": {
+      "params": 8071296,
+      "status": "untrained"
+    },
+    "cortex-s": {
+      "params": 41997312,
+      "status": "declared"
+    },
+    "cortex-m": {
+      "params": 235096064,
+      "status": "declared"
+    },
+    "cortex-2b": {
+      "params": 2056012800,
+      "status": "declared"
+    }
+  },
+  "training": {
+    "config": "cortex-demo",
+    "steps": 600,
+    "final_loss": 3.934509515762329,
+    "best_loss": 3.0971553325653076,
+    "param_count": 8071296,
+    "tokens_available": 4256723,
+    "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-demo/final.pt",
+    "metrics": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-demo/metrics.jsonl",
+    "wall_time_s": 446.21
+  },
+  "knowledge_ingest": {
+    "files": 6198,
+    "modules": 6198,
+    "classes": 17106,
+    "functions": 64403,
+    "docs": 3594,
+    "edges": 124232,
+    "skipped": 0
+  },
+  "capacity": {
+    "stored": 78705,
+    "indexed": 78705,
+    "retrievable": 48797,
+    "retrieval_recall_at_5": 0.62,
+    "probe_attempts": 200,
+    "probe_hits": 124,
+    "validated": 0
+  },
+  "eval_harness_sanity": {
+    "pass_at_1": 1.0,
+    "n_tasks": 3
+  },
+  "services": [
+    {
+      "engine": "HardwareProfiler",
+      "status": "operational",
+      "evidence": "cpus=5 ram=5.9GB free_ram=5.0GB disk_free=5458.7GB cuda=False gpu=none"
+    },
+    {
+      "engine": "Tokenizer",
+      "status": "operational",
+      "evidence": "/workspace/github__Alex10007__cortex-codegen/artifacts/tokenizer/tokenizer.json"
+    },
+    {
+      "engine": "ModelCore",
+      "status": "operational",
+      "evidence": "checkpoint=/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-demo/final.pt exists=True"
+    },
+    {
+      "engine": "KnowledgeEngine",
+      "status": "operational",
+      "evidence": "{'stored': 78705, 'indexed': 78705, 'retrievable': 47223, 'retrieval_recall_at_5': 0.6, 'probe_attempts': 50, 'probe_hits': 30, 'validated': 0}"
+    },
+    {
+      "engine": "MemoryEngine",
+      "status": "operational",
+      "evidence": "/workspace/github__Alex10007__cortex-codegen/artifacts/cortex-state/memory.db"
+    },
+    {
+      "engine": "Sandbox",
+      "status": "operational",
+      "evidence": "unshare -rn supported on this kernel: True"
+    }
+  ]
+}

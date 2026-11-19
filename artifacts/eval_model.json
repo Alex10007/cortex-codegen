@@ -1,0 +1,34 @@
+{
+  "model_config": "cortex-demo",
+  "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-demo/final.pt",
+  "pass_at_1": 0.0,
+  "n_tasks": 3,
+  "per_task": [
+    {
+      "task_id": "t-palindrome",
+      "passed": false,
+      "exit_code": 2,
+      "stdout_tail": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n<frozen importlib._bootstrap>:1387: in _gcd_import\n    ???\n<frozen importlib._bootstrap>:1360: in _find_and_load\n    ???\n<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked\n    ???\n<frozen importlib._bootstrap>:935: in _load_unlocked\n    ???\n/home/appuser/.local/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:185: in exec_module\n    exec(co, module.__dict__)\ntest_task.py:1: in <module>\n    from task import is_palindrome\nE     File \"/tmp/cortex-sandbox-v4ii8r0s/task.py\", line 4\nE       \"\"\"\nE   IndentationError: unexpected indent\n=========================== short test summary info ============================\nERROR test_task.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.11s\n",
+      "stderr_tail": "",
+      "generated_head": "\n\n\n    \"\"\"\n    \"\"\"\n\n    def _get_path_name(self, self, \"name: str)\n\n    def _get_name(self, self, self.get_id: str,\n    ) -> None:\n        self._get_schema: str | None = None\n    if self.get_name:\n        self.get_schema = self.get_body(\n            self.get_schema(self.get_name, self.get_id)\n        self.get_value = self.get_name\n\n    def _get_name(self, self._get_id: str,\n    ) -> None:\n        "
+    },
+    {
+      "task_id": "t-fizzbuzz",
+      "passed": false,
+      "exit_code": 2,
+      "stdout_tail": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n<frozen importlib._bootstrap>:1387: in _gcd_import\n    ???\n<frozen importlib._bootstrap>:1360: in _find_and_load\n    ???\n<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked\n    ???\n<frozen importlib._bootstrap>:935: in _load_unlocked\n    ???\n/home/appuser/.local/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:185: in exec_module\n    exec(co, module.__dict__)\ntest_task.py:1: in <module>\n    from task import fizzbuzz\nE     File \"/tmp/cortex-sandbox-tnnb2n51/task.py\", line 3\nE       \"\"\"\nE   IndentationError: unexpected indent\n=========================== short test summary info ============================\nERROR test_task.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.11s\n",
+      "stderr_tail": "",
+      "generated_head": "\n\n    \"\"\"\n    \"\"\"\n\n    def __init__(self, self, self._get_name: str,\n        \"\"\"\n        self.get_id: str | None = None\n        if self.get_name:\n            self.write(self.get_name, self._get_name)\n        self.get_name = self._get_name\n\n    def _is_name(self, self.get_name, self._get_schema)\n\n    def _get_name(self):\n        \"\"\"Return the default method is not None:\n            self.get_name = "
+    },
+    {
+      "task_id": "t-wordcount",
+      "passed": false,
+      "exit_code": 2,
+      "stdout_tail": "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n<frozen importlib._bootstrap>:1387: in _gcd_import\n    ???\n<frozen importlib._bootstrap>:1360: in _find_and_load\n    ???\n<frozen importlib._bootstrap>:1331: in _find_and_load_unlocked\n    ???\n<frozen importlib._bootstrap>:935: in _load_unlocked\n    ???\n/home/appuser/.local/lib/python3.12/site-packages/_pytest/assertion/rewrite.py:185: in exec_module\n    exec(co, module.__dict__)\ntest_task.py:1: in <module>\n    from task import word_frequencies\nE     File \"/tmp/cortex-sandbox-l13orayy/task.py\", line 3\nE       \"\"\"\nE   IndentationError: unexpected indent\n=========================== short test summary info ============================\nERROR test_task.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.10s\n",
+      "stderr_tail": "",
+      "generated_head": "\n\n    \"\"\"\n    \"\"\"\n\n    def _get_schema(self, self,\n        name: str,\n        \"\"\"\n        self._get_config = self._get_schema(self._get_name)\n        self._get_schema = self.get_name\n\n    def _get_name(self, self._get_name, self._get_id: str,\n    ) -> None:\n        self.get_url = self._get_url\n\n    def __init__(self, self, self._get_type_name: str,\n    ) -> None:\n        self._get_schema_name: str"
+    }
+  ],
+  "grading": "execution of hidden pytest suite inside sandbox",
+  "note": "measured on the demo-scale checkpoint after 600 CPU training steps; this is NOT the 2B-class target config"
+}

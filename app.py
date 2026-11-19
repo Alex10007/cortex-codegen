@@ -1,70 +1,49 @@
+"""Cortex Codegen UI. Talks to the local Cortex engines only — no external
+model APIs. If the demo model has not been trained yet on this host, it says
+so honestly instead of proxying a third-party model."""
+from __future__ import annotations
+
+from pathlib import Path
+
 import gradio as gr
-from huggingface_hub import InferenceClient
 
+from cortex.core import CortexAgent
 
-def respond(
-    message,
-    history: list[dict[str, str]],
-    system_message,
-    max_tokens,
-    temperature,
-    top_p,
-    hf_token: gr.OAuthToken,
-):
-    """
-    For more information on `huggingface_hub` Inference API support, please check the docs: https://huggingface.co/docs/huggingface_hub/v0.22.2/en/guides/inference
-    """
-    client = InferenceClient(token=hf_token.token, model="openai/gpt-oss-20b")
-
-    messages = [{"role": "system", "content": system_message}]
-
-    messages.extend(history)
-
-    messages.append({"role": "user", "content": message})
-
-    response = ""
-
-    for message in client.chat_completion(
-        messages,
-        max_tokens=max_tokens,
-        stream=True,
-        temperature=temperature,
-        top_p=top_p,
-    ):
-        choices = message.choices
-        token = ""
-        if len(choices) and choices[0].delta.content:
-            token = choices[0].delta.content
-
-        response += token
-        yield response
-
-
-"""
-For information on how to customize the ChatInterface, peruse the gradio docs: https://www.gradio.app/docs/chatinterface
-"""
-chatbot = gr.ChatInterface(
-    respond,
-    type="messages",
-    additional_inputs=[
-        gr.Textbox(value="You are a friendly Chatbot.", label="System message"),
-        gr.Slider(minimum=1, maximum=2048, value=512, step=1, label="Max new tokens"),
-        gr.Slider(minimum=0.1, maximum=4.0, value=0.7, step=0.1, label="Temperature"),
-        gr.Slider(
-            minimum=0.1,
-            maximum=1.0,
-            value=0.95,
-            step=0.05,
-            label="Top-p (nucleus sampling)",
-        ),
-    ],
+_ROOT = Path(__file__).parent
+agent = CortexAgent(
+    state_dir=str(_ROOT / "artifacts" / "cortex-state"),
+    tokenizer_path=str(_ROOT / "artifacts" / "tokenizer" / "tokenizer.json"),
+    checkpoint_path=str(_ROOT / "artifacts" / "runs" / "cortex-demo" / "final.pt"),
 )
 
-with gr.Blocks() as demo:
-    with gr.Sidebar():
-        gr.LoginButton()
-    chatbot.render()
 
+def respond(message, history):
+    statuses = {r["engine"]: r["status"] for r in agent.service_reports()}
+    model_status = statuses.get("ModelCore", "")
+    if "operational" not in model_status:
+        return ("Cortex Codegen core model is not trained on this host yet; "
+                "run `python scripts/build_and_verify.py`. Engines: "
+                + ", ".join(f"{k}={v}" for k, v in sorted(statuses.items())))
+    try:
+        return agent.generate(message, max_new_tokens=96)
+    except Exception as exc:
+        return f"generation unavailable: {exc}"
+
+
+def status_text() -> str:
+    return "\n".join(
+        f"{r['engine']}: {r['status']}\n  evidence: {r['evidence']}"
+        for r in agent.service_reports()
+    )
+
+
+with gr.Blocks(title="Cortex Codegen") as demo:
+    gr.Markdown("# Cortex Codegen — Fibonera AI software-engineering system")
+    with gr.Tab("Chat"):
+        gr.ChatInterface(respond, type="messages")
+    with gr.Tab("System status"):
+        out = gr.Textbox(status_text(), label="Engine verification state", lines=24)
+        gr.Button("Refresh").click(status_text, outputs=out)
 
 if __name__ == "__main__":
     demo.launch()

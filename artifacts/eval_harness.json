@@ -1,0 +1,30 @@
+{
+  "pass_at_1": 1.0,
+  "per_task": [
+    {
+      "task_id": "t-palindrome",
+      "passed": true,
+      "exit_code": 0,
+      "stdout_tail": "...                                                                      [100%]\n3 passed in 0.01s\n",
+      "stderr_tail": "",
+      "subject": "harness_sanity"
+    },
+    {
+      "task_id": "t-fizzbuzz",
+      "passed": true,
+      "exit_code": 0,
+      "stdout_tail": "..                                                                       [100%]\n2 passed in 0.02s\n",
+      "stderr_tail": "",
+      "subject": "harness_sanity"
+    },
+    {
+      "task_id": "t-wordcount",
+      "passed": true,
+      "exit_code": 0,
+      "stdout_tail": "..                                                                       [100%]\n2 passed in 0.01s\n",
+      "stderr_tail": "",
+      "subject": "harness_sanity"
+    }
+  ],
+  "n_tasks": 3
+}

@@ -1,0 +1,16 @@
+{
+  "vocab_size": 32768,
+  "corpus_files": 174,
+  "corpus_bytes": 15999999,
+  "corpus_roots": [
+    "/usr/local/lib/python3.12"
+  ],
+  "provenance": {
+    "source_uri": "/usr/local/lib/python3.12",
+    "license": "Python-2.0 / PSF",
+    "version": "3.12",
+    "content_sha256": "per-file sha256 stored per knowledge item",
+    "collected_at": "2026-11-19T05:08:53.537528+00:00",
+    "collector": "cortex.tokenizer.cortex_tokenizer.collect_code_corpus"
+  }
+}

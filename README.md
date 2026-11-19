@@ -1,17 +1,21 @@
 ---
 title: Cortex Codegen
-emoji: 💬
-colorFrom: yellow
-colorTo: purple
+emoji: 🧠
+colorFrom: purple
+colorTo: indigo
 sdk: gradio
 sdk_version: 5.42.0
 app_file: app.py
 pinned: false
-hf_oauth: true
-hf_oauth_scopes:
-- inference-api
 license: apache-2.0
-short_description: cortex is an agent specializes in cybersecurity
+short_description: Fibonera-owned AI software-engineering intelligence (Cortex)
 ---
 
-An example chatbot using [Gradio](https://gradio.app), [`huggingface_hub`](https://huggingface.co/docs/huggingface_hub/v0.22.2/en/index), and the [Hugging Face Inference API](https://huggingface.co/docs/api-inference/index).
+# Cortex Codegen
+
+Fibonera-owned AI software-engineering system: a real (demo-scale, verified)
+transformer core trained in-repo, code tokenizer, knowledge engine with
+provenance and measured capacity, sandboxed execution, security analysis,
+and evaluation infrastructure. See `docs/BASELINE.md` and `artifacts/report.json`
+for verification evidence. The 2B-class physical model is declared and
+parameter-counted but **not trained** on the CPU-only development host.
