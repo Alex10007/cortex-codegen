@@ -113,6 +113,17 @@ class VirtualParameterStore:
         self._pages[bank] = mm
         return mm
 
+    def evict_inactive(self, active_keys: set) -> int:
+        """Drop non-active, non-dirty slot objects from process memory.
+        Callers must commit first (attach does); evicted slots reload from
+        disk including AdamW state, so no trained value is lost."""
+        evicted = 0
+        for k in list(self._slots.keys()):
+            if k not in active_keys and k not in self.dirty:
+                del self._slots[k]
+                evicted += 1
+        return evicted
+
     def close(self) -> None:
         for mm in self._pages.values():
             mm.flush()
@@ -122,9 +133,17 @@ class VirtualParameterStore:
     # ---------- slots ----------
 
     def slot_state(self, bank: int, row: int, dim: int, rank: int,
-                   seed: int = 4242) -> "SlotState":
+                   seed: int = 4242,
+                   init_values: np.ndarray | None = None) -> "SlotState":
         """Page-in the slot (one LoRA pair A[dim,rank], B[rank,dim] carved
-        from bank row `row`) creating persistent trainable leaves."""
+        from bank row `row`) creating persistent trainable leaves.
+
+        If the slot was previously committed, its values AND AdamW state
+        are restored from disk (values: bank row; m/v/step: npz), so
+        eviction never loses trained state. `init_values` (length 2*dim*rank)
+        supplies deterministic initialization for a never-touched row
+        (e.g. SVD-derived values); otherwise fresh rows use seeded noise.
+        """
         import torch
 
         from cortex.model.virtual_slot import SlotState
@@ -142,15 +161,45 @@ class VirtualParameterStore:
         flat = torch_from(raw[:n])
         if bool((flat == 0).all()):
             # sparse hole: this row was never initialized
-            rng = np.random.default_rng(seed + bank * 100_000 + row)
-            flat = torch_from(rng.standard_normal(n).astype(np.float32) * 0.02)
+            if init_values is not None:
+                if len(init_values) != n:
+                    raise ValueError(
+                        f"init_values length {len(init_values)} != {n}")
+                flat = torch_from(np.asarray(init_values, dtype=np.float32))
+            else:
+                rng = np.random.default_rng(seed + bank * 100_000 + row)
+                flat = torch_from(rng.standard_normal(n).astype(np.float32) * 0.02)
             self.dirty.add(key)
         A = torch.nn.Parameter(flat[:dim * rank].view(dim, rank).clone())
         B = torch.nn.Parameter(flat[dim * rank:].view(rank, dim).clone())
         st = SlotState(bank=bank, row=row, A=A, B=B)
+        self._restore_opt_state(st, dim, rank)
         self._slots[key] = st
         self.dirty.add(key)
         return st
+
+    def _restore_opt_state(self, st: "SlotState", dim: int, rank: int) -> None:
+        import torch
+
+        import numpy as _np
+
+        path = self.root / f"adam-{st.bank:05d}-{st.row:06d}.npz"
+        if not path.exists():
+            return
+        data = _np.load(path)
+        if int(data["step_count"]) == 0:
+            return
+        st.step_count = int(data["step_count"])
+        for name, p in (("A", st.A), ("B", st.B)):
+            if data[f"{name}_m"].shape != tuple(p.shape):
+                st.step_count = 0
+                st.m.clear()
+                st.v.clear()
+                return
+            st.m[name] = torch.from_numpy(
+                _np.ascontiguousarray(data[f"{name}_m"], dtype=_np.float32))
+            st.v[name] = torch.from_numpy(
+                _np.ascontiguousarray(data[f"{name}_v"], dtype=_np.float32))
 
     # ---------- commit / recovery ----------
 
@@ -185,7 +234,11 @@ class VirtualParameterStore:
             rows_map = m["initialized_rows"]
             rows_map.setdefault(str(bank), {})[str(row)] = digest
             m["coverage_rows_per_bank"][bank] = len(rows_map[str(bank)])
-            m["committed_step"] = step
+            # lineage watermark is monotonic: a later commit at a lower step
+            # (e.g. a fresh trainer resuming against the same store) must
+            # never rewind the recorded training frontier
+            m["committed_step"] = max(int(m.get("committed_step", 0)),
+                                      int(step))
             m["transaction_id"] = txid
             _atomic_json(self.manifest_path, m)
             self.manifest = m

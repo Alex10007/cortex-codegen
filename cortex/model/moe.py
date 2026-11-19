@@ -99,6 +99,7 @@ class MoEFFN(nn.Module):
         f = counts.to(probs.dtype) / max(n, 1)
         p_mean = probs.mean(0)
         self.last_counts = counts.detach()
+        self.last_probs = p_mean.detach()
         self.last_aux = self.n_experts * torch.sum(f * p_mean)
         self.last_z = torch.mean(
             torch.logsumexp(logits, dim=-1) ** 2).clamp_min(0.0)
@@ -119,6 +120,21 @@ class MoEFFN(nn.Module):
             "physical": counts[:self.n_physical],
             "virtual": counts[self.n_physical:],
         }
+
+
+def js_divergence(p: torch.Tensor, q: torch.Tensor, eps: float = 1e-9) -> float:
+    """Jensen-Shannon divergence (bits, base 2): 0 identical, 1 disjoint."""
+    p = p / p.sum().clamp_min(eps)
+    q = q / q.sum().clamp_min(eps)
+    m = 0.5 * (p + q)
+
+    def kl(a: torch.Tensor) -> float:
+        mask = a > 0
+        if not bool(mask.any()):
+            return 0.0
+        return float((a[mask] * ((a[mask] / m[mask].clamp_min(eps)).log2())).sum())
+
+    return 0.5 * kl(p) + 0.5 * kl(q)
 
 
 class CortexMoETransformer(CortexTransformer):

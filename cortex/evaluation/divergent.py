@@ -1,20 +1,22 @@
 """Divergent reasoning: parallel hypotheses, contradiction detection,
-execution-based verification (stage 7, stage F).
+execution-based verification, and execution-feedback repair (stage 8
+extension of the stage-7 mechanism).
 
-For each coding task the model generates N hypotheses at different
-temperatures (independent sampling paths), grades every candidate against
-the task's hidden pytest suite in the sandbox, detects contradictions
-(some hypotheses pass, others fail on the same task), measures
-convergence, and selects only execution-verified candidates.
+Round 1 (divergence): N independently sampled candidates per task at
+different temperatures, each graded against the task's hidden pytest suite
+in the sandbox. Grad-backed selection picks only execution-verified
+candidates.
+
+Round 2 (repair): for tasks with no passing hypothesis, a new generation
+is conditioned on the actual failure output (executed pytest stderr),
+producing repair hypotheses graded by the same independent grader.
 
 Quality is measured by verified pass rates on real tasks - never by the
 number of hypotheses produced.
 """
 from __future__ import annotations
 
-import tempfile
-from pathlib import Path
-from typing import Any
+import hashlib
 
 import torch
 
@@ -22,32 +24,43 @@ from cortex.evaluation.runner import grade_single
 from cortex.evaluation.inference import extract_code
 from cortex.evaluation.tasks import TASKS
 
+REPAIR_TEMPERATURES = (0.2,)
 
-def _generate_candidates(agent, task, temperatures, max_new_tokens: int):
-    prompt = agent.tokenizer.EOT + "\n" + "# Task: " + task.instruction + "\n"
+
+def _sample_and_grade(agent, task, temperatures, max_new_tokens: int,
+                      prefix: str, hyps_tag: str) -> list[dict]:
+    prompt = (agent.tokenizer.EOT + "\n" + "# Task: " + task.instruction
+              + "\n" + prefix)
     ids = agent.tokenizer.encode(prompt)
-    x = torch.tensor([ids[:200]], dtype=torch.long)
-    hyps = []
+    x = torch.tensor([ids[:max(1, 200)]], dtype=torch.long)
+    out = []
     for temperature in temperatures:
-        out = agent.model.generate(x, max_new_tokens=max_new_tokens,
+        gen = agent.model.generate(x, max_new_tokens=max_new_tokens,
                                    temperature=temperature,
                                    eot_id=agent.tokenizer.eot_id)
-        text = agent.tokenizer.decode(out[0].tolist()[len(ids[:200]) - 1:])
+        text = agent.tokenizer.decode(gen[0].tolist()[len(ids[:200]) - 1:])
         candidate = extract_code(text)
         grade = grade_single(task, candidate)
-        hyps.append({
+        out.append({
+            "round": hyps_tag,
             "temperature": temperature,
-            "candidate_head": candidate[:400],
+            "candidate_head": candidate[:300],
+            "sha1": hashlib.sha1(
+                candidate.encode("utf-8", "replace")).hexdigest()[:16],
             "nonempty": bool(candidate.strip()),
             "passed": bool(grade["passed"]),
-            "exit_code": grade["exit_code"],
+            "grade": {"exit_code": grade["exit_code"],
+                      "stderr_tail": (grade["stderr_tail"] or "")[-300:]},
         })
-    return hyps
+    return out
 
 
 def divergent_eval(agent, tasks=None, n_hypotheses: int = 3,
                    temperatures: tuple[float, ...] | None = None,
-                   max_new_tokens: int = 180) -> dict[str, Any]:
+                   max_new_tokens: int = 180,
+                   repair_round: bool = True) -> dict:
+    """Full divergent + repair evaluation. Every candidate is graded by
+    real sandbox execution; no score is derived from generation alone."""
     if tasks is None:
         tasks = TASKS
     if temperatures is None:
@@ -55,31 +68,45 @@ def divergent_eval(agent, tasks=None, n_hypotheses: int = 3,
     if len(temperatures) != n_hypotheses:
         temperatures = temperatures[:n_hypotheses]
 
-    n = max(1, len(temperatures))
     per_task = []
     for task in tasks:
-        hyps = _generate_candidates(agent, task, temperatures,
-                                    max_new_tokens)
-        passes = [h["passed"] for h in hyps]
-        n_pass = sum(passes)
-        contradiction = 0 < n_pass < len(passes)
-        verdicts = [tuple(sorted((h["passed"], h["exit_code"])))
-                    for h in hyps]
-        distinct_outcomes = len(set(verdicts))
-        # convergence: fraction of hypotheses agreeing with the majority
-        # verdict on task success (1.0 = all hypotheses agree)
-        majority = max(n_pass, len(passes) - n_pass)
-        convergence = round(majority / len(passes), 4) if passes else 0.0
-        verified = next((h for h in hyps if h["passed"]), None)
+        hyps = _sample_and_grade(agent, task, temperatures,
+                                 max_new_tokens, "", "divergent")
+        repair = []
+        need_repair = repair_round and not any(h["passed"] for h in hyps)
+        if need_repair:
+            failure = next(
+                (h["grade"]["stderr_tail"] for h in hyps
+                 if h["grade"]["stderr_tail"]), "")
+            prefix = ("" if not failure else
+                      "# Previous attempt failed:\n# " +
+                      failure.replace("\n", "\n# ")[:600] + "\n")
+            repair = _sample_and_grade(agent, task, REPAIR_TEMPERATURES,
+                                       max_new_tokens, prefix, "repair")
+
+        all_hyps = hyps + repair
+        distinct_candidates = {h["sha1"] for h in all_hyps}
+        n_pass = sum(1 for h in all_hyps if h["passed"])
+        verdicts = {(h["round"], h["passed"]) for h in all_hyps}
+        contradiction = (0 < n_pass < len(all_hyps)
+                         and len({h["passed"] for h in hyps}) > 1)
+        majority = n_pass if n_pass * 2 >= len(all_hyps) else len(all_hyps) - n_pass
+        convergence = round(majority / len(all_hyps), 4) if all_hyps else 0.0
+        verified = [h for h in all_hyps if h["passed"]]
+        repair_recovered = (bool(repair)
+                            and any(h["passed"] for h in repair)
+                            and not any(h["passed"] for h in hyps))
         per_task.append({
             "task_id": task.task_id,
-            "hypotheses": hyps,
-            "n_hypotheses": len(passes),
-            "n_passed": n_pass,
+            "hypotheses_round1": hyps,
+            "repair_round": repair,
+            "distinct_candidates": len(distinct_candidates),
+            "n_passed_total": n_pass,
             "contradiction": contradiction,
-            "distinct_outcomes": distinct_outcomes,
             "convergence": convergence,
-            "verified_candidate_found": verified is not None,
+            "repair_recovered": repair_recovered,
+            "verified_selection": verified[0]["sha1"] if verified else None,
+            "verified_candidate_found": bool(verified),
         })
 
     total = len(per_task)
@@ -88,16 +115,22 @@ def divergent_eval(agent, tasks=None, n_hypotheses: int = 3,
         "n_tasks": total,
         "n_hypotheses_per_task": len(temperatures),
         "temperatures": list(temperatures),
+        "repair_round": repair_round,
         "pass_at_1_index0": round(
-            sum(1 for t in per_task if t["hypotheses"][0]["passed"]) / total, 4),
-        "pass_at_n_any": round(
-            sum(1 for t in per_task if t["n_passed"] > 0) / total, 4),
+            sum(1 for t in per_task if t["hypotheses_round1"][0]["passed"])
+            / total, 4),
+        "pass_at_n": round(sum(1 for t in per_task if t["n_passed_total"] > 0)
+                           / total, 4),
+        "pass_via_repair": round(
+            sum(1 for t in per_task if t["repair_recovered"]) / total, 4),
         "contradiction_rate": round(
             sum(1 for t in per_task if t["contradiction"]) / total, 4),
         "mean_convergence": round(
             sum(t["convergence"] for t in per_task) / total, 4),
-        "tasks_with_majority_correct": sum(
-            1 for t in per_task if t["n_passed"] * 2 > t["n_hypotheses"]),
-        "grading": "execution of hidden pytest suite inside sandbox per hypothesis",
+        "distinct_candidate_rate": round(
+            sum(t["distinct_candidates"] for t in per_task)
+            / max(1, sum(len(t["hypotheses_round1"]) + len(t["repair_round"])
+                         for t in per_task)), 4),
+        "grading": "each hypothesis graded by sandboxed pytest execution",
     }
     return {"aggregate": agg, "per_task": per_task}

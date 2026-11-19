@@ -50,6 +50,33 @@ def slot_adam_states(st: SlotState) -> dict[str, Any]:
     return out
 
 
+def svd_slot_init(M: torch.Tensor, rank: int, target_std: float = 0.02,
+                  n_probe: int = 256) -> np.ndarray:
+    """Deterministic slot initialization derived from a trained matrix M.
+
+    Computes the rank-`rank` truncated SVD M ≈ U S Vᵀ and returns the
+    flat [A ; B] values with A = α·U_r·√S_r, B = √S_r·Vᵀ_r so that
+    A @ B ≈ α²·M̂_r. The scalar α is chosen empirically so the slot's
+    output on isotropic probes matches `target_std`, matching the scale of
+    freshly initialized linear layers. This reduces the fresh-expert
+    cost: new slots start as low-rank, trained-matrix-scaled maps instead
+    of pure noise. Deterministic (SVD of a fixed matrix).
+    """
+    torch_linalg = torch.linalg.svd(M.to(torch.float32), full_matrices=False)
+    U, S, Vt = torch_linalg
+    r = min(rank, S.numel())
+    A = U[:, :r] * S[:r].sqrt()
+    B = S[:r].sqrt()[:, None] * Vt[:r, :]
+    probe_rng = torch.Generator().manual_seed(4242)
+    x = torch.randn(n_probe, M.shape[0], generator=probe_rng)
+    with torch.no_grad():
+        y = (x @ A) @ B
+        std = float(y.std())
+    alpha = target_std / max(std, 1e-12)
+    flat = torch.cat([(A * alpha).reshape(-1), B.reshape(-1)])
+    return flat.numpy().astype(np.float32)
+
+
 class VirtualAdamW:
     """Standard AdamW over active virtual slots (per-slot bias correction,
     decoupled weight decay). State lives with the slot so it can be
