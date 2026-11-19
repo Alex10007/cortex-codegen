@@ -1,0 +1,614 @@
+{
+  "kind": "cortex-stage7-502b-report",
+  "owned_by": "Fibonera",
+  "A": {
+    "stage": "A-architecture-audit-and-specification",
+    "dense_2b_param_count": 2056012800,
+    "dense_demo_param_count": 8071296,
+    "moe_demo_param_count": 11630976,
+    "dense_demo_is_control": true,
+    "objective_doc": "docs/OBJECTIVE_502B.md",
+    "v1_fingerprint": {
+      "status": "unmodified",
+      "fingerprint": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177"
+    },
+    "v1_fingerprint_value": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177",
+    "v2_suite_fingerprint": "64ea2c020004af92854aebdde0557678293313b06881fdf5b5abb54e8729c8a3",
+    "v2_suite_fingerprint_ok": true,
+    "hardware": {
+      "cuda": false,
+      "gpus": 0,
+      "platform": "Linux-6.18.35-x86_64-with-glibc2.41"
+    }
+  },
+  "B": {
+    "stage": "B-virtual-tensor-storage",
+    "allocated_parameters": 500000000000,
+    "exact_500b": true,
+    "partitions_total": 5000,
+    "partition_shape": [
+      2000,
+      50000
+    ],
+    "dtype": "float32",
+    "allocation_seconds": 0.377,
+    "logical_bytes": 2000000000000,
+    "owned_by": "Fibonera"
+  },
+  "C": {
+    "stage": "C-virtual-optimizer-engine",
+    "optimizer": "VirtualAdamW (standard AdamW, bias-corrected, decoupled wd)",
+    "updates": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "max_abs_delta_after_5_steps": 0.00502118,
+    "parameters_changed": true,
+    "grad_norm_final": 714.469878664966
+  },
+  "D": {
+    "stage": "D-joint-training-coordinator",
+    "warm_checkpoint": "artifacts/runs/cortex-sft-stage6/stage6-epoch-002.pt",
+    "steps_executed": 655,
+    "warm_phase": {
+      "steps": 30,
+      "loss_first": 6.4991,
+      "loss_last": 4.7567
+    },
+    "coverage_sweep": {
+      "groups_executed": 625,
+      "partitions_targeted": 5000,
+      "uncovered_partitions": 0,
+      "loss_first": 4.1767,
+      "loss_last": 1.1915
+    },
+    "heldout_loss_after_warm_phase": 4.80643739784078,
+    "heldout_loss_after_sweep": 3.232678440912455,
+    "heldout_note": "post-sweep heldout is measured with the LAST attached group, which took only 1 step; fresh groups start as noise until trained - not a regression of the trained slots",
+    "lineage": {
+      "step": 655,
+      "transaction_id": "tx-stage7-joint",
+      "physical_sha256": "4bb7b4b9f712d502d44dcc363247be802dd5b0e26c86637f0966390aae00dd86",
+      "virtual_integrity_ok": true
+    },
+    "store_integrity": {
+      "rows_checked": 5000,
+      "integrity_ok": true,
+      "bad_rows": []
+    },
+    "accounting": {
+      "allocated": 500000000000,
+      "initialized": 250000000,
+      "activated": 30720000,
+      "received_gradients": 30720000,
+      "optimizer_updated": 30720000,
+      "demonstrably_trained": 30720000,
+      "updates_applied_total": 655,
+      "partitions_touched": 5000,
+      "partitions_total": 5000,
+      "virtual_rank": 16,
+      "physical_trainable_parameters": 11630976,
+      "distinct_activated_slots": 5000
+    },
+    "joint_training_executed": true
+  },
+  "E": {
+    "stage": "E-moe-diagnostics",
+    "moe_layers": 4,
+    "last_routing": [
+      {
+        "counts": [
+          44,
+          25,
+          50,
+          36,
+          113,
+          31,
+          9,
+          41,
+          70,
+          37,
+          11,
+          43
+        ],
+        "tokens_routed": 510,
+        "utilization_fraction": 1.0,
+        "max_expert_fraction": 0.2216,
+        "collapsed": false,
+        "physical": [
+          44,
+          25,
+          50,
+          36
+        ],
+        "virtual": [
+          113,
+          31,
+          9,
+          41,
+          70,
+          37,
+          11,
+          43
+        ]
+      }
+    ],
+    "all_layers_utilization": [
+      1.0,
+      1.0,
+      1.0,
+      1.0
+    ],
+    "any_layer_collapsed": false,
+    "aux_terms_last": [
+      2.161024,
+      2.040767,
+      2.133251,
+      2.068276
+    ],
+    "z_terms_last": [
+      3.902287,
+      3.737589,
+      3.071073,
+      3.067584
+    ],
+    "physical_experts": [
+      71,
+      24,
+      68,
+      79
+    ]
+  },
+  "F": {
+    "kind": "cortex-divergent-reasoning-eval",
+    "n_tasks": 3,
+    "n_hypotheses_per_task": 3,
+    "temperatures": [
+      0.2,
+      0.7,
+      1.0
+    ],
+    "pass_at_1_index0": 0.0,
+    "pass_at_n_any": 0.0,
+    "contradiction_rate": 0.0,
+    "mean_convergence": 1.0,
+    "tasks_with_majority_correct": 0,
+    "grading": "execution of hidden pytest suite inside sandbox per hypothesis",
+    "stage": "F-divergent-reasoning"
+  },
+  "G": {
+    "stage": "G-distributed-infrastructure-and-recovery",
+    "benchmarks": {
+      "storage": {
+        "rows_benchmarked": 40,
+        "row_kb": 195,
+        "write_mbps": 287.26,
+        "read_mbps": 8566.36
+      },
+      "paging": {
+        "cold_page_open_s": 0.0005,
+        "warm_row_reads": 8,
+        "warm_row_read_s": 0.0
+      },
+      "sparse_adam": {
+        "steps": 20,
+        "slot_params": 6144,
+        "mean_step_ms": 0.107,
+        "p99_step_ms": 0.345,
+        "final_step_count": 20
+      },
+      "optimizer_roundtrip": {
+        "bank": 1,
+        "row": 2,
+        "keys": [
+          "A_m",
+          "A_v",
+          "B_m",
+          "B_v",
+          "step_count"
+        ],
+        "state_file": "adam-00001-000002.npz",
+        "bit_exact": true
+      },
+      "shard_probe": {
+        "exit_codes": [
+          0,
+          0
+        ],
+        "stdout_tail": "{\"world_size\": 2, \"banks_covered\": 40, \"ownership_overlap\": [], \"digests_exchanged\": 40, \"all_integrity_ok\": true, \"sharding_ok\": true}\n\n",
+        "stderr_tail": "\n",
+        "report": {
+          "kind": "cortex-virtual-shard-probe",
+          "world_size": 2,
+          "banks_per_rank": 20,
+          "banks_covered": 40,
+          "banks_expected": 40,
+          "ownership_overlap": [],
+          "digests_exchanged": 40,
+          "all_integrity_ok": true,
+          "per_rank": [
+            {
+              "rank": 0,
+              "owned_banks": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19
+              ],
+              "committed": [
+                [
+                  0,
+                  0,
+                  "566d2caa345a2dda"
+                ],
+                [
+                  1,
+                  1,
+                  "17f41066a625ccb6"
+                ],
+                [
+                  2,
+                  2,
+                  "2fbd9c0783feb0a6"
+                ],
+                [
+                  3,
+                  3,
+                  "ff56bf7dc55d2b46"
+                ],
+                [
+                  4,
+                  4,
+                  "47373d270bc75936"
+                ],
+                [
+                  5,
+                  5,
+                  "a85c21949daff6bf"
+                ],
+                [
+                  6,
+                  6,
+                  "19bc477f04bf879f"
+                ],
+                [
+                  7,
+                  7,
+                  "473929029374d53b"
+                ],
+                [
+                  8,
+                  8,
+                  "559fee2b4189fcf6"
+                ],
+                [
+                  9,
+                  9,
+                  "4c3278b12cf95c7e"
+                ],
+                [
+                  10,
+                  10,
+                  "0f6426d4bb6a94b1"
+                ],
+                [
+                  11,
+                  11,
+                  "f3b4be6411e80a6d"
+                ],
+                [
+                  12,
+                  12,
+                  "8e528221d01e3467"
+                ],
+                [
+                  13,
+                  13,
+                  "635f1400890f3ce4"
+                ],
+                [
+                  14,
+                  14,
+                  "f305f8ffbe3092eb"
+                ],
+                [
+                  15,
+                  15,
+                  "ed89fc9f45cca439"
+                ],
+                [
+                  16,
+                  16,
+                  "d5fdc8c8e27008a4"
+                ],
+                [
+                  17,
+                  17,
+                  "0bf54a88a96c9001"
+                ],
+                [
+                  18,
+                  18,
+                  "ef6608a873d50097"
+                ],
+                [
+                  19,
+                  19,
+                  "72a8c55d028af224"
+                ]
+              ],
+              "coverage_rows_per_bank": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "integrity_ok": true
+            },
+            {
+              "rank": 1,
+              "owned_banks": [
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37,
+                38,
+                39
+              ],
+              "committed": [
+                [
+                  20,
+                  20,
+                  "ae323847db642b04"
+                ],
+                [
+                  21,
+                  21,
+                  "2e5a53a785c3e9ab"
+                ],
+                [
+                  22,
+                  22,
+                  "a2067cf939f894b2"
+                ],
+                [
+                  23,
+                  23,
+                  "fd9dd5d1038db49d"
+                ],
+                [
+                  24,
+                  24,
+                  "e4ba0f86f89b774f"
+                ],
+                [
+                  25,
+                  25,
+                  "60eaa53eb0147b12"
+                ],
+                [
+                  26,
+                  26,
+                  "a659c92ac5d316df"
+                ],
+                [
+                  27,
+                  27,
+                  "f286c430d61bfa4b"
+                ],
+                [
+                  28,
+                  28,
+                  "2e02f78f0e71988c"
+                ],
+                [
+                  29,
+                  29,
+                  "3e59c2f813d369bc"
+                ],
+                [
+                  30,
+                  30,
+                  "06644292cdfbe9b2"
+                ],
+                [
+                  31,
+                  31,
+                  "20c622c782f79627"
+                ],
+                [
+                  32,
+                  32,
+                  "abb220ad7b968af6"
+                ],
+                [
+                  33,
+                  33,
+                  "816fedb972953a86"
+                ],
+                [
+                  34,
+                  34,
+                  "badb6906b4926fd2"
+                ],
+                [
+                  35,
+                  35,
+                  "fddbd33678570220"
+                ],
+                [
+                  36,
+                  36,
+                  "6e8756187089d808"
+                ],
+                [
+                  37,
+                  37,
+                  "cf40988a7b3288d7"
+                ],
+                [
+                  38,
+                  38,
+                  "417d9eca545e3e43"
+                ],
+                [
+                  39,
+                  39,
+                  "ce370a3f20ed3724"
+                ]
+              ],
+              "coverage_rows_per_bank": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "integrity_ok": true
+            }
+          ],
+          "owned_by": "Fibonera",
+          "sharding_ok": true
+        }
+      },
+      "kill_recovery": {
+        "child_signaled_ready": true,
+        "killed_with_sigkill": true,
+        "committed_rows_verified": 1,
+        "digests_ok_after_kill": true,
+        "corrupt_row_detected_by_digests": true,
+        "recovery_clean": true
+      }
+    },
+    "joint_restart": {
+      "resumed_step": 655,
+      "physical_digest_ok": true,
+      "lineage_steps_match": true,
+      "ref_batch_loss_after_restart": 0.38045111298561096,
+      "ref_batch_loss_before_checkpoint": 0.38045111298561096,
+      "parity_ok": true
+    },
+    "recovery_verified": true
+  },
+  "H": {
+    "stage": "H-controlled-training-experiment",
+    "steps": 30,
+    "dense_final_loss": 2.0872,
+    "joint_final_loss": 4.2663,
+    "dense_heldout": 3.787751264795412,
+    "joint_heldout": 5.310826330280623,
+    "note": "identical batches, warm start and lr; joint arm additionally learns 8 fresh virtual slots in 30 steps, while the dense control starts from an already-SFT'd dense head; new-expert cost visible in early joint loss",
+    "dense_control_untouched_class": "cortex.model.transformer.CortexTransformer"
+  },
+  "I": {
+    "stage": "I-full-scale-gate",
+    "decision": "REFUSED-HARDWARE-GATE",
+    "reason": "measured cuda=False, gpus=0; 2B physical + 500B virtual training requires >=4x80GB-class GPUs with the validated FSDP/sharding path",
+    "what_would_qualify": "8x40GB or 4x80GB GPUs, measured FSDP2 validation, memory estimation margin, and this host's storage path",
+    "full_scale_training_executed": false
+  }
+}

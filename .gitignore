@@ -10,3 +10,6 @@ artifacts/cortex-state/
 *.db
 .vscode/
 node_modules/
+artifacts/virtual-store-502b/
+*.f32
+*.npz

@@ -27,6 +27,11 @@ def _first_code_block(text: str) -> str:
     return blocks[0] if blocks else text
 
 
+def extract_code(text: str) -> str:
+    """Public alias; scripts/eval_model.py defines the same extraction."""
+    return _first_code_block(text)
+
+
 def teacher_forced_token_accuracy(model, tok, recs: list[dict[str, Any]],
                                   seq_len: int, batch_size: int = 8,
                                   max_batches: int = 6) -> Optional[float]:
