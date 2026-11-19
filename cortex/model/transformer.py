@@ -43,7 +43,8 @@ class CausalSelfAttention(nn.Module):
         self.qkv = nn.Linear(dim, 3 * dim)
         self.proj = nn.Linear(dim, dim)
 
-    def forward(self, x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor,
+                key_pad_mask: torch.Tensor | None = None) -> torch.Tensor:
         B, T, D = x.shape
         qkv = self.qkv(x).view(B, T, 3, self.n_heads, self.head_dim).permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]
@@ -52,6 +53,8 @@ class CausalSelfAttention(nn.Module):
         att = (q @ k.transpose(-2, -1)) / math.sqrt(self.head_dim)
         causal = torch.triu(torch.ones(T, T, dtype=torch.bool, device=x.device), diagonal=1)
         att = att.masked_fill(causal, float("-inf"))
+        if key_pad_mask is not None:
+            att = att.masked_fill(key_pad_mask[:, None, None, :], float("-inf"))
         att = F.softmax(att, dim=-1)
         out = (att @ v).transpose(1, 2).contiguous().view(B, T, D)
         return self.proj(out)
@@ -75,8 +78,9 @@ class Block(nn.Module):
         self.ln2 = nn.LayerNorm(cfg.dim)
         self.mlp = MLP(cfg.dim, cfg.d_ff)
 
-    def forward(self, x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor) -> torch.Tensor:
-        x = x + self.attn(self.ln1(x), cos, sin)
+    def forward(self, x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor,
+                key_pad_mask: torch.Tensor | None = None) -> torch.Tensor:
+        x = x + self.attn(self.ln1(x), cos, sin, key_pad_mask)
         x = x + self.mlp(self.ln2(x))
         return x
 
@@ -103,15 +107,16 @@ class CortexTransformer(nn.Module):
         elif isinstance(module, nn.Embedding):
             nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
-    def forward(self, tokens: torch.Tensor, targets: torch.Tensor | None = None):
-        # tokens/targets: [B, T]
+    def forward(self, tokens: torch.Tensor, targets: torch.Tensor | None = None,
+                pad_mask: torch.Tensor | None = None):
+        """tokens/pad_mask: [B, T]; pad_mask True = mask out as attention key."""
         B, T = tokens.shape
         device = tokens.device
         head_dim = self.cfg.dim // self.cfg.n_heads
         cos, sin = rope_cache(T, head_dim, device, torch.float32)
         x = self.tok_emb(tokens)
         for block in self.blocks:
-            x = block(x, cos, sin)
+            x = block(x, cos, sin, pad_mask)
         x = self.ln_f(x)
         logits = x @ self.tok_emb.weight.T if self.cfg.tie_word_embeddings else self.head(x)
         loss = None

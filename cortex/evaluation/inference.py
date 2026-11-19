@@ -42,7 +42,7 @@ def teacher_forced_token_accuracy(model, tok, recs: list[dict[str, Any]],
             x, y = make_batch(recs[i:i + batch_size], tok, seq_len)
             if x is None:
                 continue
-            logits, _ = model(x)
+            logits, _ = model(x, pad_mask=x == tok.pad_id)
             mask = y != -100
             pred = logits.argmax(dim=-1)
             hit = (pred == y) & mask

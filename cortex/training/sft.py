@@ -147,7 +147,7 @@ def evaluate_heldout(model: CortexTransformer, recs: list[dict[str, Any]], tok,
             x, y = make_batch(recs[i:i + batch_size], tok, seq_len)
             if x is None:
                 continue
-            logits, _ = model(x)
+            logits, _ = model(x, pad_mask=x == tok.pad_id)
             mask = y != -100
             if int(mask.sum()) == 0:
                 continue
@@ -205,7 +205,7 @@ def fine_tune(config_name: str, tokenizer_path: str, dataset_jsonl: str,
             x, y = make_batch([train_recs[j] for j in idxs], tok, cfg.max_seq_len)
             if x is None:
                 continue
-            _, loss = model(x, y)
+            _, loss = model(x, y, pad_mask=x == tok.pad_id)
             opt.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)

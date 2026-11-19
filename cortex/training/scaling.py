@@ -213,3 +213,43 @@ def validate_scalable_path(config_name: str, tokenizer_path: str,
         "metrics_path": str(out / "amp_smoke.jsonl"),
         "note": "real executed run; proves precision path + checkpoint round-trip",
     }
+
+
+def cluster_plans(cfg: ModelConfig, batch_size: int,
+                  seq_len: int | None = None) -> list[dict[str, Any]]:
+    """Per-world-size requirement matrix for the declared 2B config.
+
+    ZeRO-3/FSDP full sharding: parameters, grads and optimizer states split
+    across N devices; activations are per-device (micro-batch = batch/N).
+    Each row is arithmetic from the exact parameter count, not a guess.
+    """
+    seq_len = seq_len or cfg.max_seq_len
+    params = cfg.theoretical_param_count()
+    mem = estimate_memory_bytes(cfg, batch_size, seq_len, amp=True)
+    state_bytes = (mem["param_bytes"] + mem["grad_bytes"]
+                   + mem["optimizer_bytes"])
+    plans = []
+    for world in (2, 4, 8):
+        per_dev_state = state_bytes / world
+        per_dev_act = mem["activation_bytes_est"] / world
+        per_dev_total = per_dev_state + per_dev_act
+        plans.append({
+            "world_size": world,
+            "sharding": "ZeRO-3 / FSDP full shard",
+            "micro_batch": batch_size // world,
+            "per_gpu_state_gb": round(per_dev_state / 1e9, 2),
+            "per_gpu_activation_gb_est": round(per_dev_act / 1e9, 2),
+            "per_gpu_total_gb_est": round(per_dev_total / 1e9, 2),
+            "fits_40gb_gpu": per_dev_total <= 40e9,
+            "fits_80gb_gpu": per_dev_total <= 80e9,
+        })
+    return {
+        "config": cfg.name,
+        "params": params,
+        "batch_size": batch_size,
+        "seq_len": seq_len,
+        "plans": plans,
+        "cpu_offload_optimizer": True,
+        "note": "per-GPU arithmetic; measured only on GPU infrastructure "
+                "during a real run",
+    }
