@@ -1,0 +1,53 @@
+{
+  "kind": "cortex-stage9-hardware-report",
+  "owned_by": "Fibonera",
+  "measured_at": "2026-11-19T23:38:20+0000",
+  "hardware_inventory": {
+    "cpu_cores": 5,
+    "ram_total_gb": 5.92,
+    "ram_available_gb": 5.49,
+    "disk_free_gb": 5459.99,
+    "has_cuda": false,
+    "gpu_name": "none",
+    "platform": "Linux x86_64",
+    "python_version": "3.12.14",
+    "torch_version": "2.15.0+cpu",
+    "cuda_available_torch": false,
+    "gpu_count": 0,
+    "nccl_available": false
+  },
+  "storage_benchmark_measured": {
+    "rows_benchmarked": 40,
+    "row_kb": 195,
+    "write_mbps": 335.2,
+    "read_mbps": 11252.32
+  },
+  "checkpoint_timing": {
+    "warm6_load_seconds": 0.1,
+    "checkpoint_size_mb": 30.81
+  },
+  "demo_step_throughput": {
+    "note": "CORTEX_DEMO (8.07M params) CPU forward+backward+AdamW; batch=2, seq=128; measured wall clock",
+    "steps": 34,
+    "seconds": 3.054,
+    "approx_tokens_per_second": 2850.0
+  },
+  "two_b_trainable_on_host": false,
+  "two_b_ram_constraint": "needs ~46.0 GB RAM (16 B/param x1.5 activations headroom), available 5.5 GB",
+  "gpu_qualification_executed": false,
+  "gpu_qualification_reason": "FSDP2/NCCL/multi-GPU validation requires real CUDA devices; none exist on this host. CPU measurements are software verification only and CANNOT qualify a GPU environment.",
+  "estimated_full_training_cost": {
+    "note": "estimate only, not a measurement; no paid resources provisioned, none will be without explicit authorization",
+    "basis": "8x A100-40GB-class reference; provider quote required before any provisioning",
+    "gpu_hours_estimate_min": 420,
+    "budget_ceiling_usd": 50000,
+    "spent_usd": 0
+  },
+  "missing_requirements": [
+    ">=4 GPUs x 80 GB (or >=8 x 40 GB); measured 0 CUDA devices",
+    "NCCL backend qualification on the real devices",
+    "FSDP2 sharded forward/backward validation on real GPUs",
+    "multi-GPU all-reduce and worker-failure-recovery qualification"
+  ],
+  "decision": "BLOCKED"
+}

@@ -1,0 +1,56 @@
+{
+  "kind": "cortex-stage9-joint-comparison",
+  "owned_by": "Fibonera",
+  "stage": "G-unified-joint-training",
+  "steps_per_arm": 60,
+  "identical_batches_and_optimizer": true,
+  "arm_definitions": {
+    "arm1_dense": "CortexTransformer warm start; no virtual params",
+    "arm2_joint_frozen_router": "joint trainer; routers frozen",
+    "arm3_joint_full": "joint trainer; routers trainable",
+    "arm4_full_integrated": "arm3 model + divergent reasoning at inference (one coordinator, no separate training system)"
+  },
+  "arm1_dense_control": {
+    "loss_first": 2.6055,
+    "loss_last": 2.9034,
+    "heldout_before": 3.469615515259197,
+    "heldout_after": 3.509615282549906
+  },
+  "arm2_joint_frozen_router": {
+    "loss_first": 6.0425,
+    "loss_last": 3.8583,
+    "heldout": 4.1767,
+    "distinct_slots_updated": 64
+  },
+  "arm3_joint_full": {
+    "loss_first": 6.0875,
+    "loss_last": 3.6284,
+    "heldout": 4.0971,
+    "distinct_slots_updated": 64
+  },
+  "arm4_full_integrated": {
+    "mode": "joint_full model + divergent reasoning at inference",
+    "pass_at_n": 0.0,
+    "n_tasks": 1,
+    "distinct_candidates": 3,
+    "failure_categories_round1": {
+      "passed": 0,
+      "syntax": 0,
+      "import": 0,
+      "runtime": 2,
+      "assertion": 0,
+      "timeout": 0,
+      "empty": 0,
+      "unknown": 0
+    }
+  },
+  "fairness_note": "identical batch order/count and optimizer settings; joint arms page in fresh row-7 virtual slots per group, so the extra virtual compute per step is reported rather than hidden; validation slice is the untouched heldout split",
+  "joint_better_than_dense_on_heldout": false,
+  "heldout_delta_joint_minus_dense": 0.5875,
+  "objective_terms": {
+    "completion_masked_ce": "1.0 (primary)",
+    "aux_lb_coef": 0.01,
+    "router_z_coef": 0.001,
+    "version": "joint-loss-v2 (unchanged from stages 7/8)"
+  }
+}

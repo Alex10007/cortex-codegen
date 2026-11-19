@@ -37,6 +37,10 @@ def fingerprint_tasks(suite: str = "v1") -> str:
         from cortex.evaluation.tasks_v2 import tasks_v2_tuples
 
         payload = json.dumps(sorted(tasks_v2_tuples()), sort_keys=True)
+    elif suite == "v3":
+        from cortex.evaluation.tasks_v3 import tasks_v3_tuples
+
+        payload = json.dumps(sorted(tasks_v3_tuples()), sort_keys=True)
     else:
         raise ValueError(f"unknown benchmark suite: {suite}")
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()

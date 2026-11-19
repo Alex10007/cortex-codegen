@@ -1,0 +1,278 @@
+{
+  "aggregate": {
+    "kind": "cortex-stage9-reasoning-evaluation",
+    "n_tasks": 3,
+    "n_hypotheses_per_task": 3,
+    "temperatures": [
+      0.2,
+      0.7,
+      1.0
+    ],
+    "repair_round": true,
+    "pass_at_1_index0": 0.0,
+    "pass_at_n": 0.0,
+    "pass_via_repair": 0.0,
+    "contradiction_rate": 0.0,
+    "mean_convergence": 1.0,
+    "distinct_candidate_rate": 1.0,
+    "failure_categories_round1": {
+      "passed": 0,
+      "syntax": 0,
+      "import": 0,
+      "runtime": 9,
+      "assertion": 0,
+      "timeout": 0,
+      "empty": 0,
+      "unknown": 0
+    },
+    "tokens_consumed": 2160,
+    "seconds_elapsed": 17.36,
+    "grading": "each hypothesis graded by sandboxed pytest execution",
+    "owned_by": "Fibonera",
+    "subject": {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/joint-502b-stage9/checkpoints/joint-step-005286.pt",
+      "arch": "CortexMoETransformer"
+    },
+    "capability_note": "candidate distinctness with zero pass rates is a capability failure - reported as such, never dressed up as progress",
+    "status": "REJECTED-BY-EVALUATION"
+  },
+  "per_task": [
+    {
+      "task_id": "t-palindrome",
+      "hypotheses_round1": [
+        {
+          "round": "divergent",
+          "temperature": 0.2,
+          "candidate_head": "\n\n    >>> safe_pair(io.BytesIO(2)\n    None\n    >>> safe_noescape(io.BytesIO(b\"\n    'abc'\n    \"\"\"\n    return _Trim.sub(\"-\", extra).strip(\"_\")\n<|endoftext|>",
+          "sha1": "86d2f621dda270af",
+          "nonempty": true,
+          "passed": false,
+          "failure_category": "runtime",
+          "grade": {
+            "exit_code": 2,
+            "stderr_tail": ""
+          }
+        },
+        {
+          "round": "divergent",
+          "temperature": 0.7,
+          "candidate_head": "\n\n    >>> read_unicodestringnl(io.BytesIO(b\" 1)\n    'abc'\n    \"\"\"\n\n    return((s)\n<|endoftext|>",
+          "sha1": "7bb1589611efe855",
+          "nonempty": true,
+          "passed": false,
+          "failure_category": "runtime",
+          "grade": {
+            "exit_code": 2,
+            "stderr_tail": ""
+          }
+        },
+        {
+          "round": "divergent",
+          "temperature": 1.0,
+          "candidate_head": "\n\n    >>> safe_snan(io.BytesIO(69\n    \"\"\"\n    return self.JUNK.micro\n<|endoftext|>",
+          "sha1": "8fce263dad22683d",
+          "nonempty": true,
+          "passed": false,
+          "failure_category": "runtime",
+          "grade": {
+            "exit_code": 2,
+            "stderr_tail": ""
+          }
+        }
+      ],
+      "repair_round": [
+        {
+          "round": "repair",
+          "temperature": 0.2,
+          "candidate_head": "\n    ...     __iadd(self)\n    ...    \"\"\"\n\n    return _TestClass(self)\n<|endoftext|>",
+          "sha1": "22151fe6c5da545c",
+          "nonempty": true,
+          "passed": false,
+          "failure_category": "runtime",
+          "grade": {
+            "exit_code": 2,
+            "stderr_tail": ""
+          },
+          "repair_category_targeted": "runtime"
+        }
+      ],
+      "distinct_candidates": 4,
+      "n_passed_total": 0,
+      "contradiction": false,
+      "convergence": 1.0,
+      "repair_recovered": false,
+      "verified_selection": null,
+      "verified_candidate_found": false,
+      "failure_breakdown_round1": {
+        "passed": 0,
+        "syntax": 0,
+        "import": 0,
+        "runtime": 3,
+        "assertion": 0,
+        "timeout": 0,
+        "empty": 0,
+        "unknown": 0
+      },
+      "seconds_elapsed": 6.0,
+      "tokens_used": 720
+    },
+    {
+      "task_id": "t-fizzbuzz",
+      "hypotheses_round1": [
+        {
+          "round": "divergent",
+          "temperature": 0.2,
+          "candidate_head": "\n\n return int(s.finditer(n)\n<|endoftext|>",
+          "sha1": "bdfb7eb1f2909b7b",
+          "nonempty": true,
+          "passed": false,
+          "failure_category": "runtime",
+          "grade": {
+            "exit_code": 2,
+            "stderr_tail": ""
+          }
+        },
+        {
+          "round": "divergent",
+          "temperature": 0.7,
+          "candidate_head": "\n\n return int(rJUNK(' ')\n<|endoftext|>",
+          "sha1": "9e3f48a7d4bfb02c",
+          "nonempty": true,
+          "passed": false,
+          "failure_category": "runtime",
+          "grade": {
+            "exit_code": 2,
+            "stderr_tail": ""
+          }
+        },
+        {
+          "round": "divergent",
+          "temperature": 1.0,
+          "candidate_head": "\n\n    >>> double('bc')\n    3\n    >>> double( 2)\n    'abc'\n    \"\"\"\n\n    return ch in ws\n<|endoftext|>",
+          "sha1": "4d365c15e521a7b5",
+          "nonempty": true,
+          "passed": false,
+          "failure_category": "runtime",
+          "grade": {
+            "exit_code": 2,
+            "stderr_tail": ""
+          }
+        }
+      ],
+      "repair_round": [
+        {
+          "round": "repair",
+          "temperature": 0.2,
+          "candidate_head": "\n    ...     __iadd')\n    ...     return x\n    return x\n    return _TestClass()\n<|endoftext|>",
+          "sha1": "a85e9617df47461e",
+          "nonempty": true,
+          "passed": false,
+          "failure_category": "runtime",
+          "grade": {
+            "exit_code": 2,
+            "stderr_tail": ""
+          },
+          "repair_category_targeted": "runtime"
+        }
+      ],
+      "distinct_candidates": 4,
+      "n_passed_total": 0,
+      "contradiction": false,
+      "convergence": 1.0,
+      "repair_recovered": false,
+      "verified_selection": null,
+      "verified_candidate_found": false,
+      "failure_breakdown_round1": {
+        "passed": 0,
+        "syntax": 0,
+        "import": 0,
+        "runtime": 3,
+        "assertion": 0,
+        "timeout": 0,
+        "empty": 0,
+        "unknown": 0
+      },
+      "seconds_elapsed": 4.95,
+      "tokens_used": 720
+    },
+    {
+      "task_id": "t-wordcount",
+      "hypotheses_round1": [
+        {
+          "round": "divergent",
+          "temperature": 0.2,
+          "candidate_head": "\n\n    >>> flatten(io.BytesIO(io.BytesIO(translate( None\n    >>> identity(1)\n    \"\"\"\n\n    return _TestClass(2)\n<|endoftext|>",
+          "sha1": "b2c8941f9de5d742",
+          "nonempty": true,
+          "passed": false,
+          "failure_category": "runtime",
+          "grade": {
+            "exit_code": 2,
+            "stderr_tail": ""
+          }
+        },
+        {
+          "round": "divergent",
+          "temperature": 0.7,
+          "candidate_head": "\n\n    >>> temp_canonical(io.BytesIO(2)\n    \"\"\"\n\n    return x\n<|endoftext|>",
+          "sha1": "62e2e12e5c46a24d",
+          "nonempty": true,
+          "passed": false,
+          "failure_category": "runtime",
+          "grade": {
+            "exit_code": 2,
+            "stderr_tail": ""
+          }
+        },
+        {
+          "round": "divergent",
+          "temperature": 1.0,
+          "candidate_head": "\n\n    >>> flatten(version)\n    True\n    \"\"\"\n\n    @functools.wraps(func)\n    def wrapper(first: _unpackQ\")\n    ...    _TestClass(first: _[        Pro\n    def func(first: _T, * other.items()\n    _ release\n    \"\"\"\n\n    return _ __contains(self)\n<|endoftext|>",
+          "sha1": "72dbd0cde8bc209d",
+          "nonempty": true,
+          "passed": false,
+          "failure_category": "runtime",
+          "grade": {
+            "exit_code": 2,
+            "stderr_tail": ""
+          }
+        }
+      ],
+      "repair_round": [
+        {
+          "round": "repair",
+          "temperature": 0.2,
+          "candidate_head": "\n    ...     /,\n    ...    \"\"\"\n\n    return _TestClass(param, ve')\n<|endoftext|>",
+          "sha1": "287a9218db915944",
+          "nonempty": true,
+          "passed": false,
+          "failure_category": "runtime",
+          "grade": {
+            "exit_code": 2,
+            "stderr_tail": ""
+          },
+          "repair_category_targeted": "runtime"
+        }
+      ],
+      "distinct_candidates": 4,
+      "n_passed_total": 0,
+      "contradiction": false,
+      "convergence": 1.0,
+      "repair_recovered": false,
+      "verified_selection": null,
+      "verified_candidate_found": false,
+      "failure_breakdown_round1": {
+        "passed": 0,
+        "syntax": 0,
+        "import": 0,
+        "runtime": 3,
+        "assertion": 0,
+        "timeout": 0,
+        "empty": 0,
+        "unknown": 0
+      },
+      "seconds_elapsed": 6.41,
+      "tokens_used": 720
+    }
+  ]
+}

@@ -1,0 +1,195 @@
+{
+  "kind": "cortex-stage9-moe-diagnostics",
+  "owned_by": "Fibonera",
+  "stage": "D-moe-specialization",
+  "resume": {
+    "resumed": true,
+    "from": "joint-502b-stage9",
+    "parity_ok": true,
+    "resumed_step": 5286
+  },
+  "router_fingerprint_basis": "warm-start (pre-sweep fingerprint)",
+  "n_family_batches": 5,
+  "family_names": [
+    "functools",
+    "pickletools",
+    "_pydecimal",
+    "difflib",
+    "recipes"
+  ],
+  "probe": {
+    "kind": "cortex-moe-specialization-probe",
+    "n_layers": 4,
+    "per_layer": [
+      {
+        "n_observations": 5,
+        "n_experts": 12,
+        "top_k": 2,
+        "mean_entropy_bits": 3.5637,
+        "mean_max_prob": 0.1126,
+        "js_first_vs_last_batch": 0.02395262,
+        "expert0_vs_1_weight_cosine": 0.007558
+      },
+      {
+        "n_observations": 5,
+        "n_experts": 12,
+        "top_k": 2,
+        "mean_entropy_bits": 3.5637,
+        "mean_max_prob": 0.1126,
+        "js_first_vs_last_batch": 0.01312345,
+        "expert0_vs_1_weight_cosine": 0.008036
+      },
+      {
+        "n_observations": 5,
+        "n_experts": 12,
+        "top_k": 2,
+        "mean_entropy_bits": 3.5637,
+        "mean_max_prob": 0.1126,
+        "js_first_vs_last_batch": 0.00349634,
+        "expert0_vs_1_weight_cosine": 0.011054
+      },
+      {
+        "n_observations": 5,
+        "n_experts": 12,
+        "top_k": 2,
+        "mean_entropy_bits": 3.5637,
+        "mean_max_prob": 0.1126,
+        "js_first_vs_last_batch": 0.01940612,
+        "expert0_vs_1_weight_cosine": 0.007943
+      }
+    ],
+    "root_cause": {
+      "max_entropy_bits_n_experts": 3.585,
+      "mean_entropy": [
+        3.5637,
+        3.5637,
+        3.5637,
+        3.5637
+      ],
+      "near_uniform_routing": true,
+      "hypothesis": [
+        "router weights are freshly initialized (warm-start carries dense mlp into expert 0 only; the router linear is new) so logits ~ 0 and posteriors ~ uniform; mean-over-tokens posteriors then differ practically not at all between families (JS ~ 0) unless the router is trained"
+      ],
+      "test": "compare router parameter movement and gradient norms (gradient_flow + router_movement)"
+    }
+  },
+  "gradient_flow": {
+    "loss": 0.08599,
+    "router_grad_entries": [
+      [
+        "blocks.0.mlp.router.weight",
+        0.03033764
+      ],
+      [
+        "blocks.1.mlp.router.weight",
+        0.05127514
+      ],
+      [
+        "blocks.2.mlp.router.weight",
+        0.05683485
+      ],
+      [
+        "blocks.3.mlp.router.weight",
+        0.03571629
+      ]
+    ],
+    "router_grad_nonzero": true,
+    "n_router_params": 9216,
+    "expert_grad_norm_mean": 0.00391913,
+    "expert_grad_nonzero": true
+  },
+  "router_movement_vs_fingerprint": {
+    "recorded": true,
+    "relative_moves": {
+      "blocks.0.mlp.router.weight": 0.02348126,
+      "blocks.1.mlp.router.weight": 0.10259774,
+      "blocks.2.mlp.router.weight": 0.11579843,
+      "blocks.3.mlp.router.weight": 0.14647364
+    }
+  },
+  "assignment_stability": {
+    "repeats": 3,
+    "deterministic_per_layer": [
+      true,
+      true,
+      true,
+      true
+    ],
+    "stable": true
+  },
+  "cross_family_js_per_layer": {
+    "functools|pickletools": [
+      0.002994,
+      0.006338,
+      0.007204,
+      0.013102
+    ],
+    "functools|_pydecimal": [
+      0.016209,
+      0.007758,
+      0.012164,
+      0.007182
+    ],
+    "functools|difflib": [
+      0.015578,
+      0.009395,
+      0.005859,
+      0.017811
+    ],
+    "functools|recipes": [
+      0.023953,
+      0.013123,
+      0.003496,
+      0.019406
+    ],
+    "pickletools|_pydecimal": [
+      0.007564,
+      0.006207,
+      0.009434,
+      0.014901
+    ],
+    "pickletools|difflib": [
+      0.006864,
+      0.002762,
+      0.002311,
+      0.003774
+    ],
+    "pickletools|recipes": [
+      0.013566,
+      0.00464,
+      0.003048,
+      0.008245
+    ],
+    "_pydecimal|difflib": [
+      0.003706,
+      0.00732,
+      0.007385,
+      0.011779
+    ],
+    "_pydecimal|recipes": [
+      0.002216,
+      0.00781,
+      0.006586,
+      0.00962
+    ],
+    "difflib|recipes": [
+      0.00478,
+      0.001457,
+      0.000819,
+      0.004222
+    ]
+  },
+  "max_input_conditional_js_per_layer": [
+    0.023953,
+    0.013123,
+    0.012164,
+    0.019406
+  ],
+  "root_cause_evidence": {
+    "near_uniform_router_posteriors": true,
+    "router_gradients_flow": true,
+    "router_weights_moved_since_warm_start": true
+  },
+  "conclusion": "measured input-conditional routing beyond the 0.005 JS threshold (stages 7/8 measured exactly 0.0 across all layers): the stage-9 sweep training moved the routers off uniform posteriors. This is a weak, early-horizon signal of differentiation, NOT proof of useful expert specialization; useful specialization requires task-conditioned execution quality gaps.",
+  "specialization_demonstrated": true
+}

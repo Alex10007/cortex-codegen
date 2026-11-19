@@ -22,6 +22,8 @@ import torch
 
 from cortex.evaluation.runner import grade_single
 from cortex.evaluation.inference import extract_code
+from cortex.evaluation.failure_tax import (classify, failure_breakdown,
+                                            repair_hint)
 from cortex.evaluation.tasks import TASKS
 
 REPAIR_TEMPERATURES = (0.2,)
@@ -49,6 +51,7 @@ def _sample_and_grade(agent, task, temperatures, max_new_tokens: int,
                 candidate.encode("utf-8", "replace")).hexdigest()[:16],
             "nonempty": bool(candidate.strip()),
             "passed": bool(grade["passed"]),
+            "failure_category": classify(grade),
             "grade": {"exit_code": grade["exit_code"],
                       "stderr_tail": (grade["stderr_tail"] or "")[-300:]},
         })
@@ -69,20 +72,34 @@ def divergent_eval(agent, tasks=None, n_hypotheses: int = 3,
         temperatures = temperatures[:n_hypotheses]
 
     per_task = []
+    import time
     for task in tasks:
+        t0 = time.time()
         hyps = _sample_and_grade(agent, task, temperatures,
                                  max_new_tokens, "", "divergent")
         repair = []
         need_repair = repair_round and not any(h["passed"] for h in hyps)
         if need_repair:
+            # targeted repair: classify the DOMINANT observed failure mode
+            # and condition generation on the actual failure output
+            breakdown = failure_breakdown(hyps)
+            category = max((c for c in breakdown
+                            if c not in ("passed", "unknown")),
+                           key=lambda c: breakdown[c], default="unknown")
             failure = next(
                 (h["grade"]["stderr_tail"] for h in hyps
                  if h["grade"]["stderr_tail"]), "")
-            prefix = ("" if not failure else
-                      "# Previous attempt failed:\n# " +
-                      failure.replace("\n", "\n# ")[:600] + "\n")
+            prefix = ""
+            hint = repair_hint(category)
+            if hint:
+                prefix += "# " + hint + "\n"
+            if failure:
+                prefix += ("# Previous attempt failed:\n# " +
+                           failure.replace("\n", "\n# ")[:600] + "\n")
             repair = _sample_and_grade(agent, task, REPAIR_TEMPERATURES,
                                        max_new_tokens, prefix, "repair")
+            for h in repair:
+                h["repair_category_targeted"] = category
 
         all_hyps = hyps + repair
         distinct_candidates = {h["sha1"] for h in all_hyps}
@@ -107,9 +124,20 @@ def divergent_eval(agent, tasks=None, n_hypotheses: int = 3,
             "repair_recovered": repair_recovered,
             "verified_selection": verified[0]["sha1"] if verified else None,
             "verified_candidate_found": bool(verified),
+            "failure_breakdown_round1": failure_breakdown(
+                hyps) if repair_round else None,
+            "seconds_elapsed": round(time.time() - t0, 2),
+            "tokens_used": len(temperatures) * max_new_tokens +
+            len(repair) * max_new_tokens,
         })
 
     total = len(per_task)
+    import collections
+
+    cat_counts: dict[str, int] = collections.Counter()
+    for t in per_task:
+        for c, n in (t.get("failure_breakdown_round1") or {}).items():
+            cat_counts[c] += n
     agg = {
         "kind": "cortex-divergent-reasoning-eval",
         "n_tasks": total,
@@ -131,6 +159,10 @@ def divergent_eval(agent, tasks=None, n_hypotheses: int = 3,
             sum(t["distinct_candidates"] for t in per_task)
             / max(1, sum(len(t["hypotheses_round1"]) + len(t["repair_round"])
                          for t in per_task)), 4),
+        "failure_categories_round1": dict(cat_counts),
+        "tokens_consumed": sum(t["tokens_used"] for t in per_task),
+        "seconds_elapsed": round(
+            sum(t["seconds_elapsed"] for t in per_task), 2),
         "grading": "each hypothesis graded by sandboxed pytest execution",
     }
     return {"aggregate": agg, "per_task": per_task}

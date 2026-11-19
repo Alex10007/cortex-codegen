@@ -1,0 +1,395 @@
+{
+  "kind": "cortex-stage9-coding-benchmarks",
+  "owned_by": "Fibonera",
+  "stage": "F-coding-capability",
+  "fingerprint_v1": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177",
+  "fingerprint_v2": "64ea2c020004af92854aebdde0557678293313b06881fdf5b5abb54e8729c8a3",
+  "fingerprint_v3": "c70feb13b061a35b9b3940296c40ea8365aa57089b325050ef238dc93774ccbb",
+  "decoding": {
+    "temperature": 0.2,
+    "top_k": 50,
+    "max_new_tokens": 180
+  },
+  "grading": "sandboxed pytest execution per candidate; v2 graded via runner_v2 repository checks",
+  "harness_sanity": {
+    "v1_sanity_pass_at_1": 1.0,
+    "v2_sanity_pass_at_1": 1.0,
+    "v3_sanity_pass_at_1": 1.0
+  },
+  "v1_fingerprint_preserved": true,
+  "v2_fingerprint_preserved": true,
+  "subjects": {
+    "dense-control": {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage6/stage6-epoch-002.pt",
+      "v1_pass_at_1": 0.0,
+      "v1": [
+        {
+          "task_id": "t-palindrome",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t-fizzbuzz",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t-wordcount",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        }
+      ],
+      "v2_pass_at_1": 0.0,
+      "v2_compile_ok_rate": 0.2,
+      "v2_per_tier": {
+        "function": 0.0,
+        "debugging": 0.0,
+        "multi-file": 0.0,
+        "repo": 0.0
+      },
+      "v3_report": {
+        "subject": "dense-control",
+        "suite_fingerprint": "c70feb13b061a35b9b3940296c40ea8365aa57089b325050ef238dc93774ccbb",
+        "n_tasks": 12,
+        "pass_at_1": 0.0,
+        "compile_rate": 0.0,
+        "per_family": {
+          "python-algorithms": 0.0,
+          "sql-databases": 0.0,
+          "debugging": 0.0,
+          "test-generation": 0.0,
+          "refactoring": 0.0,
+          "api": 0.0,
+          "security": 0.0,
+          "performance": 0.0,
+          "data-structures": 0.0
+        },
+        "per_task": [
+          {
+            "task_id": "t3-run-length-encode",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "python-algorithms"
+          },
+          {
+            "task_id": "t3-interval-merge",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "python-algorithms"
+          },
+          {
+            "task_id": "t3-sql-sqlite-aggregate",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "sql-databases"
+          },
+          {
+            "task_id": "t3-sql-sqlite-window-free",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "sql-databases"
+          },
+          {
+            "task_id": "t3-debug-off-by-one",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "debugging"
+          },
+          {
+            "task_id": "t3-debug-mutation",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "debugging"
+          },
+          {
+            "task_id": "t3-testgen-cases",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "test-generation"
+          },
+          {
+            "task_id": "t3-refactor-fluent",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "refactoring"
+          },
+          {
+            "task_id": "t3-api-handler",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "api"
+          },
+          {
+            "task_id": "t3-security-safe-substitute",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "security"
+          },
+          {
+            "task_id": "t3-performance-sort-k",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "performance"
+          },
+          {
+            "task_id": "t3-multi-call-node",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "data-structures"
+          }
+        ]
+      }
+    },
+    "joint-stage9": {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/joint-502b-stage9/checkpoints/joint-step-005286.pt",
+      "v1_pass_at_1": 0.0,
+      "v1": [
+        {
+          "task_id": "t-palindrome",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t-fizzbuzz",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t-wordcount",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        }
+      ],
+      "v2_pass_at_1": 0.0,
+      "v2_compile_ok_rate": 0.2,
+      "v2_per_tier": {
+        "function": 0.0,
+        "debugging": 0.0,
+        "multi-file": 0.0,
+        "repo": 0.0
+      },
+      "v3_report": {
+        "subject": "joint-stage9",
+        "suite_fingerprint": "c70feb13b061a35b9b3940296c40ea8365aa57089b325050ef238dc93774ccbb",
+        "n_tasks": 12,
+        "pass_at_1": 0.0,
+        "compile_rate": 0.0,
+        "per_family": {
+          "python-algorithms": 0.0,
+          "sql-databases": 0.0,
+          "debugging": 0.0,
+          "test-generation": 0.0,
+          "refactoring": 0.0,
+          "api": 0.0,
+          "security": 0.0,
+          "performance": 0.0,
+          "data-structures": 0.0
+        },
+        "per_task": [
+          {
+            "task_id": "t3-run-length-encode",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "python-algorithms"
+          },
+          {
+            "task_id": "t3-interval-merge",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "python-algorithms"
+          },
+          {
+            "task_id": "t3-sql-sqlite-aggregate",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "sql-databases"
+          },
+          {
+            "task_id": "t3-sql-sqlite-window-free",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "sql-databases"
+          },
+          {
+            "task_id": "t3-debug-off-by-one",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "debugging"
+          },
+          {
+            "task_id": "t3-debug-mutation",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "debugging"
+          },
+          {
+            "task_id": "t3-testgen-cases",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "test-generation"
+          },
+          {
+            "task_id": "t3-refactor-fluent",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "refactoring"
+          },
+          {
+            "task_id": "t3-api-handler",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "api"
+          },
+          {
+            "task_id": "t3-security-safe-substitute",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "security"
+          },
+          {
+            "task_id": "t3-performance-sort-k",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "performance"
+          },
+          {
+            "task_id": "t3-multi-call-node",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "data-structures"
+          }
+        ]
+      }
+    }
+  },
+  "v1_integrity": {
+    "status": "unmodified",
+    "fingerprint": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177"
+  }
+}
