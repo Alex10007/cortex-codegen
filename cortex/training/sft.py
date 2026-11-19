@@ -165,11 +165,19 @@ def fine_tune(config_name: str, tokenizer_path: str, dataset_jsonl: str,
               init_checkpoint: str | None, out_dir: str,
               epochs: int = 2, batch_size: int = 8, lr: float = 1e-4,
               seed: int = 7, keep_checkpoints: int = 2,
-              log_every: int = 10) -> dict[str, Any]:
+              log_every: int = 10,
+              chunk_long_records: bool = False) -> dict[str, Any]:
+    import time
+
     import torch
 
     from cortex.training.engine import set_seed
     from cortex.tokenizer.cortex_tokenizer import load_tokenizer
+
+    if chunk_long_records:
+        from cortex.training.longcontext import make_batch_chunked as _mb
+    else:
+        _mb = make_batch
 
     set_seed(seed)
     cfg = CONFIGS[config_name]
@@ -202,21 +210,28 @@ def fine_tune(config_name: str, tokenizer_path: str, dataset_jsonl: str,
         rng.shuffle(order)
         for i in range(0, len(order), batch_size):
             idxs = order[i:i + batch_size]
-            x, y = make_batch([train_recs[j] for j in idxs], tok, cfg.max_seq_len)
+            x, y = _mb([train_recs[j] for j in idxs], tok, cfg.max_seq_len)
             if x is None:
                 continue
+            t0 = time.time()
             _, loss = model(x, y, pad_mask=x == tok.pad_id)
             opt.zero_grad(set_to_none=True)
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(),
+                                                       1.0)
             opt.step()
             step += 1
             losses.append(float(loss.detach()))
             if step % log_every == 0:
+                tokens_per_s = round(x.shape[0] * x.shape[1]
+                                     / max(time.time() - t0, 1e-9), 1)
                 with open(metrics_path, "a", encoding="utf-8") as fh:
                     fh.write(json.dumps(
                         {"step": step, "epoch": epoch,
-                         "train_loss": losses[-1]}) + "\n")
+                         "train_loss": losses[-1],
+                         "grad_norm": float(grad_norm),
+                         "tokens_per_s": tokens_per_s,
+                         "batch_rows": int(x.shape[0])}) + "\n")
         hl = evaluate_heldout(model, test_recs, tok, cfg.max_seq_len)
         heldout_losses.append(hl)
         payload = {"model": config_name, "step": step, "epoch": epoch,

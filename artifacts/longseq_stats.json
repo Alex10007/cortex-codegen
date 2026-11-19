@@ -1,0 +1,117 @@
+{
+  "stats_by_seq_len": {
+    "256": {
+      "seq_len": 256,
+      "splits": {
+        "train": {
+          "records": 241,
+          "fit_unmodified": 74,
+          "recovered_by_chunking": 111,
+          "legacy_trainable": 74,
+          "trainable_with_chunking": 185,
+          "instruction_too_long_untrainable": 56,
+          "legacy_drop_rate": 0.6929,
+          "remaining_exclusion_rate": 0.2324
+        },
+        "val": {
+          "records": 26,
+          "fit_unmodified": 6,
+          "recovered_by_chunking": 17,
+          "legacy_trainable": 6,
+          "trainable_with_chunking": 23,
+          "instruction_too_long_untrainable": 3,
+          "legacy_drop_rate": 0.7692,
+          "remaining_exclusion_rate": 0.1154
+        },
+        "heldout": {
+          "records": 65,
+          "fit_unmodified": 16,
+          "recovered_by_chunking": 35,
+          "legacy_trainable": 16,
+          "trainable_with_chunking": 51,
+          "instruction_too_long_untrainable": 14,
+          "legacy_drop_rate": 0.7538,
+          "remaining_exclusion_rate": 0.2154
+        }
+      }
+    },
+    "2048": {
+      "seq_len": 2048,
+      "splits": {
+        "train": {
+          "records": 241,
+          "fit_unmodified": 241,
+          "recovered_by_chunking": 0,
+          "legacy_trainable": 241,
+          "trainable_with_chunking": 241,
+          "instruction_too_long_untrainable": 0,
+          "legacy_drop_rate": 0.0,
+          "remaining_exclusion_rate": 0.0
+        },
+        "val": {
+          "records": 26,
+          "fit_unmodified": 26,
+          "recovered_by_chunking": 0,
+          "legacy_trainable": 26,
+          "trainable_with_chunking": 26,
+          "instruction_too_long_untrainable": 0,
+          "legacy_drop_rate": 0.0,
+          "remaining_exclusion_rate": 0.0
+        },
+        "heldout": {
+          "records": 65,
+          "fit_unmodified": 65,
+          "recovered_by_chunking": 0,
+          "legacy_trainable": 65,
+          "trainable_with_chunking": 65,
+          "instruction_too_long_untrainable": 0,
+          "legacy_drop_rate": 0.0,
+          "remaining_exclusion_rate": 0.0
+        }
+      }
+    },
+    "8192": {
+      "seq_len": 8192,
+      "splits": {
+        "train": {
+          "records": 241,
+          "fit_unmodified": 241,
+          "recovered_by_chunking": 0,
+          "legacy_trainable": 241,
+          "trainable_with_chunking": 241,
+          "instruction_too_long_untrainable": 0,
+          "legacy_drop_rate": 0.0,
+          "remaining_exclusion_rate": 0.0
+        },
+        "val": {
+          "records": 26,
+          "fit_unmodified": 26,
+          "recovered_by_chunking": 0,
+          "legacy_trainable": 26,
+          "trainable_with_chunking": 26,
+          "instruction_too_long_untrainable": 0,
+          "legacy_drop_rate": 0.0,
+          "remaining_exclusion_rate": 0.0
+        },
+        "heldout": {
+          "records": 65,
+          "fit_unmodified": 65,
+          "recovered_by_chunking": 0,
+          "legacy_trainable": 65,
+          "trainable_with_chunking": 65,
+          "instruction_too_long_untrainable": 0,
+          "legacy_drop_rate": 0.0,
+          "remaining_exclusion_rate": 0.0
+        }
+      }
+    }
+  },
+  "completion_coverage_demo_seq_len": {
+    "complete": true,
+    "total_completion_targets": 35857
+  },
+  "chunking_reclaims_records": 111,
+  "instruction_alone_too_long_count": 56,
+  "example_untrainable_record": "Context.max",
+  "note": "supervised targets remain exactly the completion tokens in every window; instruction tokens masked -100; prompts that alone exceed the window are counted, never truncated"
+}

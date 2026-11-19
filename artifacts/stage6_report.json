@@ -1,0 +1,371 @@
+{
+  "lineage": {
+    "checkpoint_lineage_complete": true,
+    "missing": [],
+    "v1_benchmark_integrity": {
+      "status": "unmodified",
+      "fingerprint": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177"
+    }
+  },
+  "benchmark_fingerprints": {
+    "v1": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177",
+    "v1_status": "unmodified",
+    "v2_fingerprint": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177"
+  },
+  "gpu_hardware": {
+    "measured": {
+      "cores": 5,
+      "ram_bytes": 6359416832,
+      "ram_gb": 6.36,
+      "disk_free_gb": 5867.09,
+      "cuda": {
+        "available": false,
+        "device_count": 0,
+        "names": [],
+        "bf16_supported": false
+      },
+      "cpu_bf16_autocast_executed_ok": true
+    },
+    "cluster_matrix_2b": {
+      "config": "cortex-2b",
+      "params": 2056012800,
+      "batch_size": 8,
+      "seq_len": 8192,
+      "plans": [
+        {
+          "world_size": 2,
+          "sharding": "ZeRO-3 / FSDP full shard",
+          "micro_batch": 4,
+          "per_gpu_state_gb": 16.45,
+          "per_gpu_activation_gb_est": 96.64,
+          "per_gpu_total_gb_est": 113.08,
+          "fits_40gb_gpu": false,
+          "fits_80gb_gpu": false
+        },
+        {
+          "world_size": 4,
+          "sharding": "ZeRO-3 / FSDP full shard",
+          "micro_batch": 2,
+          "per_gpu_state_gb": 8.22,
+          "per_gpu_activation_gb_est": 48.32,
+          "per_gpu_total_gb_est": 56.54,
+          "fits_40gb_gpu": false,
+          "fits_80gb_gpu": true
+        },
+        {
+          "world_size": 8,
+          "sharding": "ZeRO-3 / FSDP full shard",
+          "micro_batch": 1,
+          "per_gpu_state_gb": 4.11,
+          "per_gpu_activation_gb_est": 24.16,
+          "per_gpu_total_gb_est": 28.27,
+          "fits_40gb_gpu": true,
+          "fits_80gb_gpu": true
+        }
+      ],
+      "cpu_offload_optimizer": true,
+      "note": "per-GPU arithmetic; measured only on GPU infrastructure during a real run"
+    },
+    "phase_b_pretraining_gate": {
+      "config": "cortex-2b",
+      "params": 2056012800,
+      "gpus_present": 0,
+      "gpus_required": 8,
+      "status": "BLOCKED: this host measured cuda=False, devices=0; the 2B run must execute on the Fibonera GPU cluster (8 x 40 GB or 4 x 80 GB). Nothing simulated."
+    }
+  },
+  "long_sequence_resolution": {
+    "stats_by_seq_len": {
+      "256": {
+        "seq_len": 256,
+        "splits": {
+          "train": {
+            "records": 241,
+            "fit_unmodified": 74,
+            "recovered_by_chunking": 111,
+            "legacy_trainable": 74,
+            "trainable_with_chunking": 185,
+            "instruction_too_long_untrainable": 56,
+            "legacy_drop_rate": 0.6929,
+            "remaining_exclusion_rate": 0.2324
+          },
+          "val": {
+            "records": 26,
+            "fit_unmodified": 6,
+            "recovered_by_chunking": 17,
+            "legacy_trainable": 6,
+            "trainable_with_chunking": 23,
+            "instruction_too_long_untrainable": 3,
+            "legacy_drop_rate": 0.7692,
+            "remaining_exclusion_rate": 0.1154
+          },
+          "heldout": {
+            "records": 65,
+            "fit_unmodified": 16,
+            "recovered_by_chunking": 35,
+            "legacy_trainable": 16,
+            "trainable_with_chunking": 51,
+            "instruction_too_long_untrainable": 14,
+            "legacy_drop_rate": 0.7538,
+            "remaining_exclusion_rate": 0.2154
+          }
+        }
+      },
+      "2048": {
+        "seq_len": 2048,
+        "splits": {
+          "train": {
+            "records": 241,
+            "fit_unmodified": 241,
+            "recovered_by_chunking": 0,
+            "legacy_trainable": 241,
+            "trainable_with_chunking": 241,
+            "instruction_too_long_untrainable": 0,
+            "legacy_drop_rate": 0.0,
+            "remaining_exclusion_rate": 0.0
+          },
+          "val": {
+            "records": 26,
+            "fit_unmodified": 26,
+            "recovered_by_chunking": 0,
+            "legacy_trainable": 26,
+            "trainable_with_chunking": 26,
+            "instruction_too_long_untrainable": 0,
+            "legacy_drop_rate": 0.0,
+            "remaining_exclusion_rate": 0.0
+          },
+          "heldout": {
+            "records": 65,
+            "fit_unmodified": 65,
+            "recovered_by_chunking": 0,
+            "legacy_trainable": 65,
+            "trainable_with_chunking": 65,
+            "instruction_too_long_untrainable": 0,
+            "legacy_drop_rate": 0.0,
+            "remaining_exclusion_rate": 0.0
+          }
+        }
+      },
+      "8192": {
+        "seq_len": 8192,
+        "splits": {
+          "train": {
+            "records": 241,
+            "fit_unmodified": 241,
+            "recovered_by_chunking": 0,
+            "legacy_trainable": 241,
+            "trainable_with_chunking": 241,
+            "instruction_too_long_untrainable": 0,
+            "legacy_drop_rate": 0.0,
+            "remaining_exclusion_rate": 0.0
+          },
+          "val": {
+            "records": 26,
+            "fit_unmodified": 26,
+            "recovered_by_chunking": 0,
+            "legacy_trainable": 26,
+            "trainable_with_chunking": 26,
+            "instruction_too_long_untrainable": 0,
+            "legacy_drop_rate": 0.0,
+            "remaining_exclusion_rate": 0.0
+          },
+          "heldout": {
+            "records": 65,
+            "fit_unmodified": 65,
+            "recovered_by_chunking": 0,
+            "legacy_trainable": 65,
+            "trainable_with_chunking": 65,
+            "instruction_too_long_untrainable": 0,
+            "legacy_drop_rate": 0.0,
+            "remaining_exclusion_rate": 0.0
+          }
+        }
+      }
+    },
+    "completion_coverage_demo_seq_len": {
+      "complete": true,
+      "total_completion_targets": 35857
+    },
+    "chunking_reclaims_records": 111,
+    "instruction_alone_too_long_count": 56,
+    "example_untrainable_record": "Context.max",
+    "note": "supervised targets remain exactly the completion tokens in every window; instruction tokens masked -100; prompts that alone exceed the window are counted, never truncated"
+  },
+  "fsdp_validation": {
+    "backend": "gloo",
+    "mesh_device": "cpu",
+    "world_size": 2,
+    "steps": 6,
+    "per_rank": [
+      {
+        "rank": 0,
+        "start_step": 0,
+        "steps": 6,
+        "loss_first": 10.418895721435547,
+        "loss_last": 9.959131240844727,
+        "losses_finite": true,
+        "grad_norm_last": 3.6794681549072266,
+        "grad_norms_finite": true,
+        "tokens_per_s_last": 1412.6,
+        "mesh_device": "cpu",
+        "sharded_param_local_numel_sample": 55296,
+        "sample_param_full_numel": 110592,
+        "checksum_spread": 0.0,
+        "memory": {
+          "peak_rss_mb": 865.4
+        }
+      },
+      {
+        "rank": 1,
+        "start_step": 0,
+        "steps": 6,
+        "loss_first": 10.438101768493652,
+        "loss_last": 9.990789413452148,
+        "losses_finite": true,
+        "grad_norm_last": 3.6794681549072266,
+        "grad_norms_finite": true,
+        "tokens_per_s_last": 1416.6,
+        "mesh_device": "cpu",
+        "sharded_param_local_numel_sample": 55296,
+        "sample_param_full_numel": 110592,
+        "checksum_spread": 0.0,
+        "memory": {
+          "peak_rss_mb": 859.7
+        }
+      }
+    ],
+    "loss_first": 10.418895721435547,
+    "loss_last": 9.959131240844727,
+    "max_checksum_spread_across_ranks": 0.0,
+    "sharding_verified": true,
+    "rank0_full_state_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/fsdp-validation/fsdp-final-rank0.pt",
+    "full_state_reloaded_into_plain_model": true,
+    "wall_time_s": 7.24,
+    "resume": {
+      "steps": 2,
+      "resumed_from_step": 6,
+      "resumed_ok": true,
+      "loss_last": 9.827215194702148,
+      "losses_finite": true,
+      "grad_norms_finite": true,
+      "max_checksum_spread_across_ranks": 0.0
+    }
+  },
+  "launcher_mechanics": {
+    "demo_launch_exit": 0,
+    "demo_launch_completed": true,
+    "demo_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/launcher-smoke-demo/fsdp-final-rank0.pt",
+    "demo_checkpoint_exists": true,
+    "cortex2b_exit": 2,
+    "cortex2b_refused_by_gate": true
+  },
+  "staged_training": [
+    {
+      "epoch": 1,
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage6/stage6-epoch-001.pt",
+      "init_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage5/stage5-epoch-004.pt",
+      "heldout_loss": 3.3426399661725856,
+      "v1_pass_at_1": 0.0,
+      "v1_nonempty": 1.0,
+      "v1_syntactically_valid": 0.0,
+      "v2_pass_at_1": 0.0,
+      "v2_compile_ok_rate": 0.2,
+      "v2_executed_rate": 1.0,
+      "monitoring_last": {
+        "step": 30,
+        "epoch": 1,
+        "train_loss": 4.303116798400879,
+        "grad_norm": 1.9980515241622925,
+        "tokens_per_s": 5496.2,
+        "batch_rows": 15
+      }
+    },
+    {
+      "epoch": 2,
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage6/stage6-epoch-002.pt",
+      "init_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage6/stage6-epoch-001.pt",
+      "heldout_loss": 3.301536311169939,
+      "v1_pass_at_1": 0.0,
+      "v1_nonempty": 1.0,
+      "v1_syntactically_valid": 0.0,
+      "v2_pass_at_1": 0.0,
+      "v2_compile_ok_rate": 0.2,
+      "v2_executed_rate": 1.0,
+      "monitoring_last": {
+        "step": 30,
+        "epoch": 1,
+        "train_loss": 4.238329887390137,
+        "grad_norm": 1.9748860597610474,
+        "tokens_per_s": 5283.5,
+        "batch_rows": 15
+      }
+    }
+  ],
+  "monitoring": {
+    "metrics_rows_last_epoch": 24,
+    "grad_norm_and_throughput_recorded": true,
+    "fsdp_tokens_per_s_last": 1412.6,
+    "fsdp_grad_norm_last": 3.6794681549072266,
+    "fsdp_memory": {
+      "peak_rss_mb": 865.4
+    }
+  },
+  "failure_taxonomy": {
+    "compile_stage": {
+      "stage": "syntax-error",
+      "generated_head": "\n\n    >>> list(1.0.1(1)\n    \"\"\"\n    return None\n    return a_name\n<|endoftext|>\n    return a\n<|endoftext|>\n<|endoftext|>\ndef _is_args(func)\n<|endoftext|>\n<|endoftext|>\ndef _args(func)\n    return _get_args(args, _get_args)\n<|endoftext|>\n<|endoftext|>\ndef _args(value, _args, **kwargs):\n    \"\"\"\n    return _args_args(func)\n    return _args\n<|endoftext|>\n<|endoftext|>\n<|endoftext|>\n<|endoftext|>\n<|endo",
+      "text_head": "\n\n    >>> list(1.0.1(1)\n    \"\"\"\n    return None\n    return a_name\n<|endoftext|>\n    return a\n<|endoftext|>\n<|endoftext|>\ndef _is_args(func)\n<|endoftext|>\n<|endoftext|>\ndef _args(func)\n    return _get_args(args, _get_args)\n<|endoftext|>\n<|endoftext|>\ndef _args(value, _args, **kwargs):\n    \"\"\"\n    return _args_args(func)\n    return _args\n<|endoftext|>\n<|endoftext|>\n<|endoftext|>\n<|endoftext|>\n<|endo"
+    },
+    "decode_ablation": {
+      "greedy": {
+        "passed": false,
+        "generated_head": "\n\n    >>> list(iterable(iterable)\n    >>> list(iterable)\n    >>> list(iterable)\n    >>> list(iterable)\n    >>> list(iterable)\n    >>> list(iterable)\n    >>> list(iterable)\n    >>> list(iterable)\n    >>> list(iterable)\n    >>> list(iterable)"
+      },
+      "temp02-k50": {
+        "passed": false,
+        "generated_head": "\n\n    >>> list(func(b)\n    >>> list(iterable)\n    >>> list(data)\n    >>> list(data)\n    \"\"\"\n    return _get(data)\n    return self.get(data)\n    return self.get(data)\n    return self.get(data)\n    return self.get(self)\n    return self._get(s"
+      },
+      "temp07-k50": {
+        "passed": false,
+        "generated_head": "\n\n    \"\"\"\n    return self.read(get___(args):\n        return _items(\n                (object):\n            return list(s)\n        if len(self) in self._items_name()\n        return c\n    if len(self) == len(data)\n<|endoftext|>\n<|endoftext|>\nd"
+      }
+    },
+    "teacher_forced_token_accuracy_heldout": 0.4698
+  },
+  "knowledge_expansion": {
+    "patterns_ingested_this_stage": 0,
+    "capacity": {
+      "stored": 79034,
+      "indexed": 79034,
+      "retrievable": 49001,
+      "retrieval_recall_at_5": 0.62,
+      "probe_attempts": 200,
+      "probe_hits": 124,
+      "validated": 329
+    }
+  },
+  "promotion": {
+    "promoted": false,
+    "reasons": [
+      "pass@1 did not improve by >= 0.1 (base=0.0, cand=0.0)"
+    ],
+    "baseline": {
+      "pass_at_1": 0.0,
+      "val_loss": 3.3936574976596807
+    },
+    "candidate": {
+      "pass_at_1": 0.0,
+      "compile_ok_rate": 0.2,
+      "executed_rate": 1.0,
+      "per_tier": {},
+      "val_loss": 3.301536311169939
+    },
+    "baseline_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage5/stage5-epoch-004.pt",
+    "candidate_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage6/stage6-epoch-002.pt"
+  },
+  "owned_by": "Fibonera",
+  "config_training_status": {
+    "cortex-2b": "DECLARED-NOT-TRAINED (2B run requires the GPU infrastructure measured in stage 6; launcher refused on this host by the hardware gate)",
+    "cortex-demo": "trained (8,071,296 params, real checkpoints + evals)"
+  }
+}

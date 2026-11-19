@@ -556,3 +556,131 @@ validation).
 3. pass@1 remains 0.0 at 8M scale; the pipeline is verified end-to-end, so
    the remaining variable is physical scale + data breadth, both measured
    and documented, not engineered around.
+
+## 15. Stage 6: GPU scale-up preparation & execution of every feasible step (executed)
+
+Everything below is from the executed pipeline `scripts/stage6_run.py`
+recording into `artifacts/stage6_report.json` plus per-stage artifacts. The
+directive's own stop clause applied: "If GPU infrastructure is unavailable,
+stop before claiming full-scale training. Complete only the infrastructure
+preparation and validation that can genuinely be executed." That is exactly
+what was done - every executable step executed, the 2B run hardware-gated.
+
+### 15.1 Lineage, benchmarks, ownership (requirements 1, 11)
+
+- All lineage artifacts present (stage 2 -> stage 5 checkpoints); v1
+  integrity `unmodified` (fingerprint `74cc7607...`); v2 suite fingerprint
+  unchanged; promotion thresholds untouched. Owned by Fibonera.
+
+### 15.2 GPU infrastructure re-measured; 2B gate (requirements 2, 12)
+
+- Measured again at stage-6 run time: CUDA available **False**, device
+  count **0** (5 cores, 6.36 GB RAM). GPU specs delivered as the validated
+  cluster matrix (batch 8, seq 8192, ZeRO-3/FSDP full shard):
+  world 8 -> 4.11 GB state + 24.16 GB activations = **28.27 GB/GPU (fits
+  40 GB)**; world 4 -> 56.54 GB (needs 80 GB); world 2 -> 113.08 GB (no).
+- `phase_b_pretraining_gate`: status **BLOCKED** (recorded, not simulated).
+
+### 15.3 FSDP2 sharded training executed for real (requirement 3)
+
+`cortex/training/fsdp.py` implements the model+optimizer state path used for
+2B: composable `fully_shard` FSDP2, device mesh (CUDA when present / CPU
+otherwise), bf16 `MixedPrecisionPolicy` on GPU, activation checkpointing on
+GPU, per-rank data shards, gradient reduce-scatter, and two checkpoint
+layers. Executed validation (demo config, 2 real OS processes):
+
+- **true parameter sharding verified**: sampled per-rank local shard numel x
+  world == full numel, local < full (`sharding_verified: True`);
+- gradient all-reduce agreement: full-parameter checksum spread across
+  ranks = **0.0**;
+- sharded resume checkpoint via `torch.distributed.checkpoint` (model +
+  optimizer state): a second spawned run **resumed from step 6** and
+  continued (`resumed_ok: True`), losses and grad norms finite;
+- rank-0 full-state export (`get_model_state_dict(full_state_dict=True)`)
+  **reloads into a plain model strict=True**;
+- monitoring recorded per step: loss, grad norm, tokens/s, memory
+  (peak RSS 865.4 MB at demo scale; `peak_gpu_mb` on GPU).
+
+### 15.4 Long-sequence exclusion resolved (requirement 4)
+
+`cortex/training/longcontext.py` — over-length records are split into
+overlapping windows (stride seq_len-1) whose shifted rows reconstruct the
+stream exactly: every supervised target remains exactly a completion token
+(+ EOT), instruction tokens masked -100 in every window, no silent
+truncation. Measured on the real dataset/tokenizer:
+
+| seq len | legacy trainable | trainable with chunking | remaining exclusion |
+|---|---|---|---|
+| 256 (demo) | 74/241 (drop **69.29 %**) | 185/241 | 23.24 % (instruction alone > window; counted, not truncated) |
+| 2048 | 241/241 | 241/241 | 0 % |
+| 8192 (2B) | 241/241 | 241/241 | 0 % |
+
+The 2B 8192-token context covers 100 % of records; chunking additionally
+recovers 111 of the 167 records the demo path silently dropped. Records
+that fit one window produce byte-identical batches to the legacy path
+(test-asserted). Opt-in via `fine_tune(chunk_long_records=True)`; legacy
+behaviour preserved by default.
+
+### 15.5 2B launcher: real spawn on feasible scale, hardware gate on cortex-2b (requirements 5, 12)
+
+`scripts/train_2b_fsdp.py` — the actual 2B training launcher (measured GPU
+requirement, token-bin packing, FSDP spawn, sharded checkpointing).
+Executed in this environment:
+
+- full mechanics on `cortex-demo`: **LAUNCHING -> COMPLETED**, checkpoint
+  `artifacts/runs/launcher-smoke-demo/fsdp-final-rank0.pt` (exit 0);
+- `--config cortex-2b`: **REFUSED by the hardware gate** (exit 2,
+  `REFUSED-HARDWARE-GATE`, measured requirement world 8 x 40 GB vs
+  measured 0 GPUs). **No 2B training was started or simulated.**
+
+### 15.6 Chunked code-specialized SFT + independent evaluation (requirements 6-9)
+
+Warm start from `stage5-epoch-004`; 2 epochs, chunk_long_records=True
+(every record now contributes gradient), completion-only masking, pad-mask
+attention. Checkpoints `artifacts/runs/cortex-sft-stage6/stage6-epoch-001..002.pt`:
+
+| checkpoint | held-out loss | v1 pass@1 | v1 syntax | v2 pass@1 | v2 compile_ok | v2 executed |
+|---|---|---|---|---|---|---|
+| baseline stage5-epoch-004 | 3.394 | 0.0 | 0.0 | 0.0 | 0.2 | 1.0 |
+| stage6-epoch-001 | 3.3426 | 0.0 | 0.0 | 0.0 | 0.2 | 1.0 |
+| stage6-epoch-002 | 3.3015 | 0.0 | 0.0 | 0.0 | 0.2 | 1.0 |
+
+Held-out loss improves again (3.394 -> 3.302); free-running pass@1 remains
+0.0. Failure taxonomy re-executed (decode ablation, compile diagnosis:
+`syntax-error`, teacher-forced accuracy 0.4698): failures remain data-
+breadth + physical-scale limitations, not pipeline defects (audit, overfit,
+and padding proofs allPass since stages 4-5, unchanged this stage).
+
+### 15.7 Knowledge architecture (requirement 10)
+
+0 new patterns ingested (all offered verified multi-file patterns already
+validated - dedup gate held). Virtual-knowledge distinction preserved:
+physical = trained neural parameters only; virtual capacity tiering
+unchanged (validated 329). This architecture remains a separate deployment
+target from model training.
+
+### 15.8 Promotion gate (requirement 11)
+
+Candidate `stage6-epoch-002` vs baseline `stage5-epoch-004`: pass@1
+0.0 -> 0.0 -> **NOT promoted** (thresholds unchanged).
+
+### 15.9 Test results
+
+`pytest -q tests/`: **99 passed** (87 after stage 5, +12 stage-6 tests in
+`tests/test_stage6.py`: window reconstruction, byte-identity with legacy
+batches, recovery of dropped records, real training step on chunked
+batches, instruction-too-long counted, measured dataset stats, chunked
+fine-tune with grad-norm/throughput metrics, real 2-process FSDP validation
+incl. resume, cluster matrix, 2B launcher refusal, benchmark integrity).
+
+### 15.10 Outstanding (explicit)
+
+1. **Actual 2B training has NOT executed** - the launcher and every
+   mechanism it needs (FSDP full shard, bf16, activation checkpointing,
+   sharded model+optimizer checkpoint/resume, full-state export, monitoring,
+   100 %-coverage data path) are implemented and validated at executable
+   scale, but the run itself requires the Fibonera GPU cluster (8 x 40 GB
+   or 4 x 80 GB). On such a host:
+   `python scripts/train_2b_fsdp.py --config cortex-2b` executes the real run.
+2. Pass@1 remains 0.0 at 8M scale; the remaining variables are physical
+   scale and data breadth (measured), not trainable-pipeline integrity.

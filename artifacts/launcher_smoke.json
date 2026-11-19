@@ -1,0 +1,8 @@
+{
+  "demo_launch_exit": 0,
+  "demo_launch_completed": true,
+  "demo_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/launcher-smoke-demo/fsdp-final-rank0.pt",
+  "demo_checkpoint_exists": true,
+  "cortex2b_exit": 2,
+  "cortex2b_refused_by_gate": true
+}
