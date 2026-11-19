@@ -58,5 +58,6 @@ def test_harvest_only_emits_verified_pairs(tmp_path):
     assert "broken_add" not in names
     assert "quiet" not in names
     for p in pairs:
-        assert p["provenance"]["license"] == "Python-2.0 / PSF"
+        assert p["provenance"]["license"] == "project-local"
+        assert p["provenance"]["source_uri"].startswith("file://")
         assert p["instruction"].startswith("Implement the Python function")

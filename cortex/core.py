@@ -70,6 +70,12 @@ class CortexAgent:
             _ = MODEL_STATUS
         return self._model
 
+    def load_checkpoint(self, checkpoint_path: str) -> str:
+        """Point the agent at a checkpoint and force a model reload."""
+        self.checkpoint_path = checkpoint_path
+        self._model = None
+        return self.model.__class__.__name__
+
     def generate(self, prompt: str, max_new_tokens: int = 64,
                  temperature: float = 0.8) -> str:
         import torch

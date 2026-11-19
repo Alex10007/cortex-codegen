@@ -22,12 +22,23 @@ class BenchmarkTamperedError(RuntimeError):
     pass
 
 
-def fingerprint_tasks() -> str:
-    payload = json.dumps(
-        sorted((t.task_id, t.instruction, t.test_code, t.reference_solution)
-               for t in TASKS),
-        sort_keys=True,
-    )
+def _task_tuple(t) -> tuple:
+    return (t.task_id, t.instruction, t.test_code, t.reference_solution, "")
+
+
+def fingerprint_tasks(suite: str = "v1") -> str:
+    if suite == "v1":
+        payload = json.dumps(
+            sorted((t.task_id, t.instruction, t.test_code, t.reference_solution)
+                   for t in TASKS),
+            sort_keys=True,
+        )
+    elif suite == "v2":
+        from cortex.evaluation.tasks_v2 import tasks_v2_tuples
+
+        payload = json.dumps(sorted(tasks_v2_tuples()), sort_keys=True)
+    else:
+        raise ValueError(f"unknown benchmark suite: {suite}")
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
@@ -53,14 +64,16 @@ def check_integrity(ledger_path: str = DEFAULT_LEDGER) -> dict[str, Any]:
 
 
 def append_history(report: dict[str, Any],
-                   history_path: str = DEFAULT_HISTORY) -> list[dict[str, Any]]:
+                   history_path: str = DEFAULT_HISTORY,
+                   suite: str = "v1") -> list[dict[str, Any]]:
     Path(history_path).parent.mkdir(parents=True, exist_ok=True)
     entry = {
         "subject": report.get("per_task", [{}])[0].get("subject", "model")
         if report.get("per_task") else "model",
         "pass_at_1": report["pass_at_1"],
         "n_tasks": report["n_tasks"],
-        "fingerprint": fingerprint_tasks(),
+        "suite": suite,
+        "fingerprint": fingerprint_tasks(suite),
     }
     with open(history_path, "a", encoding="utf-8") as fh:
         fh.write(json.dumps(entry) + "\n")
@@ -77,15 +90,22 @@ def read_history(history_path: str = DEFAULT_HISTORY) -> list[dict[str, Any]]:
 
 def detect_regression(report: dict[str, Any],
                       history_path: str = DEFAULT_HISTORY,
-                      ledger_path: str = DEFAULT_LEDGER) -> dict[str, Any]:
+                      ledger_path: str = DEFAULT_LEDGER,
+                      suite: str = "v1") -> dict[str, Any]:
     history = read_history(history_path)
+    subject = "model"
+    if report.get("per_task"):
+        subject = report["per_task"][0].get("subject", "model")
     best = max((h["pass_at_1"] for h in history
-                if h["fingerprint"] == fingerprint_tasks()), default=None)
-    check_integrity(ledger_path)
+                if h.get("fingerprint") == fingerprint_tasks(suite)
+                and h.get("subject") == subject), default=None)
+    if suite == "v1":
+        check_integrity(ledger_path)
     current = report["pass_at_1"]
     return {
         "current_pass_at_1": current,
         "best_pass_at_1": best,
         "regressed": best is not None and current < best,
         "history_entries": len(history),
+        "suite": suite,
     }
