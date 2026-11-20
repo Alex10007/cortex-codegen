@@ -135,6 +135,8 @@ def test_legacy_slot_without_shape_or_optimizer_is_reported_unknown(small_store)
     manifest.pop("initialized_slot_shapes")
     small_store.manifest_path.write_text(json.dumps(manifest))
     small_store.manifest = manifest
+    # Simulate a fresh process with no live tensor object to establish shape.
+    small_store._slots.clear()
     accounting = small_store.accounting()
     assert accounting["initialized"] == 0
     assert accounting["initialized_unknown_rows"] == 1
@@ -232,6 +234,7 @@ def test_orphan_optimizer_state_is_not_counted_as_trained(small_store):
     assert accounting["invariants_hold"] is False
     assert coverage["persisted_optimizer_scan"]["orphan_optimizer_slots"] == 1
     assert coverage["scalars"]["optimizer_updated"] == 0
+    assert coverage["invariants_hold"] is False
     with pytest.raises(RuntimeError, match="orphan optimizer state"):
         small_store.slot_state(4, 5, dim=32, rank=4)
 
