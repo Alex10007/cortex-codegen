@@ -83,3 +83,15 @@ def test_create_rejects_nonpositive_limits(tmp_path):
     root = make_fake_cgroup_root(tmp_path / "delegated")
     with pytest.raises(ValueError):
         CgroupV2.create(root, mem_mb=0, nproc=4)
+
+
+
+def test_full_isolation_refuses_to_launch_without_delegated_cgroup(monkeypatch):
+    from cortex.execution import sandbox
+
+    monkeypatch.setattr(sandbox, "_supports_bwrap", lambda: True)
+    monkeypatch.setattr(sandbox.shutil, "which", lambda name: "/usr/bin/bwrap")
+    monkeypatch.setattr(sandbox, "configured_cgroup_root", lambda: None)
+    with pytest.raises(sandbox.NetworkIsolationUnavailable, match="CORTEX_CGROUP_ROOT"):
+        sandbox.run(code="raise SystemExit('must not execute')",
+                    require_full_isolation=True)
