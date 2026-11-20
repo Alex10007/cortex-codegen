@@ -187,9 +187,18 @@ class CortexAgent:
                             "evidence": "no items ingested yet"})
         reports.append({"engine": "MemoryEngine", "status": "operational",
                         "evidence": str(self.state_dir / "memory.db")})
-        reports.append({"engine": "Sandbox", "status": "operational",
-                        "evidence": "unshare -rn supported on this kernel: "
-                        + str(_unshare_supported())})
+        from cortex.execution.sandbox import _supports_bwrap
+        hardened = _supports_bwrap()
+        reports.append({
+            "engine": "Sandbox",
+            "status": ("hardened-available" if hardened else
+                       "degraded-only; API execution disabled"),
+            "evidence": {
+                "bubblewrap_user_pid_network_namespaces": hardened,
+                "network_namespace_only": _unshare_supported(),
+                "api_requires_full_isolation": True,
+            },
+        })
         return reports
 
 
