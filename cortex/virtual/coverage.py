@@ -86,54 +86,65 @@ def measure(store: vstore.VirtualParameterStore,
     unknown_shape_rows = max(0, rows_total - known_shape_rows)
     participation = participation or []
 
-    # live in-process slot state (this session only)
-    live_activated_params = 0
-    live_grad_params = 0
+    # Build exact per-slot scalar shapes and identity sets. Never estimate a
+    # union with max(counts): overlapping evidence must be deduplicated by
+    # (bank,row), and legacy rows without shape evidence remain unknown.
+    shape_by_key = {}
+    for bank_s, rows in slot_shapes.items():
+        for row_s, shape in rows.items():
+            shape_by_key[(int(bank_s), int(row_s))] = int(shape["scalars"])
+
+    committed_keys = {
+        (int(bank_s), int(row_s))
+        for bank_s, rows in committed.items() for row_s in rows
+    }
+    live_keys = set(store._slots)
+    live_grad_keys = set()
+    live_shape = {}
     scalars_with_grad = 0
-    for st in store._slots.values():
-        n = st.A.numel() + st.B.numel()
-        live_activated_params += n
-        g_nonzero = 0
+    for key, st in store._slots.items():
+        live_shape[key] = st.A.numel() + st.B.numel()
+        g_count = 0
         if st.A.grad is not None:
-            g_nonzero += int((st.A.grad.abs() > 0).sum())
+            g_count += int((st.A.grad.abs() > 0).sum())
         if st.B.grad is not None:
-            g_nonzero += int((st.B.grad.abs() > 0).sum())
-        scalars_with_grad += g_nonzero
-        if g_nonzero:
-            live_grad_params += n
+            g_count += int((st.B.grad.abs() > 0).sum())
+        scalars_with_grad += g_count
+        if g_count:
+            live_grad_keys.add(key)
 
-    # gradient recipients derivable from the persisted participation log
-    part_slots: set = set()
-    for e in participation:
-        for br in e.get("virtual_slots_updated", []):
-            part_slots.add(tuple(br))
-    part_params = None
-    for e in participation:
-        n_upd = len(e.get("virtual_slots_updated", []))
-        if e.get("virtual_grad_params") and n_upd:
-            part_params = int(e["virtual_grad_params"]) // n_upd
-            break
+    part_slots = set()
+    for entry in participation:
+        for bank_row in entry.get("virtual_slots_updated", []):
+            part_slots.add((int(bank_row[0]), int(bank_row[1])))
 
+    persisted_slots = set()
+    for path in store.root.glob("adam-*.npz"):
+        bank_s, row_s = path.stem.removeprefix("adam-").split("-", 1)
+        with np.load(path) as state:
+            if int(state["step_count"]) > 0:
+                key = (int(bank_s), int(row_s))
+                persisted_slots.add(key)
+                shape_by_key[key] = int(
+                    state["A_m"].size + state["B_m"].size)
+
+    activated_keys = committed_keys | live_keys | part_slots | persisted_slots
+    received_keys = live_grad_keys | part_slots | persisted_slots
+    for key, n in live_shape.items():
+        shape_by_key.setdefault(key, n)
+
+    def exact_scalar_total(keys):
+        known = sum(shape_by_key[key] for key in keys if key in shape_by_key)
+        unknown = sum(1 for key in keys if key not in shape_by_key)
+        return known, unknown
+
+    activated_scalars, activated_unknown_slots = exact_scalar_total(
+        activated_keys)
+    received_scalars, received_unknown_slots = exact_scalar_total(
+        received_keys)
     persisted = persisted_optimizer_scan(store)
-    pps = persisted["params_per_slot"] or part_params
-    if pps is None:
-        for st in store._slots.values():
-            pps = st.A.numel() + st.B.numel()
-            break
-
     persisted_updated_scalars = int(
         persisted.get("optimizer_updated_scalars", 0))
-    part_updated_scalars = len(part_slots) * (pps or 0)
-    received_scalars = max(live_grad_params, part_updated_scalars,
-                           persisted_updated_scalars)
-
-    # activated: live slots, participation slots, or any slot with a
-    # persisted optimizer state (activation precedes any gradient/update)
-    activated_scalars = max(
-        live_activated_params,
-        (len(part_slots) + len([k for k in store._slots
-                                if tuple(k) in part_slots])) * (pps or 0),
-        persisted_updated_scalars)
 
     # persisted value sampling among committed rows
     rows_sampled = 0
@@ -155,15 +166,17 @@ def measure(store: vstore.VirtualParameterStore,
         "initialized_unknown_rows": unknown_shape_rows,
         "initialized_exact": unknown_shape_rows == 0,
         "activated": activated_scalars,
+        "activated_unknown_slots": activated_unknown_slots,
         "received_gradients": received_scalars,
+        "received_gradients_unknown_slots": received_unknown_slots,
         "received_gradients_scalars": scalars_with_grad,
         "optimizer_updated": persisted_updated_scalars,
         "demonstrably_trained": persisted_updated_scalars,
     }
-    note = ("received_gradients is the union of persisted optimizer state "
-            "(npz step_count>0), participation-log recipients and live "
-            "session gradients; optimizer_updated/demonstrably_trained come "
-            "strictly from persisted optimizer state on disk")
+    note = ("activated and received-gradient counts are exact unions by "
+            "(bank,row) identity where slot shape evidence exists; unknown "
+            "legacy slots are reported separately. optimizer_updated and "
+            "demonstrably_trained come from persisted optimizer state.")
     return {
         "identity": "cortex-virtual-scalar-coverage",
         "scalars": scalars,
@@ -191,7 +204,10 @@ def measure(store: vstore.VirtualParameterStore,
             >= scalars["received_gradients"]
             >= scalars["optimizer_updated"]
             >= scalars["demonstrably_trained"]
-            and scalars["demonstrably_trained"] < scalars["allocated"]),
+            and scalars["demonstrably_trained"] < scalars["allocated"]
+            and activated_unknown_slots == 0
+            and received_unknown_slots == 0
+            and unknown_shape_rows == 0),
     }
 
 
