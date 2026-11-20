@@ -76,6 +76,11 @@ def persisted_optimizer_scan(
             "orphan_optimizer_slots": orphan_optimizer_slots,
             "params_per_slot": params_per_slot,
             "optimizer_updated_scalars": optimizer_updated_scalars,
+            "demonstrably_trained_scalars": demonstrably_trained_scalars,
+            "demonstrably_trained_unknown_slots":
+                demonstrably_trained_unknown_slots,
+            "demonstrably_trained_exact":
+                demonstrably_trained_unknown_slots == 0,
             "optimizer_steps_per_slot": per_slot}
 
 
@@ -225,8 +230,10 @@ def measure(store: vstore.VirtualParameterStore,
     }
     note = ("activated and received-gradient counts are exact unions by "
             "(bank,row) identity where slot shape evidence exists; unknown "
-            "legacy slots are reported separately. optimizer_updated and "
-            "demonstrably_trained come from persisted optimizer state.")
+            "legacy slots are reported separately. optimizer_updated counts "
+            "slots with persisted optimizer steps; demonstrably_trained "
+            "counts unique scalar values recorded as numerically changed. "
+            "Legacy optimizer files without change masks remain unknown.")
     return {
         "identity": "cortex-virtual-scalar-coverage",
         "scalars": scalars,
