@@ -215,6 +215,11 @@ class JointTrainer:
         for slot in active_slots:
             slot.A.grad = None
             slot.B.grad = None
+        self._before_values = {
+            (slot.bank, slot.row): (
+                slot.A.detach().clone(), slot.B.detach().clone())
+            for slot in active_slots
+        }
         logits, loss = self.model(x, y, pad_mask=pad)
         n_tok = int((y != -100).sum())
         self.phys_opt.zero_grad(set_to_none=True)
@@ -249,26 +254,29 @@ class JointTrainer:
         entry["virtual_grad_params"] = int(sum(
             self.store._slots[br].A.numel() + self.store._slots[br].B.numel()
             for br in distinct))
-        # scalar-level update distribution over the actually-updated slots
-        deltas: list[float] = []
+        # Exact scalar-level update distribution for this optimizer step.
+        max_abs_delta = 0.0
+        abs_delta_sum = 0.0
         nonzero = 0
         total_scalars = 0
         for br in sorted(distinct):
-            s = self.store._slots[br]
+            slot = self.store._slots[br]
             before = self._before_values.get(br)
             if before is not None:
-                for cur, prev in ((s.A, before[0]), (s.B, before[1])):
-                    d = float((cur.detach() - prev).abs().max())
-                    moved = ((cur.detach() - prev).abs() > 1e-12).float().mean()
-                    deltas.append(d)
-                    nonzero += int(round(float(moved) * cur.numel()))
-                    total_scalars += cur.numel()
-        if deltas:
-            entry["update_scalar_max_abs_delta"] = round(max(deltas), 8)
+                for cur, prev in ((slot.A, before[0]), (slot.B, before[1])):
+                    delta = (cur.detach() - prev).abs()
+                    max_abs_delta = max(
+                        max_abs_delta, float(delta.max().item()))
+                    abs_delta_sum += float(delta.sum().item())
+                    nonzero += int(torch.count_nonzero(delta).item())
+                    total_scalars += delta.numel()
+        if total_scalars:
+            entry["update_scalar_max_abs_delta"] = round(max_abs_delta, 8)
             entry["update_scalar_mean_abs_delta"] = round(
-                float(sum(abs(d) for d in deltas) / len(deltas)), 8)
+                abs_delta_sum / total_scalars, 8)
             entry["update_scalars_moved"] = nonzero
             entry["update_scalars_total"] = total_scalars
+        self._before_values.clear()
         if log:
             self.participation.append(entry)
         self._save_progress()
