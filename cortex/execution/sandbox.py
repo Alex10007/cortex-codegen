@@ -254,9 +254,11 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
             # until the launcher PID has entered the delegated cgroup.
             gate_read, gate_write = os.pipe()
             bootstrap = (
-                "import os,sys; fd=int(sys.argv[1]); "
-                "if not os.read(fd,1): os._exit(126); "
-                "os.close(fd); os.execvp(sys.argv[2],sys.argv[2:])"
+                "import os,sys\\n"
+                "fd=int(sys.argv[1])\\n"
+                "if not os.read(fd,1): os._exit(126)\\n"
+                "os.close(fd)\\n"
+                "os.execvp(sys.argv[2],sys.argv[2:])"
             )
             launch_cmd = [sys.executable, "-c", bootstrap, str(gate_read), *full_cmd]
             try:
