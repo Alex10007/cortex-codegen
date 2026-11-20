@@ -74,18 +74,21 @@ def measure(store: vstore.VirtualParameterStore,
     committed = manifest["initialized_rows"]
     rows_per_bank = {str(b): len(rows) for b, rows in committed.items()}
     rows_total = sum(rows_per_bank.values())
+    committed_key_set = {
+        (int(bank), int(row))
+        for bank, rows in committed.items() for row in rows
+    }
     slot_shapes = {
-        bank: dict(rows) for bank, rows in
-        manifest.get("initialized_slot_shapes", {}).items()
+        bank: {row: shape for row, shape in rows.items()
+               if (int(bank), int(row)) in committed_key_set}
+        for bank, rows in manifest.get("initialized_slot_shapes", {}).items()
     }
     # Legacy committed rows can be sized exactly when a persisted optimizer
     # state exists. Do not treat an entire 50,000-value bank row as a slot.
     for path in store.root.glob("adam-*.npz"):
         stem = path.stem.removeprefix("adam-")
         bank_s, row_s = stem.split("-", 1)
-        if (int(bank_s), int(row_s)) not in {
-                (int(b), int(r)) for b, rows in committed.items()
-                for r in rows}:
+        if (int(bank_s), int(row_s)) not in committed_key_set:
             continue
         with np.load(path) as state:
             if int(state["step_count"]) <= 0:
@@ -225,7 +228,8 @@ def measure(store: vstore.VirtualParameterStore,
             and scalars["demonstrably_trained"] < scalars["allocated"]
             and activated_unknown_slots == 0
             and received_unknown_slots == 0
-            and unknown_shape_rows == 0),
+            and unknown_shape_rows == 0
+            and persisted.get("orphan_optimizer_slots", 0) == 0),
     }
 
 
