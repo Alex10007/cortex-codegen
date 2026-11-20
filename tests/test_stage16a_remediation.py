@@ -453,3 +453,34 @@ def test_2b_moe_parameter_estimate_is_separate_from_dense_2b():
         report["backbone_parameters"]
         + report["physical_expert_parameters"]
         + report["router_parameters"])
+
+
+
+def test_multi_slot_commit_publishes_manifest_once(small_store, monkeypatch):
+    real_atomic_json = vstore._atomic_json
+    calls = []
+
+    def counted_atomic_json(*args, **kwargs):
+        calls.append(1)
+        return real_atomic_json(*args, **kwargs)
+
+    monkeypatch.setattr(vstore, "_atomic_json", counted_atomic_json)
+    small_store.slot_state(0, 10, dim=16, rank=4)
+    small_store.slot_state(0, 11, dim=16, rank=4)
+    commits = small_store.commit(step=3, txid="single-publish")
+    manifest = json.loads(small_store.manifest_path.read_text())
+    assert len(commits) == 2
+    assert len(calls) == 1
+    assert manifest["committed_step"] == 3
+    assert set(manifest["initialized_rows"]["0"]) >= {"10", "11"}
+
+
+def test_committed_virtual_row_digest_is_verified_before_load(small_store):
+    slot = small_store.slot_state(0, 12, dim=16, rank=4)
+    small_store.commit(step=1, txid="digest-check")
+    page = small_store.page(0)
+    page[12, 0] += 1.0
+    page.flush()
+    small_store._slots.clear()
+    with pytest.raises(RuntimeError, match="digest mismatch"):
+        small_store.slot_state(0, 12, dim=16, rank=4)
