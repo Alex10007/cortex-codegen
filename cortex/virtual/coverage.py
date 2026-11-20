@@ -36,13 +36,13 @@ def persisted_optimizer_scan(
     steps: list[int] = []
     for f in sorted(store.root.glob("adam-*.npz")):
         with np.load(f) as z:
-            sc = int(z["step_count"])
-            if sc <= 0:
-                continue
             stem = f.stem.removeprefix("adam-")
             bank_s, row_s = stem.split("-", 1)
             if (int(bank_s), int(row_s)) not in committed:
                 orphan_optimizer_slots += 1
+                continue
+            sc = int(z["step_count"])
+            if sc <= 0:
                 continue
             slots_updated += 1
             slot_scalars = int(z["A_m"].size + z["B_m"].size)
