@@ -72,13 +72,20 @@ def _resolve_allowed_repo_path(repo_path: str) -> str:
 
 def _require_full_sandbox() -> None:
     from cortex.execution.sandbox import _supports_bwrap
+    from cortex.execution.qualification import qualify_sandbox
 
     if not _supports_bwrap():
         raise HTTPException(
             status_code=503,
             detail="code execution disabled: working bubblewrap user/pid/"
                    "network namespace isolation is unavailable")
-
+    report = qualify_sandbox()
+    if not report.get("passed"):
+        failed = [name for name, status in report.get("checks", {}).items()
+                  if status != "PASS"]
+        raise HTTPException(
+            status_code=503,
+            detail="sandbox behavioral qualification failed: " + ", ".join(failed))
 
 def create_app(agent=None, api_token: str | None = None, *,
                rate_limit_db: str | None = None,
