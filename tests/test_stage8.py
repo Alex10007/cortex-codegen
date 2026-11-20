@@ -174,7 +174,7 @@ def test_coverage_measure_invariants(small_store):
     rep = coverage.measure(store, None, part)
     sc = rep["scalars"]
     assert sc["allocated"] == 8 * vstore.ROWS_PER_BANK
-    assert sc["initialized"] == 3 * vstore.BANK_COLS
+    assert sc["initialized"] == 3 * (2 * dim * rank)
     assert sc["demonstrably_trained"] <= sc["optimizer_updated"] \
         <= sc["received_gradients"] <= sc["activated"] < sc["allocated"]
     assert rep["invariants_hold"]
@@ -191,7 +191,7 @@ def test_coverage_partition_never_reads_uninitialized_rows(small_store):
     st.A.detach().zero_()
     store.commit(step=1, txid="tx-cov2")
     rep = coverage.measure(store, None, [])
-    assert rep["scalars"]["initialized"] == vstore.BANK_COLS
+    assert rep["scalars"]["initialized"] == 2 * 64 * 8
     assert rep["update_distribution"]["steps_with_data"] == 0
 
 
