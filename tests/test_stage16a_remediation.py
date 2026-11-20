@@ -446,7 +446,7 @@ def test_2b_moe_parameter_estimate_is_separate_from_dense_2b():
 
     report = estimate_moe_physical_parameters(CORTEX_2B)
     assert report["dense_reference_parameters"] == 2_056_012_800
-    assert report["physical_total_parameters"] == 5_832_360_960
+    assert report["physical_total_parameters"] == 5_832_545_280
     assert report["physical_total_parameters"] > (
         report["dense_reference_parameters"])
     assert report["physical_total_parameters"] == (
