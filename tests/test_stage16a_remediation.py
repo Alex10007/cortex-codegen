@@ -157,7 +157,7 @@ def test_cluster_plans_never_emit_zero_microbatch():
     from cortex.model.configs import CORTEX_2B
     from cortex.training.scaling import cluster_plans
 
-    plans = cluster_plans(CORTEX_2B, batch_size=4)
+    plans = cluster_plans(CORTEX_2B, batch_size=4, seq_len=128)
     assert plans["plans"]
     assert all(p["micro_batch"] >= 1 for p in plans["plans"])
     assert all(4 % p["world_size"] == 0 for p in plans["plans"])
@@ -337,7 +337,7 @@ def test_agent_generation_uses_inference_mode(tmp_path):
             return "generated"
 
     class Model:
-        cfg = SimpleNamespace(max_seq_len=32)
+        cfg = SimpleNamespace(max_seq_len=128)
 
         def generate(self, tokens, **kwargs):
             assert torch.is_inference_mode_enabled()
