@@ -240,12 +240,14 @@ class CortexAgent:
         return plan(objective, repo_path, repo_map).to_dict()
 
     def run_pipeline(self, objective: str, repo_path: str,
-                     patcher=None, authorize_destructive: bool = False) -> dict[str, Any]:
+                     patcher=None, authorize_destructive: bool = False,
+                     objective_verifier=None) -> dict[str, Any]:
         from cortex.pipeline.engineer import run_engineering_pipeline
 
         report = run_engineering_pipeline(
             objective, repo_path, patcher=patcher,
-            authorize_destructive=authorize_destructive, audit=self.audit)
+            authorize_destructive=authorize_destructive, audit=self.audit,
+            objective_verifier=objective_verifier)
         self.memory.record(record_project(repo_path), "pipeline", {
             "objective": objective, "status": report["status"],
             "verified": report.get("verified", False),
