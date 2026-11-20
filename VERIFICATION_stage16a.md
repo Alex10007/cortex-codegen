@@ -114,7 +114,7 @@ Existing Stage 8 accounting assertions were updated to use exact slot scalars ra
 
 - Source changes: **implemented on remediation branch**.
 - Regression tests: **written; not yet executed in this session**.
-- GitHub Actions: [latest run](https://github.com/Alex10007/cortex-codegen/actions/runs/44809069232) concluded failure before a runner started. The test job has `runner_id=0`, no steps and no logs. This is not evidence of either a passing or failing test suite.
+- GitHub Actions: [latest run](https://github.com/Alex10007/cortex-codegen/actions/runs/44809511172) concluded failure before a runner started. The test job has `runner_id=0`, no steps and no logs. This is not evidence of either a passing or failing test suite.
 - 2B physical training: **BLOCKED** pending efficient attention and real hardware qualification.
 - 500B virtual training: infrastructure is corrected in source, but the corrected optimizer/store path has not yet been re-executed at scale.
 - MoE physical model: parameter count is now reported honestly; the default 2B MoE model is larger than the 2.056B dense reference.
@@ -151,6 +151,6 @@ A focused pipeline correctness increment was added after the initial Stage 16A r
 
 This is rollback-capable multi-file publication, **not** a filesystem-wide atomic transaction. It does not close a same-user concurrent filesystem race between preflight and publication; stronger dirfd/openat-style path handling remains a hardening opportunity.
 
-The branch head at this report update is expected to include the Stage 16A.2 commits; verify the live ref before treating this report as current. GitHub Actions run [44809069232](https://github.com/Alex10007/cortex-codegen/actions/runs/44809069232) again failed before runner startup (`runner_id=0`, empty steps). None of the new tests have an execution result from that run.
+The branch head at this report update is expected to include the Stage 16A.2 commits; verify the live ref before treating this report as current. GitHub Actions run [44809511172](https://github.com/Alex10007/cortex-codegen/actions/runs/44809511172) again failed before runner startup (`runner_id=0`, empty steps). None of the new tests have an execution result from that run.
 
 **Stage 16A.2 status: implemented, tests written, NOT VERIFIED.** No model training, benchmark promotion, PR merge, or main-branch change was performed.
