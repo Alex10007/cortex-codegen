@@ -17,13 +17,16 @@ from cortex.security.analyzer import analyze_tree, summarize
 from cortex.testing.engine import run_pytest
 
 Patcher = Callable[[Any], dict[str, str]]
+ObjectiveVerifier = Callable[[Any, dict[str, Any]], bool]
 
 
 def run_engineering_pipeline(objective: str, repo_path: str,
                              patcher: Optional[Patcher] = None,
                              authorize_destructive: bool = False,
                              audit: AuditLog | None = None,
-                             test_command_top: list[str] | None = None) -> dict[str, Any]:
+                             test_command_top: list[str] | None = None,
+                             objective_verifier: ObjectiveVerifier | None = None
+                             ) -> dict[str, Any]:
     audit = audit or AuditLog.default()
 
     repo_map = analyze_repository(repo_path)
@@ -77,10 +80,15 @@ def run_engineering_pipeline(objective: str, repo_path: str,
     validation_passed = tests_ok and sec_summary["critical"] == 0
     # Passing the existing repository test suite is baseline validation, not
     # evidence that the requested objective was implemented.
-    verified = validation_passed and implementation_performed
+    objective_verified = bool(
+        objective_verifier and objective_verifier(the_plan, test_report or {}))
+    verified = (validation_passed and implementation_performed
+                and objective_verified)
     status = ("verified" if verified else
               "baseline-validated-no-implementation"
-              if validation_passed else
+              if validation_passed and not implementation_performed else
+              "changes-tested-not-objective-verified"
+              if validation_passed and implementation_performed else
               "tests-failed" if test_report else "insecure-or-untested")
 
     report = {
@@ -95,10 +103,12 @@ def run_engineering_pipeline(objective: str, repo_path: str,
         "verified": verified,
         "implementation_performed": implementation_performed,
         "validation_passed": validation_passed,
+        "objective_verified": objective_verified,
     }
     audit.record("pipeline.result", {"objective": objective,
                                      "status": report["status"],
                                      "verified": verified,
                                      "implementation_performed": implementation_performed,
-                                     "validation_passed": validation_passed})
+                                     "validation_passed": validation_passed,
+                                     "objective_verified": objective_verified})
     return report
