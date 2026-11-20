@@ -129,8 +129,8 @@ def test_indexer_uses_qualified_names_for_nested_symbols(tmp_path):
     graph = KnowledgeGraph(str(tmp_path / "kg.db"))
     index_code_root(str(tmp_path), store, graph)
     function_ids = {
-        item["id"] for item in store.iter_texts()
-        if item[1] == "function"
+        item_id for item_id, _text in store.iter_texts()
+        if ":func:" in item_id
     }
     assert any(":func:outer.same" in item_id for item_id in function_ids)
     assert any(":func:A.same" in item_id for item_id in function_ids)
