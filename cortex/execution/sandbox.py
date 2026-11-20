@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import os
 import resource
+import signal
+import stat
 import shutil
 import subprocess
 import sys
@@ -77,6 +79,80 @@ def _limits(cpu_s: int, mem_mb: int, nproc: int):
     return apply
 
 
+def _copy_workspace_no_symlinks(source: str, destination: str) -> None:
+    """Copy a workspace without following links or special files.
+
+    Descriptor-relative opens plus O_NOFOLLOW prevent a symlink in the source
+    tree from being dereferenced into host files while the copy is made. If the
+    platform cannot provide these primitives, fail closed rather than falling
+    back to path-based copying.
+    """
+    required = ("O_DIRECTORY", "O_NOFOLLOW")
+    if os.name != "posix" or any(not hasattr(os, item) for item in required):
+        raise RuntimeError("safe workspace copying requires POSIX O_NOFOLLOW")
+
+    root_flags = os.O_RDONLY | os.O_DIRECTORY
+    nofollow = os.O_NOFOLLOW
+    source_fd = os.open(os.path.realpath(source), root_flags | nofollow)
+    destination_fd = os.open(destination, root_flags | nofollow)
+    copied_files = 0
+    copied_bytes = 0
+    max_files = 100_000
+    max_bytes = 2 * 1024 * 1024 * 1024
+
+    def copy_directory(src_fd: int, dst_fd: int) -> None:
+        nonlocal copied_files, copied_bytes
+        for name in os.listdir(src_fd):
+            info = os.stat(name, dir_fd=src_fd, follow_symlinks=False)
+            if stat.S_ISLNK(info.st_mode):
+                raise ValueError(f"workspace contains a symlink: {name}")
+            if stat.S_ISDIR(info.st_mode):
+                os.mkdir(name, mode=0o700, dir_fd=dst_fd)
+                child_src = os.open(
+                    name, os.O_RDONLY | os.O_DIRECTORY | nofollow,
+                    dir_fd=src_fd)
+                child_dst = os.open(
+                    name, os.O_RDONLY | os.O_DIRECTORY | nofollow,
+                    dir_fd=dst_fd)
+                try:
+                    copy_directory(child_src, child_dst)
+                finally:
+                    os.close(child_src)
+                    os.close(child_dst)
+                continue
+            if not stat.S_ISREG(info.st_mode):
+                raise ValueError(f"workspace contains a non-regular file: {name}")
+            copied_files += 1
+            if copied_files > max_files:
+                raise ValueError("workspace contains too many files")
+            file_fd = os.open(name, os.O_RDONLY | nofollow, dir_fd=src_fd)
+            try:
+                actual = os.fstat(file_fd)
+                if not stat.S_ISREG(actual.st_mode):
+                    raise ValueError(f"workspace entry changed during copy: {name}")
+                copied_bytes += actual.st_size
+                if copied_bytes > max_bytes:
+                    raise ValueError("workspace exceeds the 2 GiB copy limit")
+                target_fd = os.open(
+                    name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | nofollow,
+                    0o600, dir_fd=dst_fd)
+                try:
+                    with os.fdopen(os.dup(file_fd), "rb") as source_file, \\
+                            os.fdopen(os.dup(target_fd), "wb") as target_file:
+                        shutil.copyfileobj(source_file, target_file, length=1024 * 1024)
+                    os.fchmod(target_fd, stat.S_IMODE(actual.st_mode) & 0o777)
+                finally:
+                    os.close(target_fd)
+            finally:
+                os.close(file_fd)
+
+    try:
+        copy_directory(source_fd, destination_fd)
+    finally:
+        os.close(source_fd)
+        os.close(destination_fd)
+
+
 def run(code: str | None = None, argv: Sequence[str] | None = None,
         workspace: str | None = None, timeout_s: float = 20.0,
         cpu_s: int = 15, mem_mb: int = 1024, nproc: int = 64,
@@ -91,12 +167,7 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
     cmd = list(argv) if argv else [sys.executable, "-c", code or ""]
     with tempfile.TemporaryDirectory(prefix="cortex-sandbox-") as td:
         if workspace:
-            for item in Path(workspace).iterdir():
-                dst = Path(td) / item.name
-                if item.is_dir():
-                    shutil.copytree(item, dst, dirs_exist_ok=True)
-                else:
-                    shutil.copy2(item, dst)
+            _copy_workspace_no_symlinks(workspace, td)
         env = {"PATH": "/usr/local/bin:/usr/bin:/bin", "HOME": td, "TMPDIR": td,
                "SANDBOX": "1", "PYTHONDONTWRITEBYTECODE": "1"}
         import site
@@ -143,13 +214,15 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
             full_cmd = cmd
         start = time.time()
         timed_out = False
+        proc = subprocess.Popen(
+            full_cmd, cwd=(td if not bwrap else "/"), env=env,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            preexec_fn=_limits(cpu_s, mem_mb, nproc),
+            start_new_session=(os.name == "posix"),
+        )
         try:
-            proc = subprocess.run(
-                full_cmd, cwd=(td if not bwrap else "/"), env=env,
-                capture_output=True, text=True, timeout=timeout_s,
-                preexec_fn=_limits(cpu_s, mem_mb, nproc),
-            )
-            rc, out, err = proc.returncode, proc.stdout, proc.stderr
+            out, err = proc.communicate(timeout=timeout_s)
+            rc = proc.returncode
             if (require_full_isolation and bwrap and rc != 0
                     and ((err or "").lower().startswith("bwrap:")
                          or "namespace" in (err or "").lower()
@@ -157,9 +230,17 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                 raise NetworkIsolationUnavailable(
                     "bubblewrap could not establish required namespaces; "
                     "refusing degraded execution")
-        except subprocess.TimeoutExpired as exc:
+        except subprocess.TimeoutExpired:
             timed_out = True
-            rc, out, err = -9, exc.stdout or "", exc.stderr or ""
+            if os.name == "posix":
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            else:
+                proc.kill()
+            out, err = proc.communicate()
+            rc = proc.returncode
         dur = time.time() - start
 
     if filesystem_isolated:

@@ -172,3 +172,22 @@ Implemented on the remediation branch:
 **Verification:** source and tests are committed, but none of these tests have been executed in this environment. GitHub Actions run [44810168757](https://github.com/Alex10007/cortex-codegen/actions/runs/44810168757) again failed before runner startup (`runner_id=0`, no steps). This provides no evidence of a passing or failing test suite.
 
 **Stage 16A.3 status: IMPLEMENTED, NOT VERIFIED.** No model training, benchmark promotion, PR merge, or main-branch change was performed.
+
+
+## Stage 16A.4 — sandbox workspace and process-tree hardening
+
+Implemented on the remediation branch:
+
+- Replaced path-following workspace copies with descriptor-relative traversal. Source entries are opened with `O_NOFOLLOW`; symlinks and non-regular files (including FIFOs and device nodes) are rejected rather than copied or dereferenced.
+- The copy path fails closed on platforms that do not expose the required POSIX no-follow directory primitives. It enforces a 100,000-file ceiling and a 2 GiB aggregate copy ceiling.
+- Replaced `subprocess.run` timeout handling with explicit process-group management on POSIX. Each run starts a new session; on wall-clock timeout, the entire process group receives SIGKILL before output collection, preventing ordinary descendants from surviving after the direct child is killed.
+- Added adversarial tests for external file symlinks, external directory symlinks, special-file rejection, and descendant termination after timeout.
+
+Security scope and verification limits:
+
+- These changes harden workspace ingestion and ordinary process-tree timeout handling; they do not constitute a complete sandbox certification.
+- Bubblewrap namespace/mount behavior, seccomp policy, cgroup-level aggregate resource limits, output-volume limits, and adversarial race testing still require a functioning Linux runner with bubblewrap.
+- The descriptor-relative copy implementation deliberately requires POSIX `O_NOFOLLOW`; unsupported platforms reject workspace execution rather than silently falling back to unsafe path traversal.
+- The new tests are committed as regression specifications but have not been executed in this remote GitHub editing session. A GitHub Actions job that never obtains a runner is not test evidence.
+
+**Stage 16A.4 status: IMPLEMENTED, NOT VERIFIED.** No model training, benchmark promotion, PR merge, or main-branch change was performed.
