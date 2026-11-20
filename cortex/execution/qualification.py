@@ -21,6 +21,7 @@ def qualify_sandbox() -> dict[str, Any]:
         "cgroup_v2_delegation": "PASS" if probe_cgroup_v2().get("available") else "FAIL",
         "isolated_execution": "NOT_RUN",
         "aggregate_limits_enforced": "NOT_RUN",
+        "detached_descendant_cleanup": "NOT_RUN",
         "workspace_writable": "NOT_RUN",
         "host_path_inaccessible": "NOT_RUN",
         "runtime_readonly": "NOT_RUN",
@@ -40,7 +41,7 @@ def qualify_sandbox() -> dict[str, Any]:
             handle.write("CORTEX_HOST_SENTINEL")
 
         probe = r"""
-import json, os, socket
+import json, os, socket, subprocess, sys
 host_path = __HOST_SENTINEL__
 result = {}
 try:
@@ -77,6 +78,10 @@ try:
     result["network_unreachable"] = False
 except OSError:
     result["network_unreachable"] = True
+child = subprocess.Popen(
+    [sys.executable, "-c", "import time; time.sleep(60)"],
+    start_new_session=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+result["detached_child_pid"] = child.pid
 print(json.dumps(result, sort_keys=True))
 """.replace("__HOST_SENTINEL__", repr(host_sentinel))
 
@@ -93,8 +98,9 @@ print(json.dumps(result, sort_keys=True))
         checks["aggregate_limits_enforced"] = (
             "PASS"
             if all(limits.get(name) is True for name in (
-                "cgroup_v2_enforced", "aggregate_cpu_limit",
-                "aggregate_memory_limit", "aggregate_process_limit"))
+                "cgroup_v2_enforced", "cgroup_empty_after_cleanup",
+                "aggregate_cpu_limit", "aggregate_memory_limit",
+                "aggregate_process_limit"))
             else "FAIL"
         )
         try:
@@ -104,6 +110,12 @@ print(json.dumps(result, sort_keys=True))
         for name in ("workspace_writable", "host_path_inaccessible",
                      "runtime_readonly", "proc_dev_available", "network_unreachable"):
             checks[name] = "PASS" if observed.get(name) is True else "FAIL"
+        checks["detached_descendant_cleanup"] = (
+            "PASS"
+            if isinstance(observed.get("detached_child_pid"), int)
+            and limits.get("cgroup_empty_after_cleanup") is True
+            else "FAIL"
+        )
 
     return {
         "passed": all(status == "PASS" for status in checks.values()),
@@ -111,9 +123,9 @@ print(json.dumps(result, sort_keys=True))
         "limitations": [
             "No seccomp syscall-filtering policy is certified.",
             "RLIMIT_NPROC is not a reliable aggregate process cap for privileged/root execution.",
-            "Cgroup v2 CPU, memory and process-count limits are configured per execution but are not yet stress-qualified against adversarial descendants.",
+            "Cgroup v2 CPU, memory and process-count limits are configured per execution; this qualification does not yet stress the numeric memory or CPU ceilings.",
             "Disk I/O bandwidth/IOPS limits are not configured.",
-            "No cgroup enforcement or deliberate namespace/session escape resistance is certified.",
+            "Detached descendants are checked through cgroup-wide cleanup; deliberate cgroup migration or kernel-level escape resistance is not certified.",
             "Network reachability is probed against 1.1.1.1:53 only.",
         ],
     }
