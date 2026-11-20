@@ -14,7 +14,7 @@ def make_fake_cgroup_root(root: Path) -> Path:
 
 
 def make_fake_child(path: Path) -> None:
-    path.mkdir()
+    # The caller's monkeypatched mkdir has already created this directory.
     for name in ("cpu.max", "memory.max", "pids.max", "memory.swap.max",
                  "cgroup.procs", "cgroup.kill", "cgroup.events", "memory.oom.group"):
         (path / name).write_text("")
