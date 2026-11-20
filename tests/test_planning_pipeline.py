@@ -158,3 +158,30 @@ def test_patch_set_replaces_multiple_files_and_preserves_modes(tmp_path):
     assert target.read_text() == "def add(a, b): return a + b\n"
     assert target.stat().st_mode & 0o777 == 0o640
     assert (tmp_path / "new_module.py").read_text() == "VALUE = 7\n"
+
+
+def test_patch_set_rolls_back_prior_replacements_on_publish_failure(tmp_path, monkeypatch):
+    import os
+    import pytest
+    from cortex.pipeline.engineer import _apply_patch_set
+
+    _make_repo(tmp_path)
+    original = (tmp_path / "pkg" / "calc.py").read_bytes()
+    real_replace = os.replace
+    calls = 0
+
+    def fail_second_replace(source, target):
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise OSError("injected publish failure")
+        return real_replace(source, target)
+
+    monkeypatch.setattr(os, "replace", fail_second_replace)
+    with pytest.raises(OSError, match="injected publish failure"):
+        _apply_patch_set(str(tmp_path), {
+            "pkg/calc.py": "def add(a, b): return 99\n",
+            "new_module.py": "VALUE = 7\n",
+        })
+    assert (tmp_path / "pkg" / "calc.py").read_bytes() == original
+    assert not (tmp_path / "new_module.py").exists()
