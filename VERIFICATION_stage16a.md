@@ -210,3 +210,12 @@ Limitations:
 - No claim is made that bubblewrap mounts, network namespace, seccomp, or host-filesystem denial have been independently validated.
 
 **Stage 16A.5 status: IMPLEMENTED, NOT VERIFIED.** No model training, benchmark promotion, PR merge, or main-branch change was performed.
+
+
+## Stage 16A.7 — cgroup v2 aggregate resource enforcement
+
+The strict sandbox execution path now requires an administrator-delegated cgroup v2 subtree configured with `CORTEX_CGROUP_ROOT`. Each strict run configures aggregate CPU quota, memory ceiling, zero swap, group-wide OOM behavior, and a process/task ceiling. The launcher is held behind a pipe gate until its PID has been moved into the cgroup; untrusted code is not executed before attachment. Cleanup uses both process-group termination and cgroup-wide `cgroup.kill`, then waits for `cgroup.events populated 0` before deleting the cgroup.
+
+The behavioral qualification now attempts to exceed the aggregate process cap and launches descendants in separate sessions. The cgroup must report empty after cleanup. API workers cache the full qualification result once per process; each execution still gets a fresh cgroup and fail-closed setup.
+
+**Stage 16A.7 status: IMPLEMENTED, NOT RUNTIME-VERIFIED.** Regression tests are committed but have not executed because GitHub Actions jobs continue to fail before runner allocation (`runner_id=0`, empty steps and no logs). Numeric CPU/memory pressure tests, I/O bandwidth/IOPS controls, seccomp, privileged cgroup migration and kernel escape resistance remain outstanding. See [VERIFICATION_stage16a7.md](VERIFICATION_stage16a7.md). No training, benchmark promotion, PR merge or `main` change was performed.
