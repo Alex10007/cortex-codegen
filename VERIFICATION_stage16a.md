@@ -53,7 +53,8 @@ No training run was launched. No historical benchmark, dataset, Stage 12 champio
 ### 4. Checkpoint-aware model integration
 
 - `CortexAgent` now reads checkpoint architecture metadata and can load either the dense transformer or the MoE transformer.
-- MoE checkpoint loading requires its joint lineage, verifies physical checkpoint hash, virtual-store manifest hash, committed step and row integrity, then restores virtual routes.
+- MoE checkpoint loading requires its joint lineage, verifies physical checkpoint hash, virtual-store manifest hash, exact committed-step equality and row integrity, then restores virtual routes.
+- Joint physical checkpoints are written atomically; caller-supplied extra metadata cannot override reserved checkpoint hashes, step, virtual routes or Fibonera ownership fields.
 - Generation executes under inference mode to avoid building autograd graphs.
 - Project-context generation returns whether verified context was actually supplied.
 - Knowledge inserts cannot self-assert verification, and replacing a previously verified record resets its trust status until re-verified.
