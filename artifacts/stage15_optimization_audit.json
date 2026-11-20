@@ -1,0 +1,45 @@
+{
+  "kind": "cortex-stage15-optimization-audit",
+  "owned_by": "Fibonera",
+  "workstream": "G-optimization",
+  "reference_arm": "stage14-structural_h6000",
+  "gradient_conditions": {
+    "control_data_fixed_segmentation": {
+      "skipped": false,
+      "loss": 1.0966,
+      "grad_norm": 10.8007,
+      "n_grad_tensors": 51,
+      "mean_abs_grad": 0.015323,
+      "completion_masking_present": true
+    },
+    "compacted_feedback_data": {
+      "skipped": false,
+      "loss": 1.3544,
+      "grad_norm": 13.2696,
+      "n_grad_tensors": 51,
+      "mean_abs_grad": 0.01676984,
+      "completion_masking_present": true
+    },
+    "structural_weighted_loss": {
+      "skipped": false,
+      "loss": 10.0293,
+      "grad_norm": 30.6344,
+      "n_grad_tensors": 51,
+      "mean_abs_grad": 0.03817633,
+      "completion_masking_present": true
+    }
+  },
+  "alignment_note": "make_batch supervises completion tokens only; prompt positions are -100",
+  "experiment": {
+    "experiment_id": "stage15-G-optimization-audit",
+    "parent_commit": "318e601",
+    "source_commit": "318e60124894",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "control data, compacted execution-feedback data and structural weighting produce measurably different gradient signals; causal alignment and completion-only masking hold in every case",
+    "acceptance_criteria": "gradient diagnostics measured with REAL backward passes on identical model states; no combined training arms; gradient norm, mean absolute gradient, and per-position masking invariants recorded per data condition",
+    "started": "2026-11-20T16:50:40+0000",
+    "finished": "2026-11-20T16:50:41+0000",
+    "decision": "EXECUTED"
+  }
+}

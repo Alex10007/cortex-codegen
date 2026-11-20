@@ -504,8 +504,10 @@ def stage_b_feedback(tok, train_recs: list, heldout_recs: list) -> dict:
 # --------------------------------------------------------------- workstream C
 
 def train_arm(tok, arm_name: str, cfg: dict, train_recs: list,
-              heldout_recs: list, steps: int, eval_every: int) -> dict:
-    torch.manual_seed(SEED_H)
+              heldout_recs: list, steps: int, eval_every: int,
+              seed: int | None = None,
+              checkpoint_prefix: str = "cortex-sft-stage14") -> dict:
+    torch.manual_seed(SEED_H if seed is None else seed)
     model = dense_model_from_warm6()
     opt = torch.optim.AdamW(model.parameters(), lr=H_LR,
                             betas=(0.9, 0.98), weight_decay=0.01)
@@ -545,7 +547,7 @@ def train_arm(tok, arm_name: str, cfg: dict, train_recs: list,
         })
         window_losses += chunk_losses
     seconds = round(time.time() - t0, 1)
-    ck_path = CKPT10_DIR / f"cortex-sft-stage14-{arm_name}.pt"
+    ck_path = CKPT10_DIR / f"{checkpoint_prefix}-{arm_name}.pt"
     torch.save({
         "model_state": model.state_dict(), "arch": "CortexTransformer",
         "stage": 14, "steps": steps, "lr": H_LR, "batching": arm_name,

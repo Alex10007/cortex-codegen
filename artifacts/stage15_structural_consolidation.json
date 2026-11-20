@@ -1,0 +1,186 @@
+{
+  "kind": "cortex-stage15-structural-consolidation",
+  "owned_by": "Fibonera",
+  "workstream": "B-structural",
+  "reference_arm": "stage14-structural_h6000",
+  "teacher_forced": {
+    "structural_token_accuracy": {
+      "n_batches": 6,
+      "accuracy_overall": 0.6188,
+      "accuracy_whitespace": 0.9055,
+      "accuracy_structure_keyword": 0.7458,
+      "accuracy_delimiter": 0.7188,
+      "accuracy_other": 0.4903,
+      "token_counts": {
+        "whitespace": 254,
+        "structure_keyword": 59,
+        "delimiter": 192,
+        "other": 775,
+        "overall": 1280
+      }
+    },
+    "indentation_transition_accuracy": {
+      "positions": 51,
+      "correct": 49,
+      "per_example": [],
+      "accuracy": 0.9608
+    }
+  },
+  "free_running": {
+    "n_probes": 8,
+    "parse_rate": 0.0,
+    "complete_program_rate": 0.0,
+    "probes_with_class_construct": 0,
+    "probes_with_nested_def": 0,
+    "per_probe": [
+      {
+        "probe": "nested_function",
+        "generated_text_tail": "\n\n    >>> a_dir(CHARACTER_dir)\n    Decimal_dir\n    \"\"\"\n\n    return a_dir(({'b_dir)2)\n<|endoftext|>",
+        "parse": false,
+        "complete_program": false,
+        "first_persistent_error": "unexpected_indentation_transition",
+        "lex_state_end": {
+          "paren_depth": 0,
+          "brace_depth": 0,
+          "open_quote": "\"\"\"",
+          "unbalanced": true
+        },
+        "def_count": 0,
+        "class_count": 0,
+        "nested_def": false,
+        "stopped": "eot"
+      },
+      {
+        "probe": "nested_control",
+        "generated_text_tail": "      >>> a_                     (data, a[0]) == b])\n    True\n    >>> b('data('data'))\n    True\n    >>>.replace('0'))\n    True\n    \"\"\"\n    a = len(data)\n    n = len(data)\n    for n in a:\n        raise ValueError(\"data in a):\n        return a = c.items(data)\n        self.items = c.data('data.)[0]\n    raise ValueError(\"expected %d bytes in a bytes, but only %d remain\" % c)\n    return c\n<|endoftext|>",
+        "parse": false,
+        "complete_program": false,
+        "first_persistent_error": "unexpected_indentation_transition",
+        "lex_state_end": {
+          "paren_depth": 0,
+          "brace_depth": 0,
+          "open_quote": null,
+          "unbalanced": false
+        },
+        "def_count": 0,
+        "class_count": 0,
+        "nested_def": false,
+        "stopped": "eot"
+      },
+      {
+        "probe": "class_with_methods",
+        "generated_text_tail": "\n\n    >>> list of all a list of all the value of a0.\n\n    >>> list of all_int(flatten(0))\n    ['A', '3)\n    >>> list(unique_justseen(10)\n    ['A', 'B', 'B', 'A', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'B', 'A', 'B', 'A', 'B', 'C', 'A', 'B', 'B', 'A', 'B', 'C', 'B', 'A', 'B', 'C', 'C', 'B', 'B', 'B', 'B', 'B', 'C', 'C', 'C', 'C', 'C', 'B', 'D']\n\n    \"\"\"\n",
+        "parse": false,
+        "complete_program": false,
+        "first_persistent_error": "unexpected_indentation_transition",
+        "lex_state_end": {
+          "paren_depth": 0,
+          "brace_depth": 0,
+          "open_quote": "'",
+          "unbalanced": true
+        },
+        "def_count": 0,
+        "class_count": 0,
+        "nested_def": false,
+        "stopped": "max_new_tokens"
+      },
+      {
+        "probe": "exception_handling",
+        "generated_text_tail": "\n\n        return a _convert_other(context=self.timegm, Decimal2))\n\n    # True\n<|endoftext|>",
+        "parse": false,
+        "complete_program": false,
+        "first_persistent_error": "unexpected_indentation_transition",
+        "lex_state_end": {
+          "paren_depth": 0,
+          "brace_depth": 0,
+          "open_quote": null,
+          "unbalanced": false
+        },
+        "def_count": 0,
+        "class_count": 0,
+        "nested_def": false,
+        "stopped": "eot"
+      },
+      {
+        "probe": "imports_and_module",
+        "generated_text_tail": "        >>> list(self.epoch('ab\\n')\n        Decimal('abbb')\n        >>> _test_epoch(Decimal('abbb')\n        True\n        >>> _convert_other(Decimal('abbb', 'a')\n        False\n\n        >>> _convert_other(Decimal('bcc')\n        True\n        >>> ExtendedContext.is_canonical(Decimal('a'))\n        True\n        \"\"\"\n        a = _convert_other(a, raiseit=True)\n        return a.is_canonical()\n<|endoftext|>",
+        "parse": false,
+        "complete_program": false,
+        "first_persistent_error": "unexpected_indentation_transition",
+        "lex_state_end": {
+          "paren_depth": 4,
+          "brace_depth": 0,
+          "open_quote": "\"\"\"",
+          "unbalanced": true
+        },
+        "def_count": 1,
+        "class_count": 0,
+        "nested_def": false,
+        "stopped": "eot"
+      },
+      {
+        "probe": "multi_function",
+        "generated_text_tail": "  for elem, 0 in self.release in other.0\n        self.release = self.release\n        >>>\n        True\n        >>>\n        True\n        \"\"\"\n        self.release = self.release)\n        self.release[2] = self._release)\n        self.release[2] = self._release)\n        self.release[2] = self._release)\n        self.release[2] = self._release)\n        self._release = self._release)\n        self._release",
+        "parse": false,
+        "complete_program": false,
+        "first_persistent_error": "unexpected_indentation_transition",
+        "lex_state_end": {
+          "paren_depth": 0,
+          "brace_depth": 0,
+          "open_quote": null,
+          "unbalanced": true
+        },
+        "def_count": 0,
+        "class_count": 0,
+        "nested_def": false,
+        "stopped": "max_new_tokens"
+      },
+      {
+        "probe": "docstring_program",
+        "generated_text_tail": "\n\n    >>> list(flatten_when(transpose([(x, 1, 2), (2, 3), (2, 3, 5)]\n\n    >>> list(transpose([(2, 2, 3, 4), (2, 4), (2, 1, 2), (2, 3, 4)]\n\n    >>> list(powerset(transpose([(3, 1, 2), (2, 3), (2, 3, 5), (2, 3), (2, 3, 4)]\n\n    >>> list(transpose([(3, 2, 3), (2, 4), (1, 3, 5)]\n\n    >>> list(transpose([(3, 2, 3, 4), (2, 4), (1, 1, 2), (2, 3, 4)]\n\n    >>> list(powerset(randrange(3, 1))",
+        "parse": false,
+        "complete_program": false,
+        "first_persistent_error": "unexpected_indentation_transition",
+        "lex_state_end": {
+          "paren_depth": 13,
+          "brace_depth": 0,
+          "open_quote": null,
+          "unbalanced": true
+        },
+        "def_count": 0,
+        "class_count": 0,
+        "nested_def": false,
+        "stopped": "max_new_tokens"
+      },
+      {
+        "probe": "longer_program",
+        "generated_text_tail": "\n\n        >>> list(repeat(transpose([(2, 1), (3)\n        >>> groupby(3)\n        [8, 2, 2, 3]\n\n    \"\"\"\n    return list(', '3):\n<|endoftext|>",
+        "parse": false,
+        "complete_program": false,
+        "first_persistent_error": "unexpected_indentation_transition",
+        "lex_state_end": {
+          "paren_depth": 3,
+          "brace_depth": 0,
+          "open_quote": "\"\"\"",
+          "unbalanced": true
+        },
+        "def_count": 0,
+        "class_count": 0,
+        "nested_def": false,
+        "stopped": "eot"
+      }
+    ]
+  },
+  "experiment": {
+    "experiment_id": "stage15-B-structural-consolidation",
+    "parent_commit": "318e601",
+    "source_commit": "318e60124894",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "the structural arm's held-out improvement corresponds to measurably better structural-token and indentation-transition prediction, and free-running generation produces structural constructs (classes/nesting) absent from training data",
+    "acceptance_criteria": "teacher-forced per-class structural accuracy + exact-token indentation-transition accuracy on the real held-out split; 8 free-running structural probes captured with per-step trajectories and classified by the existing 13-category taxonomy; no parser-based repair before evaluation",
+    "started": "2026-11-20T16:36:57+0000",
+    "finished": "2026-11-20T16:37:06+0000",
+    "decision": "EXECUTED"
+  }
+}

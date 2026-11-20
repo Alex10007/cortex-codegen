@@ -1,0 +1,118 @@
+{
+  "kind": "cortex-stage15-subsystem-contribution",
+  "owned_by": "Fibonera",
+  "workstream": "I-subsystems",
+  "moe_probe": {
+    "kind": "cortex-moe-specialization-probe",
+    "n_layers": 4,
+    "per_layer": [
+      {
+        "n_observations": 5,
+        "n_experts": 12,
+        "top_k": 2,
+        "mean_entropy_bits": 3.456,
+        "mean_max_prob": 0.1598,
+        "js_first_vs_last_batch": 0.00204228,
+        "expert0_vs_1_weight_cosine": -0.001954
+      },
+      {
+        "n_observations": 5,
+        "n_experts": 12,
+        "top_k": 2,
+        "mean_entropy_bits": 3.456,
+        "mean_max_prob": 0.1598,
+        "js_first_vs_last_batch": 0.00171803,
+        "expert0_vs_1_weight_cosine": 0.002491
+      },
+      {
+        "n_observations": 5,
+        "n_experts": 12,
+        "top_k": 2,
+        "mean_entropy_bits": 3.456,
+        "mean_max_prob": 0.1598,
+        "js_first_vs_last_batch": 0.00233434,
+        "expert0_vs_1_weight_cosine": -0.001525
+      },
+      {
+        "n_observations": 5,
+        "n_experts": 12,
+        "top_k": 2,
+        "mean_entropy_bits": 3.456,
+        "mean_max_prob": 0.1598,
+        "js_first_vs_last_batch": 0.00162236,
+        "expert0_vs_1_weight_cosine": -0.001516
+      }
+    ],
+    "root_cause": {
+      "max_entropy_bits_n_experts": 3.585,
+      "mean_entropy": [
+        3.456,
+        3.456,
+        3.456,
+        3.456
+      ],
+      "near_uniform_routing": true,
+      "hypothesis": [
+        "router weights are freshly initialized (warm-start carries dense mlp into expert 0 only; the router linear is new) so logits ~ 0 and posteriors ~ uniform; mean-over-tokens posteriors then differ practically not at all between families (JS ~ 0) unless the router is trained"
+      ],
+      "test": "compare router parameter movement and gradient norms (gradient_flow + router_movement)"
+    }
+  },
+  "plain_generation_v1_first2": [
+    {
+      "task_id": "t-palindrome",
+      "passed": false,
+      "executed": true
+    },
+    {
+      "task_id": "t-fizzbuzz",
+      "passed": false,
+      "executed": true
+    }
+  ],
+  "divergent_eval_v1_first2": {
+    "aggregate": {
+      "kind": "cortex-divergent-reasoning-eval",
+      "n_tasks": 2,
+      "n_hypotheses_per_task": 3,
+      "temperatures": [
+        0.2,
+        0.7,
+        1.0
+      ],
+      "repair_round": true,
+      "pass_at_1_index0": 0.0,
+      "pass_at_n": 0.0,
+      "pass_via_repair": 0.0,
+      "contradiction_rate": 0.0,
+      "mean_convergence": 1.0,
+      "distinct_candidate_rate": 0.875,
+      "failure_categories_round1": {
+        "passed": 0,
+        "syntax": 0,
+        "import": 0,
+        "runtime": 6,
+        "assertion": 0,
+        "timeout": 0,
+        "empty": 0,
+        "unknown": 0
+      },
+      "tokens_consumed": 1440,
+      "seconds_elapsed": 15.5,
+      "grading": "each hypothesis graded by sandboxed pytest execution"
+    }
+  },
+  "contribution_verdict": "measured; any expert/hypothesis diversity without execution-verified success is not capability",
+  "experiment": {
+    "experiment_id": "stage15-I-subsystem-contribution",
+    "parent_commit": "318e601",
+    "source_commit": "318e60124894",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "the existing MoE and divergent-reasoning subsystems are probed with controlled ablations; expert diversity and hypothesis diversity do not count as capability without execution-verified success",
+    "acceptance_criteria": "moe_probe on the real MoE subject; divergent_eval with repair vs plain fixed-decoding generation on identical tasks; every success execution-verified",
+    "started": "2026-11-20T16:45:36+0000",
+    "finished": "2026-11-20T16:45:56+0000",
+    "decision": "EXECUTED"
+  }
+}

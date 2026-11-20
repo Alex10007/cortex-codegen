@@ -1,0 +1,55 @@
+{
+  "kind": "cortex-stage15-capacity-audit",
+  "owned_by": "Fibonera",
+  "workstream": "H-capacity",
+  "hardware": {
+    "has_cuda": false,
+    "cuda_devices": 0,
+    "ram_total_gb": 5.92,
+    "ram_available_gb": 5.09
+  },
+  "two_b_gate": {
+    "feasible": false,
+    "reason": "needs ~46.0 GB RAM (16 B/param x1.5 activations headroom), available 5.1 GB",
+    "decision": "BLOCKED - unchanged since stage 9"
+  },
+  "virtual_store_recount": {
+    "slots_updated": 35292,
+    "unchanged_35292": true,
+    "n_allocated": null
+  },
+  "checkpoint_recovery": [
+    {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage15-control_rep2.pt",
+      "exists": true,
+      "restores": true,
+      "steps": 6000
+    },
+    {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage15-structural_rep2.pt",
+      "exists": true,
+      "restores": true,
+      "steps": 6000
+    },
+    {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage15-feedback.pt",
+      "exists": true,
+      "restores": true,
+      "steps": 600
+    }
+  ],
+  "spend_usd": 0.0,
+  "gpu_hours": 0.0,
+  "experiment": {
+    "experiment_id": "stage15-H-capacity-and-virtual-accounting",
+    "parent_commit": "318e601",
+    "source_commit": "318e60124894",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "virtual coverage is recounted, GPU re-qualified, and every stage-15 checkpoint verified to restore into the reference architecture (recovery check)",
+    "acceptance_criteria": "no parameter-count inflation; allocated/init/updated scalar classes separated; 2B gate result recorded; checkpoint recovery executes real torch.load + state_dict load",
+    "started": "2026-11-20T16:45:17+0000",
+    "finished": "2026-11-20T16:45:36+0000",
+    "decision": "BLOCKED"
+  }
+}

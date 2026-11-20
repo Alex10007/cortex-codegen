@@ -1,0 +1,842 @@
+{
+  "kind": "cortex-stage15-feedback-training-redesign",
+  "owned_by": "Fibonera",
+  "workstream": "C-feedback",
+  "reference_arm_warm_start": "stage14-structural_h6000",
+  "sampled_records": 32,
+  "benchmark_instruction_contamination_hits": 0,
+  "candidate_outcomes": {
+    "n": 32,
+    "passed_reference_doctests": 0,
+    "error_class_distribution": {
+      "syntax_failure": 31,
+      "failed_reference_doctest": 1
+    },
+    "per_record": [
+      {
+        "rec_name": "JsonPointer.contains",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "shebang_matches",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "ensure_unique",
+        "executed": true,
+        "doctests_total": 2,
+        "doctest_failures": 2,
+        "passed": false,
+        "error_class": "failed_reference_doctest"
+      },
+      {
+        "rec_name": "Context.is_finite",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "script_from_examples",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "repeatfunc",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "filename_component",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "_parse_header",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "quickselect_kth",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "polynomial_from_roots",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "method_cache",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "HTTPHeaders.parse_line",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "pad_none",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "unique_everseen",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "nth",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "grouper",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "passthrough",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "unique",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "temp_dir",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "restore",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "tail",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "Counter.__add__",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "_compose",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "topological_order",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "fmean",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "invoke",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "merge_sorted",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "Context.logical_or",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "flatten",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "Version.major",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "JsonPointer.__contains__",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      },
+      {
+        "rec_name": "repo::cortexpkg_shapes",
+        "executed": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "error_class": "syntax_failure"
+      }
+    ]
+  },
+  "coverage_audit": {
+    "rows_built": 32,
+    "rows_fitting_seq": 9,
+    "rows_with_exact_solution_supervision": 9,
+    "all_rows_supervise_the_full_solution": false,
+    "stage14_style_rows_fitting_seq": 7,
+    "stage14_style_rows_built": 32,
+    "per_row": [
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 162,
+        "exact_match": false,
+        "rec_name": "JsonPointer.contains"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 449,
+        "exact_match": false,
+        "rec_name": "shebang_matches"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 162,
+        "exact_match": false,
+        "rec_name": "ensure_unique"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 172,
+        "exact_match": false,
+        "rec_name": "Context.is_finite"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 589,
+        "exact_match": false,
+        "rec_name": "script_from_examples"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 218,
+        "exact_match": false,
+        "rec_name": "repeatfunc"
+      },
+      {
+        "fits": true,
+        "n_supervised": 81,
+        "len_completion": 81,
+        "exact_match": true,
+        "rec_name": "filename_component"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 392,
+        "exact_match": false,
+        "rec_name": "_parse_header"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 253,
+        "exact_match": false,
+        "rec_name": "quickselect_kth"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 220,
+        "exact_match": false,
+        "rec_name": "polynomial_from_roots"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 687,
+        "exact_match": false,
+        "rec_name": "method_cache"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 518,
+        "exact_match": false,
+        "rec_name": "HTTPHeaders.parse_line"
+      },
+      {
+        "fits": true,
+        "n_supervised": 100,
+        "len_completion": 100,
+        "exact_match": true,
+        "rec_name": "pad_none"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 415,
+        "exact_match": false,
+        "rec_name": "unique_everseen"
+      },
+      {
+        "fits": true,
+        "n_supervised": 83,
+        "len_completion": 83,
+        "exact_match": true,
+        "rec_name": "nth"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 390,
+        "exact_match": false,
+        "rec_name": "grouper"
+      },
+      {
+        "fits": true,
+        "n_supervised": 126,
+        "len_completion": 126,
+        "exact_match": true,
+        "rec_name": "passthrough"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 206,
+        "exact_match": false,
+        "rec_name": "unique"
+      },
+      {
+        "fits": true,
+        "n_supervised": 123,
+        "len_completion": 123,
+        "exact_match": true,
+        "rec_name": "temp_dir"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 265,
+        "exact_match": false,
+        "rec_name": "restore"
+      },
+      {
+        "fits": true,
+        "n_supervised": 113,
+        "len_completion": 113,
+        "exact_match": true,
+        "rec_name": "tail"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 151,
+        "exact_match": false,
+        "rec_name": "Counter.__add__"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 251,
+        "exact_match": false,
+        "rec_name": "_compose"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 261,
+        "exact_match": false,
+        "rec_name": "topological_order"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 297,
+        "exact_match": false,
+        "rec_name": "fmean"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 406,
+        "exact_match": false,
+        "rec_name": "invoke"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 171,
+        "exact_match": false,
+        "rec_name": "merge_sorted"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 277,
+        "exact_match": false,
+        "rec_name": "Context.logical_or"
+      },
+      {
+        "fits": true,
+        "n_supervised": 94,
+        "len_completion": 94,
+        "exact_match": true,
+        "rec_name": "flatten"
+      },
+      {
+        "fits": true,
+        "n_supervised": 77,
+        "len_completion": 77,
+        "exact_match": true,
+        "rec_name": "Version.major"
+      },
+      {
+        "fits": true,
+        "n_supervised": 72,
+        "len_completion": 72,
+        "exact_match": true,
+        "rec_name": "JsonPointer.__contains__"
+      },
+      {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 217,
+        "exact_match": false,
+        "rec_name": "repo::cortexpkg_shapes"
+      }
+    ]
+  },
+  "training": {
+    "steps": 600,
+    "target_bearing_steps": 600,
+    "stage14_negative_control_target_bearing_steps": 102,
+    "supervised_tokens_total": 231716,
+    "loss_first": 0.7496,
+    "loss_last": 0.0038,
+    "lr": 5e-05,
+    "batch": 4,
+    "seed": 20261621,
+    "seconds": 143.3,
+    "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage15-feedback.pt",
+    "checkpoint_sha256": "124f260f148814fad70688ece06f9496533abf528b2ab325ef9cd248806cd48a"
+  },
+  "evaluation": {
+    "capability": {
+      "n_tasks": 15,
+      "pass_at_1": 0.0,
+      "syntax_valid_rate": 0.0,
+      "complete_program_rate": 0.0,
+      "execution_attempted_rate": 1.0,
+      "per_task": [
+        {
+          "suite": "v1",
+          "task_id": "t-palindrome",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-fizzbuzz",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-wordcount",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-run-length-encode",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-interval-merge",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-aggregate",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-window-free",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-off-by-one",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-mutation",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-testgen-cases",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-refactor-fluent",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-api-handler",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-security-safe-substitute",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-performance-sort-k",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-multi-call-node",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        }
+      ],
+      "v1_pass_at_1": 0.0,
+      "v1_n_tasks": 3,
+      "v1_per_task": [
+        {
+          "suite": "v1",
+          "task_id": "t-palindrome",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-fizzbuzz",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-wordcount",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        }
+      ],
+      "v3_pass_at_1": 0.0,
+      "v3_n_tasks": 12,
+      "v3_per_task": [
+        {
+          "suite": "v3",
+          "task_id": "t3-run-length-encode",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-interval-merge",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-aggregate",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-window-free",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-off-by-one",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-mutation",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-testgen-cases",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-refactor-fluent",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-api-handler",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-security-safe-substitute",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-performance-sort-k",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-multi-call-node",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        }
+      ]
+    },
+    "heldout_native_final": 3.5862,
+    "heldout_eval_aligned_final": 3.5957,
+    "structural_token_accuracy": {
+      "n_batches": 6,
+      "accuracy_overall": 0.5406,
+      "accuracy_whitespace": 0.9094,
+      "accuracy_structure_keyword": 0.6271,
+      "accuracy_delimiter": 0.6042,
+      "accuracy_other": 0.3974,
+      "token_counts": {
+        "whitespace": 254,
+        "structure_keyword": 59,
+        "delimiter": 192,
+        "other": 775,
+        "overall": 1280
+      }
+    },
+    "heldout_delta_vs_stage14_master_champion": 0.6833,
+    "heldout_delta_vs_stage14_negative_feedback_control": 0.3783
+  },
+  "experiment": {
+    "experiment_id": "stage15-C-feedback-coverage-redesign",
+    "parent_commit": "318e601",
+    "source_commit": "318e60124894",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "compact evidence-bearing prompts (error class + final error line, cap 160 chars) restore 100% target-bearing step coverage and remove the stage-14 held-out regression; outcome judged only by the pre-registered gates",
+    "acceptance_criteria": "FB15_RECORDS=32, FB15_STEPS=600, lr 5e-05, batch 4, seed 20261621; warm-start from the pre-declared stage-15 reference arm stage14-structural_h6000 (configuration-based, not result-based selection); every training row proves full solution supervision before training (coverage audit); stage-14's 600-step arm remains the negative control",
+    "started": "2026-11-20T16:37:06+0000",
+    "finished": "2026-11-20T16:41:00+0000",
+    "decision": "EXECUTED"
+  }
+}

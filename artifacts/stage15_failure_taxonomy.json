@@ -1,0 +1,28 @@
+{
+  "kind": "cortex-stage15-failure-taxonomy",
+  "owned_by": "Fibonera",
+  "workstream": "taxonomy",
+  "definitions": {
+    "success": "candidate executed and passed the required verification (execution + reference doctests or hidden tests)",
+    "syntax_failure": "sandbox execution or test collection failed with a Python syntax/indentation error",
+    "import_failure": "candidate module or import missing",
+    "runtime_exception": "candidate executed but raised an unclassified exception",
+    "failed_reference_doctest": "executed but reference-doctest examples failed",
+    "failed_hidden_test": "executed but failed an assertion or hidden pytest check",
+    "timeout": "sandbox or pytest execution timed out",
+    "incomplete_generation": "empty or truncated candidate",
+    "full_evidence_prompts": "RETIRED: stage-14 full-evidence prompts (long stderr) lost solution supervision; superseded by compact evidence (see coverage_audit)"
+  },
+  "measured_frequencies": {
+    "execution_data_candidates": {
+      "syntax_failure": 36
+    },
+    "feedback_arm_candidates": {
+      "syntax_failure": 31,
+      "failed_reference_doctest": 1
+    }
+  },
+  "stage14_context": {
+    "feedback_coverage_defect": "47/48 rows lost solution supervision (102/600 target-bearing steps) due to evidence length; fixed by compaction with proven coverage audit"
+  }
+}
