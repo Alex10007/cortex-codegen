@@ -87,7 +87,7 @@ def test_joint_trainer_updates_shared_virtual_slot_once_and_clears_gradients(
     trainer.attach_partition_group(groups[0])
     rec = trainer.train_step(
         [{"instruction": "add two values",
-          "code": "def add(a, b):\\n    return a + b\\n"}],
+          "code": "def add(a, b):\n    return a + b\n"}],
         seq_len=256)
     assert rec is not None
     updated = {tuple(x) for x in rec["virtual_slots_updated"]}
