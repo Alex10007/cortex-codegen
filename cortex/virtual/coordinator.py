@@ -301,13 +301,18 @@ class JointTrainer:
         cdir = Path(checkpoint_dir)
         cdir.mkdir(parents=True, exist_ok=True)
         phys_path = cdir / f"joint-step-{self.step_count:06d}.pt"
+        tmp_phys = phys_path.with_suffix(
+            phys_path.suffix + f".tmp{os.getpid()}")
         torch.save({
             "model": self.cfg.name,
             "model_state": self.model.state_dict(),
             "phys_opt_state": self.phys_opt.state_dict(),
             "arch": "CortexMoETransformer",
             "step": self.step_count,
-        }, phys_path)
+        }, tmp_phys)
+        with open(tmp_phys, "rb") as fh:
+            os.fsync(fh.fileno())
+        os.replace(tmp_phys, phys_path)
         sha = hashlib.sha256(phys_path.read_bytes()).hexdigest()
         commits = self.store.commit(self.step_count, txid)
         integrity = self.store.verify_integrity()
