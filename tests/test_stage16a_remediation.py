@@ -403,3 +403,34 @@ def test_generation_metadata_reports_actual_context_usage(tmp_path):
     agent.retrieval_context = lambda project, query: "verified project fact"
     with_context = agent.generate_with_metadata("hello", project="known-project")
     assert with_context["project_context_used"] is True
+
+
+
+def test_multi_slot_commit_publishes_one_manifest_transaction(
+        small_store, monkeypatch):
+    before = json.loads(small_store.manifest_path.read_text())
+    slot_a = small_store.slot_state(0, 0, dim=32, rank=4, seed=7)
+    slot_b = small_store.slot_state(0, 1, dim=32, rank=4, seed=8)
+    expected_a = (slot_a.A.detach().clone(), slot_a.B.detach().clone())
+    expected_b = (slot_b.A.detach().clone(), slot_b.B.detach().clone())
+
+    def fail_manifest_write(*args, **kwargs):
+        raise OSError("simulated manifest publish failure")
+
+    monkeypatch.setattr(vstore, "_atomic_json", fail_manifest_write)
+    with pytest.raises(OSError, match="manifest publish"):
+        small_store.commit(step=1, txid="atomic-test")
+
+    after = json.loads(small_store.manifest_path.read_text())
+    assert after == before
+    assert small_store.dirty == {(0, 0), (0, 1)}
+
+    # Raw bank bytes written before the manifest boundary are not accepted as
+    # committed state; a fresh process deterministically reinitializes them.
+    reopened = vstore.VirtualParameterStore.open(small_store.root)
+    restored_a = reopened.slot_state(0, 0, dim=32, rank=4, seed=7)
+    restored_b = reopened.slot_state(0, 1, dim=32, rank=4, seed=8)
+    assert torch.equal(restored_a.A.detach(), expected_a[0])
+    assert torch.equal(restored_a.B.detach(), expected_a[1])
+    assert torch.equal(restored_b.A.detach(), expected_b[0])
+    assert torch.equal(restored_b.B.detach(), expected_b[1])
