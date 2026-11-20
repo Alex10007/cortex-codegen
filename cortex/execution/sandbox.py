@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any, Callable, Sequence
 
 from cortex.interfaces import ExecutionResult
+from cortex.execution.resources import CgroupUnavailable, CgroupV2, configured_cgroup_root
 
 
 class NetworkIsolationUnavailable(RuntimeError):
@@ -186,6 +187,20 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                 "full sandbox isolation requires working bubblewrap "
                 "user/pid/network namespaces; refusing same-user host execution")
 
+        cgroup = None
+        if require_full_isolation:
+            cgroup_root = configured_cgroup_root()
+            if not cgroup_root:
+                raise NetworkIsolationUnavailable(
+                    "full sandbox isolation requires an administrator-delegated "
+                    "cgroup v2 subtree configured with CORTEX_CGROUP_ROOT")
+            try:
+                cgroup = CgroupV2.create(
+                    cgroup_root, mem_mb=mem_mb, nproc=nproc)
+            except (CgroupUnavailable, OSError, ValueError) as exc:
+                raise NetworkIsolationUnavailable(
+                    f"aggregate cgroup resource enforcement unavailable: {exc}") from exc
+
         netns = _supports_unshare()
         filesystem_isolated = False
         if bwrap:
@@ -234,12 +249,50 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                 if len(chunk) > remaining:
                     truncated[key] = True
 
-        proc = subprocess.Popen(
-            full_cmd, cwd=(td if not bwrap else "/"), env=env,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            preexec_fn=_limits(cpu_s, mem_mb, nproc),
-            start_new_session=(os.name == "posix"),
-        )
+        if cgroup is not None:
+            # Hold the interpreter before exec so no untrusted instruction runs
+            # until the launcher PID has entered the delegated cgroup.
+            gate_read, gate_write = os.pipe()
+            bootstrap = (
+                "import os,sys; fd=int(sys.argv[1]); "
+                "os.read(fd,1); os.close(fd); os.execvp(sys.argv[2],sys.argv[2:])"
+            )
+            launch_cmd = [sys.executable, "-c", bootstrap, str(gate_read), *full_cmd]
+            try:
+                proc = subprocess.Popen(
+                    launch_cmd, cwd=(td if not bwrap else "/"), env=env,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                    preexec_fn=_limits(cpu_s, mem_mb, nproc),
+                    start_new_session=(os.name == "posix"),
+                    pass_fds=(gate_read,),
+                )
+            finally:
+                os.close(gate_read)
+            try:
+                cgroup.attach(proc.pid)
+                os.write(gate_write, b"1")
+            except Exception as exc:
+                os.close(gate_write)
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                proc.wait()
+                try:
+                    cgroup.kill()
+                    cgroup.close()
+                except Exception:
+                    pass
+                raise NetworkIsolationUnavailable(
+                    f"could not attach sandbox launcher to cgroup before execution: {exc}") from exc
+            os.close(gate_write)
+        else:
+            proc = subprocess.Popen(
+                full_cmd, cwd=(td if not bwrap else "/"), env=env,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                preexec_fn=_limits(cpu_s, mem_mb, nproc),
+                start_new_session=(os.name == "posix"),
+            )
         stdout_reader = threading.Thread(
             target=drain, args=(proc.stdout, "stdout"), daemon=True)
         stderr_reader = threading.Thread(
@@ -266,10 +319,22 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                 os.killpg(proc.pid, signal.SIGKILL)
             except ProcessLookupError:
                 pass
+        if cgroup is not None:
+            try:
+                cgroup.kill()
+            except CgroupUnavailable:
+                # A failed cgroup-wide kill is a security failure, not a
+                # successful cleanup; preserve it as a hard execution error.
+                raise
         stdout_reader.join(timeout=5)
         stderr_reader.join(timeout=5)
         if stdout_reader.is_alive() or stderr_reader.is_alive():
+            if cgroup is not None:
+                cgroup.close()
             raise RuntimeError("sandbox output pipes did not close after process cleanup")
+
+        if cgroup is not None:
+            cgroup.close()
 
         rc = proc.returncode
         out = bytes(captured["stdout"]).decode("utf-8", errors="replace")
