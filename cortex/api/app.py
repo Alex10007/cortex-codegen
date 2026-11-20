@@ -128,6 +128,8 @@ def create_app(agent=None, api_token: str | None = None) -> FastAPI:
                 temperature=req.temperature, project=req.project)
         except FileNotFoundError as exc:
             raise HTTPException(status_code=503, detail=str(exc))
+        except ValueError as exc:
+            raise HTTPException(status_code=413, detail=str(exc))
         return {"text": output, "project_context_used": bool(req.project)}
 
     @app.get("/knowledge/capacity", dependencies=[Depends(require_auth)])
