@@ -167,3 +167,22 @@ def test_knowledge_add_cannot_self_assert_verification_or_preserve_stale_trust(
     assert updated["text"] == "replacement content not yet tested"
     assert updated["verified"] == 0
     assert updated["verified_by"] is None
+
+
+
+def test_known_pattern_requires_verified_record(tmp_path):
+    store = VectorStore(str(tmp_path / "kv.db"))
+    engine = LearningEngine(store)
+    code = "def multiply(a, b): return a * b"
+    item = KnowledgeItem(
+        item_id=engine._pid(code),
+        kind="pattern",
+        language="python",
+        text=code,
+        provenance=_prov(),
+        tags={"verified": True},
+    )
+    store.add(item)
+    assert engine.is_known_pattern(code) is False
+    store.mark_verified(item.item_id, "execution+tests")
+    assert engine.is_known_pattern(code) is True
