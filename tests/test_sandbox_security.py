@@ -112,3 +112,59 @@ def test_background_descendant_is_killed_when_parent_exits():
             time.sleep(0.05)
         else:
             pytest.fail(f"background descendant {child_pid} survived parent exit")
+
+
+def test_cleanup_execution_reaps_process_and_closes_cgroup():
+    from cortex.execution.sandbox import _cleanup_execution
+
+    class FakeCgroup:
+        def __init__(self):
+            self.events = []
+        def kill(self):
+            self.events.append("kill")
+        def wait_empty(self):
+            self.events.append("wait_empty")
+        def snapshot(self):
+            self.events.append("snapshot")
+            return {"verified": True}
+        def close(self):
+            self.events.append("close")
+
+    proc = subprocess.Popen(
+        [sys.executable, "-c", "pass"],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        start_new_session=True,
+    )
+    group = FakeCgroup()
+    metrics, empty = _cleanup_execution(proc, group, [], (proc.stdout, proc.stderr))
+    assert proc.returncode is not None
+    assert metrics == {"verified": True}
+    assert empty is True
+    assert group.events == ["kill", "wait_empty", "snapshot", "close"]
+
+
+def test_cleanup_execution_surfaces_cgroup_kill_failure_after_reaping():
+    from cortex.execution.sandbox import _cleanup_execution
+
+    class FailingCgroup:
+        def __init__(self):
+            self.closed = False
+        def kill(self):
+            raise OSError("injected cgroup.kill failure")
+        def wait_empty(self):
+            pass
+        def snapshot(self):
+            return {}
+        def close(self):
+            self.closed = True
+
+    proc = subprocess.Popen(
+        [sys.executable, "-c", "import time; time.sleep(30)"],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        start_new_session=True,
+    )
+    group = FailingCgroup()
+    with pytest.raises(RuntimeError, match="cgroup kill failed"):
+        _cleanup_execution(proc, group, [], (proc.stdout, proc.stderr))
+    assert proc.returncode is not None
+    assert group.closed is True
