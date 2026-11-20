@@ -27,6 +27,8 @@ def persisted_optimizer_scan(
     slots_updated = 0
     params_per_slot = None
     optimizer_updated_scalars = 0
+    demonstrably_trained_scalars = 0
+    demonstrably_trained_unknown_slots = 0
     orphan_optimizer_slots = 0
     committed = {
         (int(bank), int(row))
@@ -47,6 +49,16 @@ def persisted_optimizer_scan(
             slots_updated += 1
             slot_scalars = int(z["A_m"].size + z["B_m"].size)
             optimizer_updated_scalars += slot_scalars
+            if ("changed_evidence_known" in z
+                    and "A_changed_mask" in z
+                    and "B_changed_mask" in z):
+                demonstrably_trained_scalars += int(
+                    np.count_nonzero(z["A_changed_mask"])
+                    + np.count_nonzero(z["B_changed_mask"]))
+                if int(z["changed_evidence_known"]) != 1:
+                    demonstrably_trained_unknown_slots += 1
+            else:
+                demonstrably_trained_unknown_slots += 1
             if params_per_slot is None:
                 params_per_slot = slot_scalars
             elif params_per_slot != slot_scalars:
@@ -190,6 +202,10 @@ def measure(store: vstore.VirtualParameterStore,
             nonzero_rows += int(row_nonzero > 0)
 
     dist = update_distribution(participation)
+    demonstrably_trained_scalars = int(
+        persisted.get("demonstrably_trained_scalars", 0))
+    demonstrably_trained_unknown_slots = int(
+        persisted.get("demonstrably_trained_unknown_slots", 0))
     scalars = {
         "allocated": vstore.exact_virtual_count(),
         "initialized": initialized_scalars,
@@ -201,7 +217,11 @@ def measure(store: vstore.VirtualParameterStore,
         "received_gradients_unknown_slots": received_unknown_slots,
         "received_gradients_scalars": scalars_with_grad,
         "optimizer_updated": persisted_updated_scalars,
-        "demonstrably_trained": persisted_updated_scalars,
+        "demonstrably_trained": demonstrably_trained_scalars,
+        "demonstrably_trained_unknown_slots":
+            demonstrably_trained_unknown_slots,
+        "demonstrably_trained_exact":
+            demonstrably_trained_unknown_slots == 0,
     }
     note = ("activated and received-gradient counts are exact unions by "
             "(bank,row) identity where slot shape evidence exists; unknown "
@@ -238,6 +258,7 @@ def measure(store: vstore.VirtualParameterStore,
             and activated_unknown_slots == 0
             and received_unknown_slots == 0
             and unknown_shape_rows == 0
+            and demonstrably_trained_unknown_slots == 0
             and persisted.get("orphan_optimizer_slots", 0) == 0),
     }
 
