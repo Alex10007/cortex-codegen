@@ -484,3 +484,47 @@ def test_committed_virtual_row_digest_is_verified_before_load(small_store):
     small_store._slots.clear()
     with pytest.raises(RuntimeError, match="digest mismatch"):
         small_store.slot_state(0, 12, dim=16, rank=4)
+
+
+
+def test_demonstrably_trained_counts_only_scalars_that_changed(small_store):
+    from cortex.model.virtual_slot import VirtualAdamW
+    from cortex.virtual.coverage import measure
+
+    slot = small_store.slot_state(5, 6, dim=32, rank=4)
+    ((torch.randn(3, 32) @ slot.A) @ slot.B).sum().backward()
+    VirtualAdamW().step(slot)
+    expected = sum(int(mask.sum()) for mask in slot.changed_mask.values())
+    assert expected > 0
+    small_store.commit(step=1, txid="changed-scalar-evidence")
+    accounting = small_store.accounting()
+    coverage = measure(small_store)
+    assert accounting["demonstrably_trained"] == expected
+    assert accounting["demonstrably_trained_exact"] is True
+    assert coverage["scalars"]["demonstrably_trained"] == expected
+    assert coverage["scalars"]["demonstrably_trained_exact"] is True
+    assert expected <= accounting["optimizer_updated"]
+
+
+def test_legacy_optimizer_without_change_masks_is_not_claimed_as_trained(
+        small_store):
+    import numpy as np
+    from cortex.model.virtual_slot import VirtualAdamW, slot_adam_states
+
+    slot = small_store.slot_state(5, 7, dim=32, rank=4)
+    ((torch.randn(3, 32) @ slot.A) @ slot.B).sum().backward()
+    VirtualAdamW().step(slot)
+    state = slot_adam_states(slot)
+    legacy_state = {k: v for k, v in state.items()
+                    if not k.endswith("_changed_mask")
+                    and k != "changed_evidence_known"}
+    small_store.commit(step=1, txid="legacy-no-change-mask")
+    np.savez(small_store.root / "adam-00005-000007.npz", **legacy_state)
+
+    restored_store = vstore.VirtualParameterStore.open(small_store.root)
+    restored_store.slot_state(5, 7, dim=32, rank=4)
+    accounting = restored_store.accounting()
+    assert accounting["optimizer_updated"] == 2 * 32 * 4
+    assert accounting["demonstrably_trained"] == 0
+    assert accounting["demonstrably_trained_unknown_slots"] == 1
+    assert accounting["demonstrably_trained_exact"] is False
