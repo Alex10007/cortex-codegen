@@ -58,8 +58,14 @@ def _limits(cpu_s: int, mem_mb: int, nproc: int):
 def run(code: str | None = None, argv: Sequence[str] | None = None,
         workspace: str | None = None, timeout_s: float = 20.0,
         cpu_s: int = 15, mem_mb: int = 1024, nproc: int = 64,
-        audit: Callable[[str, dict], None] | None = None) -> ExecutionResult:
-    """Execute argv (or `code` via python -c) inside a disposable sandbox."""
+        audit: Callable[[str, dict], None] | None = None,
+        require_full_isolation: bool = False) -> ExecutionResult:
+    """Execute in a disposable workspace.
+
+    When bubblewrap is available, use user/pid/network namespaces, a read-only
+    runtime, and a dedicated writable workspace. The legacy rlimit fallback
+    is explicitly degraded and must not be used for API-hosted untrusted code.
+    """
     cmd = list(argv) if argv else [sys.executable, "-c", code or ""]
     with tempfile.TemporaryDirectory(prefix="cortex-sandbox-") as td:
         if workspace:
@@ -76,22 +82,68 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
         usersite = site.getusersitepackages()
         if os.path.isdir(usersite):
             env["PYTHONPATH"] = usersite
+        bwrap = shutil.which("bwrap")
+        if require_full_isolation and not bwrap:
+            raise NetworkIsolationUnavailable(
+                "full sandbox isolation requires bubblewrap; refusing "
+                "same-user host execution")
+
         netns = _supports_unshare()
-        full_cmd = (["unshare", "-rn"] + cmd) if netns else cmd
+        filesystem_isolated = False
+        if bwrap:
+            full_cmd = [
+                bwrap, "--die-with-parent", "--new-session", "--unshare-all",
+                "--proc", "/proc", "--dev", "/dev", "--tmpfs", "/tmp",
+                "--dir", "/workspace", "--bind", td, "/workspace",
+                "--chdir", "/workspace",
+            ]
+            for runtime_path in ("/usr", "/bin", "/lib", "/lib64"):
+                if os.path.exists(runtime_path):
+                    full_cmd.extend(["--ro-bind-try", runtime_path, runtime_path])
+            for runtime_path in (sys.prefix, sys.base_prefix):
+                if (runtime_path and os.path.exists(runtime_path)
+                        and not any(runtime_path == root
+                                    or runtime_path.startswith(root + os.sep)
+                                    for root in ("/usr", "/bin", "/lib", "/lib64"))):
+                    full_cmd.extend(["--ro-bind-try", runtime_path, runtime_path])
+            full_cmd.extend([
+                "--clearenv", "--setenv", "PATH",
+                "/usr/local/bin:/usr/bin:/bin",
+                "--setenv", "HOME", "/workspace",
+                "--setenv", "TMPDIR", "/tmp",
+                "--setenv", "PYTHONDONTWRITEBYTECODE", "1",
+                "--", *cmd,
+            ])
+            filesystem_isolated = True
+        elif netns:
+            full_cmd = ["unshare", "-rn"] + cmd
+        else:
+            full_cmd = cmd
         start = time.time()
         timed_out = False
         try:
             proc = subprocess.run(
-                full_cmd, cwd=td, env=env, capture_output=True, text=True,
-                timeout=timeout_s, preexec_fn=_limits(cpu_s, mem_mb, nproc),
+                full_cmd, cwd=(td if not bwrap else "/"), env=env,
+                capture_output=True, text=True, timeout=timeout_s,
+                preexec_fn=_limits(cpu_s, mem_mb, nproc),
             )
             rc, out, err = proc.returncode, proc.stdout, proc.stderr
+            if (require_full_isolation and bwrap and rc != 0
+                    and ("namespace" in (err or "").lower()
+                         or "operation not permitted" in (err or "").lower())):
+                raise NetworkIsolationUnavailable(
+                    "bubblewrap could not establish required namespaces; "
+                    "refusing degraded execution")
         except subprocess.TimeoutExpired as exc:
             timed_out = True
             rc, out, err = -9, exc.stdout or "", exc.stderr or ""
         dur = time.time() - start
 
-    isolation = "netns+rlimits+tmpfs-workspace" if netns else "rlimits+tmpfs-workspace"
+    if filesystem_isolated:
+        isolation = "bwrap+user-pid-net-ipc-uts+rlimits+readonly-runtime+workspace"
+    else:
+        isolation = ("netns+rlimits+temporary-workspace" if netns
+                     else "rlimits+temporary-workspace")
     result = ExecutionResult(
         ok=(not timed_out and rc == 0),
         exit_code=rc,
@@ -101,8 +153,15 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
         timed_out=timed_out,
         isolation=isolation,
         limits={"cpu_seconds": cpu_s, "mem_mb": mem_mb, "nproc": nproc,
-                "timeout_s": timeout_s, "network_blocked": netns},
+                "timeout_s": timeout_s,
+                "network_blocked": bool(netns or filesystem_isolated),
+                "filesystem_isolated": filesystem_isolated,
+                "user_namespace_isolated": filesystem_isolated,
+                "full_isolation_required": require_full_isolation},
     )
+    if require_full_isolation and not filesystem_isolated:
+        raise NetworkIsolationUnavailable(
+            "full filesystem/user namespace isolation was not established")
     if audit:
         audit("sandbox.run", {"cmd": full_cmd[:3], "ok": result.ok,
                               "timed_out": timed_out, "isolation": isolation})
