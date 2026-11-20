@@ -42,6 +42,11 @@ class MemoryEngine:
         if "verified" not in columns:
             self._conn.execute(
                 "ALTER TABLE facts ADD COLUMN verified INTEGER NOT NULL DEFAULT 0")
+        columns = {row[1] for row in self._conn.execute(
+            "PRAGMA table_info(facts)").fetchall()}
+        if "verified" not in columns:
+            self._conn.execute(
+                "ALTER TABLE facts ADD COLUMN verified INTEGER NOT NULL DEFAULT 0")
         self._conn.commit()
 
     def record(self, project: str, kind: str, payload: dict[str, Any],
