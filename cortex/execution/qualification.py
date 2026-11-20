@@ -68,7 +68,7 @@ print(json.dumps(result, sort_keys=True))
         try:
             execution = run(code=probe, timeout_s=8.0, cpu_s=5, mem_mb=256,
                             nproc=16, require_full_isolation=True)
-        except (NetworkIsolationUnavailable, OSError, RuntimeError) as exc:
+        except Exception as exc:
             checks["isolated_execution"] = "FAIL"
             return {"passed": False, "checks": checks,
                     "error": f"{type(exc).__name__}: {exc}"}
