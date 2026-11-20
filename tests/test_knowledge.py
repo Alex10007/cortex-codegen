@@ -135,3 +135,35 @@ def test_indexer_uses_qualified_names_for_nested_symbols(tmp_path):
     assert any(":func:outer.same" in item_id for item_id in function_ids)
     assert any(":func:A.same" in item_id for item_id in function_ids)
     assert any(":func:B.same" in item_id for item_id in function_ids)
+
+
+
+def test_knowledge_add_cannot_self_assert_verification_or_preserve_stale_trust(
+        tmp_path):
+    store = VectorStore(str(tmp_path / "kv.db"))
+    item = KnowledgeItem(
+        item_id="trusted-replacement",
+        kind="pattern",
+        language="python",
+        text="initial unverified content",
+        provenance=_prov(),
+        tags={"verified": True},
+    )
+    store.add(item)
+    assert store.get(item.item_id)["verified"] == 0
+    store.mark_verified(item.item_id, "execution+tests")
+    assert store.get(item.item_id)["verified"] == 1
+
+    replacement = KnowledgeItem(
+        item_id=item.item_id,
+        kind="pattern",
+        language="python",
+        text="replacement content not yet tested",
+        provenance=_prov(sha="replacement"),
+        tags={"verified": True},
+    )
+    store.add(replacement)
+    updated = store.get(item.item_id)
+    assert updated["text"] == "replacement content not yet tested"
+    assert updated["verified"] == 0
+    assert updated["verified_by"] is None
