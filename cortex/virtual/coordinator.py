@@ -147,10 +147,20 @@ class JointTrainer:
     # -- training -------------------------------------------------------------
 
     def train_step(self, recs: list[dict[str, Any]], seq_len: int,
-                   log: bool = True) -> dict[str, Any] | None:
-        from cortex.training.sft import make_batch
+                   log: bool = True,
+                   chunked: bool = False) -> dict[str, Any] | None:
+        """One coordinated physical+virtual step. With `chunked`, the
+        stage-6 long-sequence path is used so over-long records contribute
+        real supervised rows instead of being silently skipped by the
+        legacy fit filter (stage-10 measured: 71% of dataset records).
+        Default False preserves the historical training semantics."""
+        if chunked:
+            from cortex.training.longcontext import (make_batch_chunked as
+                                                     make_batch_)
+        else:
+            from cortex.training.sft import make_batch as make_batch_
 
-        x, y = make_batch(recs, self.tok, seq_len)
+        x, y = make_batch_(recs, self.tok, seq_len)
         if x is None:
             return None
         pad = x == self.tok.pad_id

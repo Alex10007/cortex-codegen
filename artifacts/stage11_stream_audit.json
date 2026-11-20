@@ -1,0 +1,30 @@
+{
+  "kind": "cortex-stage11-stream-audit",
+  "owned_by": "Fibonera",
+  "workstream": "A-stream",
+  "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+  "seq_len": 256,
+  "stage10_measured_fit_rate": 0.2892,
+  "train_records": 241,
+  "legacy_fit_records": 74,
+  "legacy_dropped_records": 167,
+  "chunked_fit_records": 185,
+  "chunked_dropped_records": 56,
+  "chunked_rows_total": 319,
+  "supervised_rows_recovered_from_legacy_dropped": 245,
+  "coordinator_chunked_flag_wired": true,
+  "dense_step_chunked_flag_wired": true,
+  "drop_eliminated": false,
+  "experiment": {
+    "experiment_id": "stage11-A-stream-audit",
+    "parent_commit": "a8c4e98",
+    "source_commit": "8eba46c2c620",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "the legacy fit filter drops most dataset records at seq-256; the chunked path should convert every record into >=1 supervised row",
+    "acceptance_criteria": "counted from the dataset bytes; the coordinator now supports the chunked path behind an explicit flag (default unchanged)",
+    "started": "2026-11-20T02:31:51+0000",
+    "finished": "2026-11-20T02:31:51+0000",
+    "decision": "FAIL"
+  }
+}

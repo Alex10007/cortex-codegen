@@ -21,6 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / "artifacts"
+sys.path.insert(0, str(ROOT))
 
 
 def build_token_bin(dataset_jsonl: str, tokenizer_path: str,

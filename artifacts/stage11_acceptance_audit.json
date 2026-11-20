@@ -1,0 +1,28 @@
+{
+  "kind": "cortex-stage11-acceptance-audit",
+  "owned_by": "Fibonera",
+  "workstream": "E-audit",
+  "parent_commit": "8eba46c",
+  "checks": {
+    "fingerprint_v1_recomputed_match": true,
+    "fingerprint_v2_recomputed_match": true,
+    "benchmark_files_untouched_vs_stage10": true,
+    "virtual_unique_trained_scalars_recount": 216834048,
+    "virtual_recount_matches_stage9_final": true,
+    "promotion_rule_followed": true,
+    "store_untouched_note": "adam npz scan read-only; no stage-11 writes to the authoritative store"
+  },
+  "all_integrity_ok": true,
+  "experiment": {
+    "experiment_id": "stage11-E-independent-audit",
+    "parent_commit": "a8c4e98",
+    "source_commit": "8eba46c2c620",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "fingerprints, virtual-store ground truth and benchmark immutability are re-derived from raw artifacts",
+    "acceptance_criteria": "second implementation; strict statuses",
+    "started": "2026-11-20T02:59:26+0000",
+    "finished": "2026-11-20T02:59:42+0000",
+    "decision": "PASS"
+  }
+}
