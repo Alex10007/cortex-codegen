@@ -205,6 +205,10 @@ def test_legacy_committed_slot_restores_from_optimizer_shape_witness(small_store
     VirtualAdamW().step(slot)
     expected_a = slot.A.detach().clone()
     expected_b = slot.B.detach().clone()
+    expected_masks = {
+        name: mask.detach().clone()
+        for name, mask in slot.changed_mask.items()
+    }
     small_store.commit(step=1, txid="legacy-optimizer-witness")
     manifest = json.loads(small_store.manifest_path.read_text())
     manifest.pop("initialized_slot_shapes")
@@ -215,6 +219,9 @@ def test_legacy_committed_slot_restores_from_optimizer_shape_witness(small_store
     assert torch.equal(restored.A.detach(), expected_a)
     assert torch.equal(restored.B.detach(), expected_b)
     assert restored.step_count == 1
+    assert restored.changed_evidence_known is True
+    for name, expected_mask in expected_masks.items():
+        assert torch.equal(restored.changed_mask[name], expected_mask)
 
 
 def test_orphan_optimizer_state_is_not_counted_as_trained(small_store):
