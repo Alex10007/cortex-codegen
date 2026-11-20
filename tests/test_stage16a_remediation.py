@@ -548,3 +548,45 @@ def test_legacy_optimizer_without_change_masks_is_not_claimed_as_trained(
     assert coverage["scalars"]["demonstrably_trained"] == 0
     assert coverage["scalars"]["demonstrably_trained_unknown_slots"] == 1
     assert coverage["scalars"]["demonstrably_trained_exact"] is False
+
+
+
+def test_agent_rejects_virtual_store_ahead_of_physical_checkpoint(
+        small_store, tmp_path):
+    import hashlib
+    from cortex.model.configs import CORTEX_DEMO
+    from cortex.tokenizer.cortex_tokenizer import load_tokenizer
+    from cortex.virtual.coordinator import JointTrainer, coverage_plan
+    from cortex.core import CortexAgent
+
+    tok = load_tokenizer(str(TOKENIZER))
+    trainer = JointTrainer(CORTEX_DEMO, tok, small_store,
+                           tmp_path / "ahead-trainer",
+                           virtual_rank=8, seed=23)
+    groups, _ = coverage_plan(small_store, trainer.model.n_virtual, 1)
+    trainer.attach_partition_group(groups[0])
+    checkpoint_dir = tmp_path / "ahead-checkpoints"
+    trainer.checkpoint(str(checkpoint_dir), step=0)
+    checkpoint_path = checkpoint_dir / "joint-step-000000.pt"
+
+    agent = CortexAgent(checkpoint_path=str(checkpoint_path),
+                        virtual_store_path=str(small_store.root),
+                        state_dir=str(tmp_path / "agent-first"))
+    assert agent.model.__class__.__name__ == "CortexMoETransformer"
+
+    slot = next(iter(small_store._slots.values()))
+    small_store.slot_state(slot.bank, slot.row, CORTEX_DEMO.dim, 8)
+    small_store.commit(step=1, txid="store-ahead")
+
+    lineage_path = checkpoint_dir / "lineage.json"
+    lineage = json.loads(lineage_path.read_text())
+    lineage["virtual_store_manifest_sha256"] = hashlib.sha256(
+        small_store.manifest_path.read_bytes()).hexdigest()
+    lineage_path.write_text(json.dumps(lineage))
+
+    stale_agent = CortexAgent(
+        checkpoint_path=str(checkpoint_path),
+        virtual_store_path=str(small_store.root),
+        state_dir=str(tmp_path / "agent-stale"))
+    with pytest.raises(RuntimeError, match="committed step does not match"):
+        _ = stale_agent.model
