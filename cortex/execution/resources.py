@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 import shutil
 import uuid
+import time
 from pathlib import Path
 
 
@@ -87,15 +88,35 @@ class CgroupV2:
             return
         self._write(self.path / "cgroup.kill", "1")
 
+    def wait_empty(self, timeout_s: float = 5.0) -> None:
+        events = self.path / "cgroup.events"
+        if not events.exists():
+            raise CgroupUnavailable("cgroup.events is unavailable; cannot verify process-tree exit")
+        deadline = time.monotonic() + timeout_s
+        while time.monotonic() < deadline:
+            try:
+                fields = dict(
+                    line.split(maxsplit=1)
+                    for line in events.read_text(encoding="ascii").splitlines()
+                    if len(line.split(maxsplit=1)) == 2
+                )
+            except OSError as exc:
+                raise CgroupUnavailable(f"cannot read cgroup.events: {exc}") from exc
+            if fields.get("populated") == "0":
+                return
+            time.sleep(0.02)
+        raise CgroupUnavailable("cgroup still contains processes after cgroup.kill")
+
     def close(self) -> None:
         if self._closed:
             return
-        self._closed = True
+        self.wait_empty()
         try:
             self.path.rmdir()
         except OSError as exc:
             raise CgroupUnavailable(
                 f"execution cgroup is not empty or could not be removed: {exc}") from exc
+        self._closed = True
 
 
 def configured_cgroup_root() -> str | None:
