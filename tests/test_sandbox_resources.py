@@ -103,3 +103,42 @@ def test_full_isolation_refuses_to_launch_without_delegated_cgroup(monkeypatch):
     with pytest.raises(sandbox.NetworkIsolationUnavailable, match="CORTEX_CGROUP_ROOT"):
         sandbox.run(code="raise SystemExit('must not execute')",
                     require_full_isolation=True)
+
+
+def test_create_rejects_invalid_cpu_quota_types_and_values(tmp_path):
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    for kwargs in (
+        {"cpu_quota_us": 0},
+        {"cpu_period_us": -1},
+        {"cpu_quota_us": True},
+        {"cpu_period_us": 100_000.0},
+    ):
+        with pytest.raises(ValueError, match="positive integers"):
+            CgroupV2.create(root, mem_mb=128, nproc=4, **kwargs)
+
+
+def test_snapshot_rejects_missing_required_kernel_counters(tmp_path):
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    real_mkdir = Path.mkdir
+    def mkdir(path, *args, **kwargs):
+        result = real_mkdir(path, *args, **kwargs)
+        if path.parent == root:
+            make_fake_child(path)
+        return result
+    # The test creates a cgroup using regular files as a minimal kernel fixture.
+    from cortex.execution import resources
+    original_create = CgroupV2.create
+    group_path = root / "cortex-test"
+    group_path.mkdir()
+    for name in ("cpu.stat", "memory.events", "pids.events", "memory.current"):
+        (group_path / name).write_text("")
+    (group_path / "cpu.stat").write_text("usage_usec 10\\n")
+    (group_path / "memory.events").write_text("oom 0\\noom_kill 0\\noom_group_kill 0\\n")
+    (group_path / "pids.events").write_text("max 0\\n")
+    (group_path / "memory.current").write_text("0")
+    group = CgroupV2(group_path)
+    with pytest.raises(CgroupUnavailable, match="nr_throttled"):
+        group.snapshot()
+    for item in group_path.iterdir():
+        item.unlink()
+    group_path.rmdir()
