@@ -79,8 +79,7 @@ def _apply_patch_set(repo_path: str, edits: dict[str, str]) -> list[str]:
                     stream.write(content)
                     stream.flush()
                     os.fsync(stream.fileno())
-                if mode is not None:
-                    os.chmod(temp_path, mode)
+                os.chmod(temp_path, mode if mode is not None else 0o644)
             except BaseException:
                 temp_path.unlink(missing_ok=True)
                 raise
