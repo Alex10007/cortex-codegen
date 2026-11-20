@@ -149,8 +149,15 @@ class VirtualParameterStore:
         from cortex.model.virtual_slot import SlotState
 
         key = (bank, row)
+        if not (0 <= bank < N_BANKS and 0 <= row < BANK_ROWS):
+            raise IndexError(f"virtual slot out of range: bank={bank}, row={row}")
         st = self._slots.get(key)
         if st is not None:
+            if tuple(st.A.shape) != (dim, rank) or tuple(st.B.shape) != (rank, dim):
+                raise ValueError(
+                    f"cached slot {key} has shapes A{tuple(st.A.shape)} / "
+                    f"B{tuple(st.B.shape)}, requested A{(dim, rank)} / "
+                    f"B{(rank, dim)}")
             return st
         page = self.page(bank)
         raw = np.asarray(page[row])
