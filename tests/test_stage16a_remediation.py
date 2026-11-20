@@ -159,3 +159,35 @@ def test_cluster_plans_never_emit_zero_microbatch():
     assert plans["plans"]
     assert all(p["micro_batch"] >= 1 for p in plans["plans"])
     assert all(4 % p["world_size"] == 0 for p in plans["plans"])
+
+
+
+def test_agent_loads_joint_moe_checkpoint_with_virtual_lineage(
+        small_store, tmp_path, monkeypatch):
+    from cortex.core import CortexAgent
+    from cortex.model.configs import CORTEX_DEMO
+    from cortex.tokenizer.cortex_tokenizer import load_tokenizer
+    from cortex.virtual.coordinator import JointTrainer, coverage_plan
+
+    tokenizer_path = str(TOKENIZER)
+    tok = load_tokenizer(tokenizer_path)
+    trainer = JointTrainer(
+        CORTEX_DEMO, tok, small_store, tmp_path / "trainer",
+        virtual_rank=8, seed=29)
+    groups, _ = coverage_plan(small_store, trainer.model.n_virtual, 1)
+    trainer.attach_partition_group(groups[0])
+    checkpoint_dir = tmp_path / "joint-checkpoint"
+    trainer.checkpoint(checkpoint_dir, "stage16a-test")
+    checkpoint_path = checkpoint_dir / "joint-step-000000.pt"
+
+    agent = CortexAgent(
+        state_dir=str(tmp_path / "agent-state"),
+        tokenizer_path=tokenizer_path,
+        checkpoint_path=str(checkpoint_path),
+        virtual_store_path=str(small_store.root))
+    model = agent.model
+    from cortex.model.moe import CortexMoETransformer
+    assert isinstance(model, CortexMoETransformer)
+    assert model.virtual_param_count() > 0
+    assert model.moe_param_count()["physical_total_parameters"] == (
+        model.actual_param_count())
