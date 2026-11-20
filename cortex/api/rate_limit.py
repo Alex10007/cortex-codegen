@@ -6,6 +6,7 @@ the same host. For multi-host deployments, use a shared external limiter.
 from __future__ import annotations
 
 import hashlib
+from contextlib import closing
 import math
 import os
 import sqlite3
@@ -20,7 +21,7 @@ class SQLiteRateLimiter:
         self.database.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         if self.database.is_symlink():
             raise ValueError("rate-limit database must not be a symlink")
-        with self._connect() as connection:
+        with closing(self._connect()) as connection:
             connection.execute("""
                 CREATE TABLE IF NOT EXISTS rate_limit_events (
                     bucket_key TEXT NOT NULL,
