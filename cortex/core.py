@@ -15,7 +15,8 @@ _STATE_ROOT = os.environ.get("CORTEX_STATE_DIR", ".cortex-state")
 class CortexAgent:
     def __init__(self, state_dir: Optional[str] = None,
                  tokenizer_path: Optional[str] = None,
-                 checkpoint_path: Optional[str] = None):
+                 checkpoint_path: Optional[str] = None,
+                 virtual_store_path: Optional[str] = None):
         from cortex.hardware.profiler import profile_hardware
         from cortex.knowledge.graph import KnowledgeGraph
         from cortex.knowledge.vector_store import VectorStore
@@ -35,6 +36,9 @@ class CortexAgent:
 
         self.tokenizer_path = tokenizer_path
         self.checkpoint_path = checkpoint_path
+        self.virtual_store_path = (
+            virtual_store_path or os.environ.get("CORTEX_VIRTUAL_STORE_DIR"))
+        self._virtual_store = None
         self._model = None
         self._tokenizer = None
 
@@ -59,14 +63,60 @@ class CortexAgent:
 
             from cortex.model.configs import MODEL_STATUS, get_config
             from cortex.model.transformer import CortexTransformer
+
             ck = torch.load(self.checkpoint_path, map_location="cpu",
                             weights_only=True)
             cfg_name = ck["model"]
-            model = CortexTransformer(get_config(cfg_name))
-            model.load_state_dict(ck["model_state"])
+            cfg = get_config(cfg_name)
+            arch = ck.get("arch", "CortexTransformer")
+            if arch == "CortexMoETransformer":
+                from cortex.model.moe import CortexMoETransformer
+                model = CortexMoETransformer(cfg)
+            elif arch == "CortexTransformer":
+                model = CortexTransformer(cfg)
+            else:
+                raise RuntimeError(f"unsupported checkpoint architecture: {arch}")
+            model.load_state_dict(ck["model_state"], strict=True)
+
+            if arch == "CortexMoETransformer":
+                lineage_path = Path(self.checkpoint_path).parent / "lineage.json"
+                if not lineage_path.exists():
+                    raise FileNotFoundError(
+                        "MoE checkpoint requires its joint lineage.json")
+                import json
+                lineage = json.loads(lineage_path.read_text())
+                if int(lineage.get("step", -1)) != int(ck.get("step", -2)):
+                    raise RuntimeError("MoE physical checkpoint/lineage step mismatch")
+                routes = lineage.get("virtual_routes") or {}
+                if routes:
+                    if not self.virtual_store_path:
+                        raise FileNotFoundError(
+                            "MoE checkpoint has virtual routes; configure "
+                            "CORTEX_VIRTUAL_STORE_DIR or virtual_store_path")
+                    from cortex.virtual.store import VirtualParameterStore
+                    store = VirtualParameterStore.open(self.virtual_store_path)
+                    integrity = store.verify_integrity()
+                    if not integrity["integrity_ok"]:
+                        raise RuntimeError(
+                            "virtual store integrity failure: "
+                            f"{integrity['bad_rows'][:5]}")
+                    if int(store.manifest.get("committed_step", 0)) < int(ck["step"]):
+                        raise RuntimeError(
+                            "virtual store is behind the physical checkpoint")
+                    rank = int(lineage.get("virtual_rank", 0))
+                    seed = int(lineage.get("virtual_seed", 4242))
+                    slots = {}
+                    for route_s, bank_row in routes.items():
+                        route = int(route_s)
+                        bank, row = map(int, bank_row)
+                        slots[route] = store.slot_state(
+                            bank, row, cfg.dim, rank, seed=seed)
+                    model.attach_virtual_slots(slots)
+                    self._virtual_store = store
             model.eval()
             self._model = model
             self.checkpoint_cfg = cfg_name
+            self.checkpoint_arch = arch
             _ = MODEL_STATUS
         return self._model
 
@@ -74,6 +124,7 @@ class CortexAgent:
         """Point the agent at a checkpoint and force a model reload."""
         self.checkpoint_path = checkpoint_path
         self._model = None
+        self._virtual_store = None
         return self.model.__class__.__name__
 
     def generate(self, prompt: str, max_new_tokens: int = 64,
@@ -175,7 +226,7 @@ class CortexAgent:
         ckpt_exists = self.checkpoint_path and Path(self.checkpoint_path).exists()
         reports.append({
             "engine": "ModelCore",
-            "status": ("operational" if ckpt_exists else
+            "status": ("checkpoint-present; capability not implied" if ckpt_exists else
                        "declared-only (2B-class) / demo-untrained"),
             "evidence": f"checkpoint={self.checkpoint_path} exists={bool(ckpt_exists)}",
         })
