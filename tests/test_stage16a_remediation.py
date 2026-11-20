@@ -527,7 +527,13 @@ def test_legacy_optimizer_without_change_masks_is_not_claimed_as_trained(
     restored_store = vstore.VirtualParameterStore.open(small_store.root)
     restored_store.slot_state(5, 7, dim=32, rank=4)
     accounting = restored_store.accounting()
+    from cortex.virtual.coverage import measure
+    coverage = measure(restored_store)
     assert accounting["optimizer_updated"] == 2 * 32 * 4
     assert accounting["demonstrably_trained"] == 0
     assert accounting["demonstrably_trained_unknown_slots"] == 1
     assert accounting["demonstrably_trained_exact"] is False
+    assert coverage["scalars"]["optimizer_updated"] == 2 * 32 * 4
+    assert coverage["scalars"]["demonstrably_trained"] == 0
+    assert coverage["scalars"]["demonstrably_trained_unknown_slots"] == 1
+    assert coverage["scalars"]["demonstrably_trained_exact"] is False
