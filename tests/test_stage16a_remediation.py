@@ -90,6 +90,9 @@ def test_joint_trainer_updates_shared_virtual_slot_once_and_clears_gradients(
           "code": "def add(a, b):\n    return a + b\n"}],
         seq_len=256)
     assert rec is not None
+    assert rec["update_scalars_moved"] > 0
+    assert rec["update_scalars_total"] >= rec["update_scalars_moved"]
+    assert rec["update_scalar_max_abs_delta"] > 0
     updated = {tuple(x) for x in rec["virtual_slots_updated"]}
     assert len(updated) == len(rec["virtual_slots_updated"])
     for key, slot in small_store._slots.items():
