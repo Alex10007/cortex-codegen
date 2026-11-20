@@ -17,7 +17,7 @@ from typing import Any
 import numpy as np
 
 import cortex.virtual.store as vstore
-from cortex.virtual.store import BANK_COLS, BANK_ROWS, N_BANKS
+from cortex.virtual.store import N_BANKS
 
 
 def persisted_optimizer_scan(
@@ -27,11 +27,22 @@ def persisted_optimizer_scan(
     slots_updated = 0
     params_per_slot = None
     optimizer_updated_scalars = 0
+    orphan_optimizer_slots = 0
+    committed = {
+        (int(bank), int(row))
+        for bank, rows in store.manifest.get("initialized_rows", {}).items()
+        for row in rows
+    }
     steps: list[int] = []
     for f in sorted(store.root.glob("adam-*.npz")):
         with np.load(f) as z:
             sc = int(z["step_count"])
             if sc <= 0:
+                continue
+            stem = f.stem.removeprefix("adam-")
+            bank_s, row_s = stem.split("-", 1)
+            if (int(bank_s), int(row_s)) not in committed:
+                orphan_optimizer_slots += 1
                 continue
             slots_updated += 1
             slot_scalars = int(z["A_m"].size + z["B_m"].size)
@@ -50,6 +61,7 @@ def persisted_optimizer_scan(
         per_slot = {"n": 0}
     return {"n_allocated": vstore.exact_virtual_count(),
             "slots_updated": slots_updated,
+            "orphan_optimizer_slots": orphan_optimizer_slots,
             "params_per_slot": params_per_slot,
             "optimizer_updated_scalars": optimizer_updated_scalars,
             "optimizer_steps_per_slot": per_slot}
@@ -71,6 +83,10 @@ def measure(store: vstore.VirtualParameterStore,
     for path in store.root.glob("adam-*.npz"):
         stem = path.stem.removeprefix("adam-")
         bank_s, row_s = stem.split("-", 1)
+        if (int(bank_s), int(row_s)) not in {
+                (int(b), int(r)) for b, rows in committed.items()
+                for r in rows}:
+            continue
         with np.load(path) as state:
             if int(state["step_count"]) <= 0:
                 continue
@@ -121,9 +137,11 @@ def measure(store: vstore.VirtualParameterStore,
     persisted_slots = set()
     for path in store.root.glob("adam-*.npz"):
         bank_s, row_s = path.stem.removeprefix("adam-").split("-", 1)
+        key = (int(bank_s), int(row_s))
+        if key not in committed_keys:
+            continue
         with np.load(path) as state:
             if int(state["step_count"]) > 0:
-                key = (int(bank_s), int(row_s))
                 persisted_slots.add(key)
                 shape_by_key[key] = int(
                     state["A_m"].size + state["B_m"].size)
