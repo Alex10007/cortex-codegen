@@ -286,6 +286,18 @@ class JointTrainer:
 
     def checkpoint(self, checkpoint_dir: str | Path, txid: str,
                    extra: dict[str, Any] | None = None) -> dict[str, Any]:
+        reserved_lineage_keys = {
+            "kind", "step", "transaction_id", "physical_checkpoint",
+            "physical_sha256", "virtual_committed_step",
+            "virtual_integrity_ok", "virtual_rows_committed",
+            "virtual_routes", "virtual_rank", "virtual_seed",
+            "virtual_store_root", "virtual_store_manifest_sha256", "owned_by",
+        }
+        overlap = reserved_lineage_keys.intersection(extra or {})
+        if overlap:
+            raise ValueError(
+                "checkpoint extra metadata cannot override reserved lineage "
+                f"keys: {sorted(overlap)}")
         cdir = Path(checkpoint_dir)
         cdir.mkdir(parents=True, exist_ok=True)
         phys_path = cdir / f"joint-step-{self.step_count:06d}.pt"
