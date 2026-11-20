@@ -95,3 +95,24 @@ def test_rate_limit_database_does_not_store_raw_bucket_identity(tmp_path):
             "SELECT bucket_key FROM rate_limit_events").fetchone()[0]
     assert stored != "authenticated:very-secret-token"
     assert len(stored) == 64
+
+
+def test_sliding_window_expires_old_requests(tmp_path, monkeypatch):
+    import cortex.api.rate_limit as rate_limit_module
+
+    clock = [1_000.0]
+    monkeypatch.setattr(rate_limit_module.time, "time", lambda: clock[0])
+    limiter = SQLiteRateLimiter(Path(tmp_path / "expiry.sqlite3"))
+
+    assert limiter.consume("principal", 1, window_s=60)[0] is True
+    assert limiter.consume("principal", 1, window_s=60)[0] is False
+    clock[0] = 1_061.0
+    assert limiter.consume("principal", 1, window_s=60)[0] is True
+
+
+def test_rate_limit_buckets_are_isolated_by_principal(tmp_path):
+    limiter = SQLiteRateLimiter(Path(tmp_path / "principals.sqlite3"))
+
+    assert limiter.consume("principal-a", 1)[0] is True
+    assert limiter.consume("principal-b", 1)[0] is True
+    assert limiter.consume("principal-a", 1)[0] is False
