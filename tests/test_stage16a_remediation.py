@@ -370,3 +370,36 @@ def test_moe_topk_load_balance_is_normalized():
         moe.router.weight.zero_()
     moe(torch.ones(2, 3, 4))
     assert float(moe.last_aux) == pytest.approx(1.0, abs=1e-6)
+
+
+
+def test_generation_metadata_reports_actual_context_usage(tmp_path):
+    from types import SimpleNamespace
+    from cortex.core import CortexAgent
+
+    class Tokenizer:
+        EOT = "<eot>"
+        eot_id = 2
+
+        def encode(self, text):
+            return [1, 3]
+
+        def decode(self, tokens):
+            return "generated"
+
+    class Model:
+        cfg = SimpleNamespace(max_seq_len=32)
+
+        def generate(self, tokens, **kwargs):
+            assert torch.is_inference_mode_enabled()
+            return tokens
+
+    agent = CortexAgent(state_dir=str(tmp_path / "agent"))
+    agent._tokenizer = Tokenizer()
+    agent._model = Model()
+    agent.retrieval_context = lambda project, query: ""
+    without = agent.generate_with_metadata("hello", project="empty-project")
+    assert without["project_context_used"] is False
+    agent.retrieval_context = lambda project, query: "verified project fact"
+    with_context = agent.generate_with_metadata("hello", project="known-project")
+    assert with_context["project_context_used"] is True
