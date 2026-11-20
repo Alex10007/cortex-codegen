@@ -86,6 +86,13 @@ class CortexAgent:
                         "MoE checkpoint requires its joint lineage.json")
                 import json
                 lineage = json.loads(lineage_path.read_text())
+                expected_physical_sha = lineage.get("physical_sha256")
+                if expected_physical_sha:
+                    actual_physical_sha = __import__("hashlib").sha256(
+                        Path(self.checkpoint_path).read_bytes()).hexdigest()
+                    if actual_physical_sha != expected_physical_sha:
+                        raise RuntimeError(
+                            "physical checkpoint does not match joint lineage")
                 if int(lineage.get("step", -1)) != int(ck.get("step", -2)):
                     raise RuntimeError("MoE physical checkpoint/lineage step mismatch")
                 routes = lineage.get("virtual_routes") or {}
