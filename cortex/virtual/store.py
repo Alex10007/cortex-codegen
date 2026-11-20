@@ -474,7 +474,8 @@ class VirtualParameterStore:
             "partitions_total": N_BANKS,
             "invariants_hold": (
                 exact_virtual_count() >= initialized >= received
-                >= updated and updated < exact_virtual_count()
+                >= updated >= demonstrably_trained
+                and updated < exact_virtual_count()
                 and initialized_unknown == 0 and activated_unknown == 0
                 and received_unknown == 0 and updated_unknown == 0
                 and changed_unknown == 0 and not orphan_optimizer_keys),
