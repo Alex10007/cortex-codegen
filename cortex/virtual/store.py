@@ -261,51 +261,65 @@ class VirtualParameterStore:
     # ---------- commit / recovery ----------
 
     def commit(self, step: int, txid: str) -> list[dict[str, Any]]:
-        """Transactional commit of every dirty slot: write values + optimizer
-        state to disk, flush, digest, then atomically update the manifest.
-        No partial state survives a crash between flush and manifest."""
-        import torch
+        """Commit all dirty slots behind one manifest transaction boundary.
 
+        Bank values and optimizer files are flushed first. The manifest is
+        atomically replaced once, only after every row is durable. A crash
+        before that point leaves uncommitted bytes (ignored on reload) and
+        orphan optimizer files (detected and refused), never a partial
+        accepted commit frontier.
+        """
         from cortex.model.virtual_slot import slot_adam_states
 
+        manifest = _read_json(self.manifest_path)
         commits: list[dict[str, Any]] = []
-        for (bank, row) in sorted(self.dirty):
+        for bank, row in sorted(self.dirty):
             st = self._slots[(bank, row)]
             page = self.page(bank)
             n = st.A.numel() + st.B.numel()
             flat = np.empty(n, dtype=np.float32)
-            flat[:st.A.numel()] = st.A.detach().numpy().reshape(-1)
-            flat[st.A.numel():] = st.B.detach().numpy().reshape(-1)
+            flat[:st.A.numel()] = st.A.detach().cpu().numpy().reshape(-1)
+            flat[st.A.numel():] = st.B.detach().cpu().numpy().reshape(-1)
             page[row, :n] = flat
             page.flush()
+            bank_path = self.root / bank_filename(bank)
+            with open(bank_path, "r+b") as bank_file:
+                os.fsync(bank_file.fileno())
             digest = hashlib.sha256(
                 np.asarray(page[row]).tobytes()).hexdigest()
+
             opt_states = slot_adam_states(st)
             if opt_states:
-                np.savez(self.root / f"adam-{bank:05d}-{row:06d}.npz",
-                         **opt_states)
+                opt_path = self.root / f"adam-{bank:05d}-{row:06d}.npz"
+                tmp_opt = self.root / (
+                    f".{opt_path.name}.tmp{os.getpid()}")
+                with open(tmp_opt, "wb") as opt_file:
+                    np.savez(opt_file, **opt_states)
+                    opt_file.flush()
+                    os.fsync(opt_file.fileno())
+                os.replace(tmp_opt, opt_path)
+
             commits.append({"bank": bank, "row": row, "step": step,
                             "txid": txid, "digest": digest,
                             "params_in_slot": int(n)})
-            m = _read_json(self.manifest_path)
-            rows_map = m["initialized_rows"]
+            rows_map = manifest["initialized_rows"]
             rows_map.setdefault(str(bank), {})[str(row)] = digest
-            shapes = m.setdefault("initialized_slot_shapes", {})
+            shapes = manifest.setdefault("initialized_slot_shapes", {})
             shapes.setdefault(str(bank), {})[str(row)] = {
                 "dim": int(st.A.shape[0]),
                 "rank": int(st.A.shape[1]),
                 "scalars": int(st.A.numel() + st.B.numel()),
             }
-            m["coverage_rows_per_bank"][bank] = len(rows_map[str(bank)])
-            # lineage watermark is monotonic: a later commit at a lower step
-            # (e.g. a fresh trainer resuming against the same store) must
-            # never rewind the recorded training frontier
-            m["committed_step"] = max(int(m.get("committed_step", 0)),
-                                      int(step))
-            m["transaction_id"] = txid
-            _atomic_json(self.manifest_path, m)
-            self.manifest = m
-        self.dirty.clear()
+            manifest["coverage_rows_per_bank"][bank] = len(
+                rows_map[str(bank)])
+
+        if commits:
+            manifest["committed_step"] = max(
+                int(manifest.get("committed_step", 0)), int(step))
+            manifest["transaction_id"] = txid
+            _atomic_json(self.manifest_path, manifest)
+            self.manifest = manifest
+            self.dirty.clear()
         return commits
 
     def verify_integrity(self) -> dict[str, Any]:
