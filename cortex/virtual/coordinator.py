@@ -310,6 +310,9 @@ class JointTrainer:
                                in self.active_routes.items()},
             "virtual_rank": self.virtual_rank,
             "virtual_seed": self.seed,
+            "virtual_store_root": str(self.store.root.resolve()),
+            "virtual_store_manifest_sha256": hashlib.sha256(
+                self.store.manifest_path.read_bytes()).hexdigest(),
             "owned_by": "Fibonera",
         }
         if extra:
