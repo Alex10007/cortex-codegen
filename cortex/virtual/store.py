@@ -368,10 +368,10 @@ class VirtualParameterStore:
             bank_s, row_s = path.stem.removeprefix("adam-").split("-", 1)
             key = (int(bank_s), int(row_s))
             with np.load(path) as state:
-                if int(state["step_count"]) <= 0:
-                    continue
                 if key not in committed_keys:
                     orphan_optimizer_keys.add(key)
+                    continue
+                if int(state["step_count"]) <= 0:
                     continue
                 n = int(state["A_m"].size + state["B_m"].size)
                 shape_by_key[key] = n
