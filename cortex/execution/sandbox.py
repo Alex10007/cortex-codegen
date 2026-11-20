@@ -357,9 +357,19 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
         if cgroup is not None:
             # Hold the interpreter before exec so no untrusted instruction runs
             # until the launcher PID has entered the delegated cgroup.
-            gate_read, gate_write = os.pipe()
-            bootstrap = _cgroup_bootstrap_source()
-            launch_cmd = [sys.executable, "-c", bootstrap, str(gate_read), *full_cmd]
+            try:
+                gate_read, gate_write = os.pipe()
+                bootstrap = _cgroup_bootstrap_source()
+                launch_cmd = [sys.executable, "-c", bootstrap, str(gate_read), *full_cmd]
+            except BaseException as setup_error:
+                try:
+                    cgroup.kill()
+                    cgroup.wait_empty()
+                    cgroup.close()
+                except Exception as cleanup_error:
+                    setup_error.add_note(
+                        f"cgroup cleanup after launch preparation failure also failed: {cleanup_error}")
+                raise
             try:
                 try:
                     proc = subprocess.Popen(
