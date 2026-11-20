@@ -182,6 +182,10 @@ def test_agent_loads_joint_moe_checkpoint_with_virtual_lineage(
     groups, _ = coverage_plan(small_store, trainer.model.n_virtual, 1)
     trainer.attach_partition_group(groups[0])
     checkpoint_dir = tmp_path / "joint-checkpoint"
+    with pytest.raises(ValueError, match="reserved lineage keys"):
+        trainer.checkpoint(
+            checkpoint_dir, "stage16a-test",
+            extra={"owned_by": "untrusted-override"})
     trainer.checkpoint(checkpoint_dir, "stage16a-test")
     checkpoint_path = checkpoint_dir / "joint-step-000000.pt"
 
