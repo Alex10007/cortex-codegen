@@ -179,6 +179,88 @@ def _copy_workspace_no_symlinks(source: str, destination: str) -> None:
         os.close(destination_fd)
 
 
+
+def _cleanup_execution(
+    proc: subprocess.Popen,
+    cgroup: CgroupV2 | None,
+    readers: Sequence[threading.Thread],
+    streams: Sequence[Any],
+) -> tuple[dict[str, object], bool]:
+    """Reap a launched process tree and its cgroup on every exit path."""
+    failures: list[str] = []
+    if os.name == "posix":
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        except OSError as exc:
+            failures.append(f"process-group termination failed: {exc}")
+    elif proc.poll() is None:
+        try:
+            proc.kill()
+        except OSError as exc:
+            failures.append(f"process termination failed: {exc}")
+
+    if cgroup is not None:
+        try:
+            cgroup.kill()
+        except Exception as exc:
+            failures.append(f"cgroup kill failed: {exc}")
+
+    try:
+        proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        try:
+            proc.kill()
+        except OSError as exc:
+            failures.append(f"direct-child kill failed: {exc}")
+        try:
+            proc.wait(timeout=5)
+        except Exception as exc:
+            failures.append(f"direct-child reap failed: {exc}")
+    except Exception as exc:
+        failures.append(f"direct-child wait failed: {exc}")
+
+    for reader in readers:
+        try:
+            reader.join(timeout=5)
+        except Exception as exc:
+            failures.append(f"output-reader join failed: {exc}")
+    if any(reader.is_alive() for reader in readers):
+        for stream in streams:
+            try:
+                stream.close()
+            except Exception as exc:
+                failures.append(f"output-pipe close failed: {exc}")
+        for reader in readers:
+            reader.join(timeout=1)
+        if any(reader.is_alive() for reader in readers):
+            failures.append("output readers remained alive after pipe closure")
+
+    metrics: dict[str, object] = {}
+    empty = False
+    if cgroup is not None:
+        try:
+            cgroup.wait_empty()
+            empty = True
+        except Exception as exc:
+            failures.append(f"cgroup did not become empty: {exc}")
+        if empty:
+            try:
+                metrics = cgroup.snapshot()
+            except Exception as exc:
+                failures.append(f"cgroup evidence snapshot failed: {exc}")
+        try:
+            cgroup.close()
+        except Exception as exc:
+            failures.append(f"cgroup removal failed: {exc}")
+            empty = False
+
+    if failures:
+        raise RuntimeError("sandbox cleanup incomplete: " + "; ".join(failures))
+    return metrics, (cgroup is not None and empty)
+
+
 def run(code: str | None = None, argv: Sequence[str] | None = None,
         workspace: str | None = None, timeout_s: float = 20.0,
         cpu_s: int = 15, mem_mb: int = 1024, nproc: int = 64,
@@ -328,53 +410,20 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
             target=drain, args=(proc.stdout, "stdout"), daemon=True)
         stderr_reader = threading.Thread(
             target=drain, args=(proc.stderr, "stderr"), daemon=True)
-        stdout_reader.start()
-        stderr_reader.start()
+        readers: list[threading.Thread] = []
         try:
-            proc.wait(timeout=timeout_s)
-        except subprocess.TimeoutExpired:
-            timed_out = True
-            if os.name == "posix":
-                try:
-                    os.killpg(proc.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-            else:
-                proc.kill()
-            proc.wait()
-
-        # A command that backgrounds a child and exits must not leave that
-        # child running or holding the output pipes open.
-        if os.name == "posix":
+            stdout_reader.start()
+            readers.append(stdout_reader)
+            stderr_reader.start()
+            readers.append(stderr_reader)
             try:
-                os.killpg(proc.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-        cgroup_metrics: dict[str, object] = {}
-        if cgroup is not None:
-            # cgroup.kill also terminates descendants that escaped the process
-            # group but remained in the delegated cgroup.
-            try:
-                cgroup.kill()
-                cgroup.wait_empty()
-                cgroup_metrics = cgroup.snapshot()
-            except Exception:
-                try:
-                    cgroup.close()
-                except Exception:
-                    pass
-                raise
-        stdout_reader.join(timeout=5)
-        stderr_reader.join(timeout=5)
-        if stdout_reader.is_alive() or stderr_reader.is_alive():
-            if cgroup is not None:
-                cgroup.close()
-            raise RuntimeError("sandbox output pipes did not close after process cleanup")
-
-        cgroup_empty_after_cleanup = False
-        if cgroup is not None:
-            cgroup.close()
-            cgroup_empty_after_cleanup = True
+                proc.wait(timeout=timeout_s)
+            except subprocess.TimeoutExpired:
+                timed_out = True
+                # The common cleanup path kills the complete process tree.
+        finally:
+            cgroup_metrics, cgroup_empty_after_cleanup = _cleanup_execution(
+                proc, cgroup, readers, (proc.stdout, proc.stderr))
 
         rc = proc.returncode
         out = bytes(captured["stdout"]).decode("utf-8", errors="replace")
