@@ -291,21 +291,6 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                 "full sandbox isolation requires working bubblewrap "
                 "user/pid/network namespaces; refusing same-user host execution")
 
-        cgroup = None
-        if require_full_isolation:
-            cgroup_root = configured_cgroup_root()
-            if not cgroup_root:
-                raise NetworkIsolationUnavailable(
-                    "full sandbox isolation requires an administrator-delegated "
-                    "cgroup v2 subtree configured with CORTEX_CGROUP_ROOT")
-            try:
-                cgroup = CgroupV2.create(
-                    cgroup_root, mem_mb=mem_mb, nproc=nproc,
-                    cpu_quota_us=cpu_quota_us, cpu_period_us=cpu_period_us)
-            except (CgroupUnavailable, OSError, ValueError) as exc:
-                raise NetworkIsolationUnavailable(
-                    f"aggregate cgroup resource enforcement unavailable: {exc}") from exc
-
         netns = _supports_unshare()
         filesystem_isolated = False
         if bwrap:
@@ -337,6 +322,21 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
             full_cmd = ["unshare", "-rn"] + cmd
         else:
             full_cmd = cmd
+        cgroup = None
+        if require_full_isolation:
+            cgroup_root = configured_cgroup_root()
+            if not cgroup_root:
+                raise NetworkIsolationUnavailable(
+                    "full sandbox isolation requires an administrator-delegated "
+                    "cgroup v2 subtree configured with CORTEX_CGROUP_ROOT")
+            try:
+                cgroup = CgroupV2.create(
+                    cgroup_root, mem_mb=mem_mb, nproc=nproc,
+                    cpu_quota_us=cpu_quota_us, cpu_period_us=cpu_period_us)
+            except (CgroupUnavailable, OSError, ValueError) as exc:
+                raise NetworkIsolationUnavailable(
+                    f"aggregate cgroup resource enforcement unavailable: {exc}") from exc
+
         start = time.time()
         timed_out = False
         max_output_bytes = 4 * 1024 * 1024  # per stream; memory use is bounded
@@ -371,13 +371,15 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                         start_new_session=(os.name == "posix"),
                         pass_fds=(gate_read,),
                     )
-                except Exception:
+                except Exception as launch_error:
                     os.close(gate_write)
                     try:
                         cgroup.kill()
+                        cgroup.wait_empty()
                         cgroup.close()
-                    except Exception:
-                        pass
+                    except Exception as cleanup_error:
+                        launch_error.add_note(
+                            f"cgroup cleanup after launch failure also failed: {cleanup_error}")
                     raise
             finally:
                 os.close(gate_read)
@@ -387,15 +389,10 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
             except Exception as exc:
                 os.close(gate_write)
                 try:
-                    os.killpg(proc.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-                proc.wait()
-                try:
-                    cgroup.kill()
-                    cgroup.close()
-                except Exception:
-                    pass
+                    _cleanup_execution(proc, cgroup, [], ())
+                except Exception as cleanup_error:
+                    exc.add_note(
+                        f"sandbox cleanup after cgroup-attach failure also failed: {cleanup_error}")
                 raise NetworkIsolationUnavailable(
                     f"could not attach sandbox launcher to cgroup before execution: {exc}") from exc
             os.close(gate_write)
@@ -420,8 +417,15 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                 proc.wait(timeout=timeout_s)
             except subprocess.TimeoutExpired:
                 timed_out = True
-                # The common cleanup path kills the complete process tree.
-        finally:
+        except BaseException as primary_error:
+            try:
+                cgroup_metrics, cgroup_empty_after_cleanup = _cleanup_execution(
+                    proc, cgroup, readers, (proc.stdout, proc.stderr))
+            except Exception as cleanup_error:
+                primary_error.add_note(
+                    f"sandbox cleanup also failed: {cleanup_error}")
+            raise
+        else:
             cgroup_metrics, cgroup_empty_after_cleanup = _cleanup_execution(
                 proc, cgroup, readers, (proc.stdout, proc.stderr))
 
