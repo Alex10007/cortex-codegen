@@ -180,6 +180,25 @@ def _copy_workspace_no_symlinks(source: str, destination: str) -> None:
 
 
 
+
+def _cleanup_unlaunched_cgroup(cgroup: CgroupV2) -> list[str]:
+    """Best-effort cleanup when no child was launched into a new cgroup.
+
+    Each operation is attempted even if an earlier one fails, so a failed
+    cgroup.kill write does not prevent an empty cgroup from being removed.
+    """
+    failures: list[str] = []
+    for label, operation in (
+        ("kill", cgroup.kill),
+        ("wait-empty", cgroup.wait_empty),
+        ("remove", cgroup.close),
+    ):
+        try:
+            operation()
+        except Exception as exc:
+            failures.append(f"{label}: {exc}")
+    return failures
+
 def _cleanup_execution(
     proc: subprocess.Popen,
     cgroup: CgroupV2 | None,
@@ -370,13 +389,11 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                         except OSError as close_error:
                             setup_error.add_note(
                                 f"launch pipe close also failed: {close_error}")
-                try:
-                    cgroup.kill()
-                    cgroup.wait_empty()
-                    cgroup.close()
-                except Exception as cleanup_error:
+                cleanup_failures = _cleanup_unlaunched_cgroup(cgroup)
+                if cleanup_failures:
                     setup_error.add_note(
-                        f"cgroup cleanup after launch preparation failure also failed: {cleanup_error}")
+                        "cgroup cleanup after launch preparation failure was incomplete: "
+                        + "; ".join(cleanup_failures))
                 raise
             try:
                 try:
@@ -391,13 +408,11 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                     )
                 except Exception as launch_error:
                     os.close(gate_write)
-                    try:
-                        cgroup.kill()
-                        cgroup.wait_empty()
-                        cgroup.close()
-                    except Exception as cleanup_error:
+                    cleanup_failures = _cleanup_unlaunched_cgroup(cgroup)
+                    if cleanup_failures:
                         launch_error.add_note(
-                            f"cgroup cleanup after launch failure also failed: {cleanup_error}")
+                            "cgroup cleanup after launch failure was incomplete: "
+                            + "; ".join(cleanup_failures))
                     raise
             finally:
                 os.close(gate_read)
