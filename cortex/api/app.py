@@ -34,6 +34,13 @@ class PipelineRequest(RepoRequest):
     authorize_destructive: bool = False
 
 
+class GenerateRequest(BaseModel):
+    prompt: str = Field(..., min_length=1, max_length=20_000)
+    project: str | None = Field(default=None, max_length=256)
+    max_new_tokens: int = Field(default=128, ge=1, le=2048)
+    temperature: float = Field(default=0.7, ge=0.0, le=2.0)
+
+
 class EvalRequest(BaseModel):
     candidate: str | None = Field(default=None, max_length=200_000)
     reference: bool = False
@@ -112,6 +119,16 @@ def create_app(agent=None, api_token: str | None = None) -> FastAPI:
     @app.post("/knowledge/query", dependencies=[Depends(require_auth)])
     def knowledge_query(req: QueryRequest) -> list[dict[str, Any]]:
         return agent.knowledge_query(req.query, k=req.k)
+
+    @app.post("/generate", dependencies=[Depends(require_auth)])
+    def generate(req: GenerateRequest) -> dict[str, Any]:
+        try:
+            output = agent.generate(
+                req.prompt, max_new_tokens=req.max_new_tokens,
+                temperature=req.temperature, project=req.project)
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=503, detail=str(exc))
+        return {"text": output, "project_context_used": bool(req.project)}
 
     @app.get("/knowledge/capacity", dependencies=[Depends(require_auth)])
     def knowledge_capacity() -> dict[str, Any]:
