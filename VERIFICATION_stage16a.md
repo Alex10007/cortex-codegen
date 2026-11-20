@@ -219,3 +219,11 @@ The strict sandbox execution path now requires an administrator-delegated cgroup
 The behavioral qualification now attempts to exceed the aggregate process cap and launches descendants in separate sessions. The cgroup must report empty after cleanup. API workers cache the full qualification result once per process; each execution still gets a fresh cgroup and fail-closed setup.
 
 **Stage 16A.7 status: IMPLEMENTED, NOT RUNTIME-VERIFIED.** Regression tests are committed but have not executed because GitHub Actions jobs continue to fail before runner allocation (`runner_id=0`, empty steps and no logs). Numeric CPU/memory pressure tests, I/O bandwidth/IOPS controls, seccomp, privileged cgroup migration and kernel escape resistance remain outstanding. See [VERIFICATION_stage16a7.md](VERIFICATION_stage16a7.md). No training, benchmark promotion, PR merge or `main` change was performed.
+
+
+## Stage 16A.8 — Kernel-Evidence Resource Qualification
+
+- Added cgroup snapshots for `cpu.stat`, `memory.events`, `pids.events`, and `memory.current` before cgroup removal; missing/malformed evidence fails closed.
+- Strict sandbox CPU quota is configurable for controlled qualification. CPU, memory and process-limit qualification now requires kernel event counters, not merely configuration or failed child-spawn attempts.
+- Added controlled CPU-bound and concurrent aggregate-memory workloads to behavioral qualification. These require live delegated Linux cgroup v2 + Bubblewrap and remain **NOT RUNTIME-VERIFIED** until run on that host.
+- Seccomp remains **NOT ENABLED / NOT CERTIFIED**; no unverified default-deny policy or speculative dependency was introduced. Disk I/O remains `NOT_CONFIGURED`.

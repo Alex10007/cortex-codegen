@@ -163,7 +163,9 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
         workspace: str | None = None, timeout_s: float = 20.0,
         cpu_s: int = 15, mem_mb: int = 1024, nproc: int = 64,
         audit: Callable[[str, dict], None] | None = None,
-        require_full_isolation: bool = False) -> ExecutionResult:
+        require_full_isolation: bool = False,
+        cpu_quota_us: int = 100_000,
+        cpu_period_us: int = 100_000) -> ExecutionResult:
     """Execute in a disposable workspace.
 
     When bubblewrap is available, use user/pid/network namespaces, a read-only
@@ -196,7 +198,8 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                     "cgroup v2 subtree configured with CORTEX_CGROUP_ROOT")
             try:
                 cgroup = CgroupV2.create(
-                    cgroup_root, mem_mb=mem_mb, nproc=nproc)
+                    cgroup_root, mem_mb=mem_mb, nproc=nproc,
+                    cpu_quota_us=cpu_quota_us, cpu_period_us=cpu_period_us)
             except (CgroupUnavailable, OSError, ValueError) as exc:
                 raise NetworkIsolationUnavailable(
                     f"aggregate cgroup resource enforcement unavailable: {exc}") from exc
@@ -331,10 +334,20 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                 os.killpg(proc.pid, signal.SIGKILL)
             except ProcessLookupError:
                 pass
+        cgroup_metrics: dict[str, object] = {}
         if cgroup is not None:
             # cgroup.kill also terminates descendants that escaped the process
             # group but remained in the delegated cgroup.
-            cgroup.kill()
+            try:
+                cgroup.kill()
+                cgroup.wait_empty()
+                cgroup_metrics = cgroup.snapshot()
+            except Exception:
+                try:
+                    cgroup.close()
+                except Exception:
+                    pass
+                raise
         stdout_reader.join(timeout=5)
         stderr_reader.join(timeout=5)
         if stdout_reader.is_alive() or stderr_reader.is_alive():
@@ -390,6 +403,9 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                 "aggregate_cpu_limit": cgroup is not None,
                 "aggregate_memory_limit": cgroup is not None,
                 "aggregate_process_limit": cgroup is not None,
+                "cgroup_metrics": cgroup_metrics,
+                "cpu_quota_us": cpu_quota_us if cgroup is not None else None,
+                "cpu_period_us": cpu_period_us if cgroup is not None else None,
                 "io_limit": "NOT_CONFIGURED"},
     )
     if require_full_isolation and not filesystem_isolated:

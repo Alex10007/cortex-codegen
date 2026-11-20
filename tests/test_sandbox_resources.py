@@ -52,6 +52,14 @@ def test_create_applies_cpu_memory_and_process_limits(tmp_path, monkeypatch):
     assert (group.path / "cpu.max").read_text() == "50000 100000"
     assert (group.path / "memory.max").read_text() == str(256 * 1024 * 1024)
     assert (group.path / "pids.max").read_text() == "12"
+    (group.path / "cpu.stat").write_text("usage_usec 1234\nnr_periods 10\nnr_throttled 3\nthrottled_usec 2000\n")
+    (group.path / "memory.events").write_text("low 0\nhigh 0\nmax 2\noom 1\noom_kill 1\noom_group_kill 0\n")
+    (group.path / "pids.events").write_text("max 4\n")
+    (group.path / "memory.current").write_text("0")
+    snapshot = group.snapshot()
+    assert snapshot["cpu_stat"]["nr_throttled"] == 3
+    assert snapshot["memory_events"]["oom_kill"] == 1
+    assert snapshot["pids_events"]["max"] == 4
     group.attach(1234)
     assert (group.path / "cgroup.procs").read_text() == "1234"
     group.kill()

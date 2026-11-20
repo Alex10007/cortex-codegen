@@ -113,6 +113,38 @@ class CgroupV2:
             time.sleep(0.02)
         raise CgroupUnavailable("cgroup still contains processes after cgroup.kill")
 
+    @staticmethod
+    def _read_counters(path: Path) -> dict[str, int]:
+        try:
+            lines = path.read_text(encoding="ascii").splitlines()
+        except OSError as exc:
+            raise CgroupUnavailable(f"cannot read {path.name}: {exc}") from exc
+        counters: dict[str, int] = {}
+        for line in lines:
+            fields = line.split()
+            if len(fields) != 2 or not fields[1].isdigit():
+                raise CgroupUnavailable(f"malformed counter in {path.name}: {line!r}")
+            counters[fields[0]] = int(fields[1])
+        if not counters:
+            raise CgroupUnavailable(f"no counters available in {path.name}")
+        return counters
+
+    def snapshot(self) -> dict[str, object]:
+        """Capture kernel-maintained resource events before the cgroup is removed."""
+        cpu = self._read_counters(self.path / "cpu.stat")
+        memory_events = self._read_counters(self.path / "memory.events")
+        pids_events = self._read_counters(self.path / "pids.events")
+        try:
+            memory_current = int((self.path / "memory.current").read_text(encoding="ascii").strip())
+        except (OSError, ValueError) as exc:
+            raise CgroupUnavailable(f"cannot read memory.current: {exc}") from exc
+        return {
+            "cpu_stat": cpu,
+            "memory_events": memory_events,
+            "pids_events": pids_events,
+            "memory_current_bytes": memory_current,
+        }
+
     def close(self) -> None:
         if self._closed:
             return

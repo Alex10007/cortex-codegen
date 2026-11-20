@@ -23,6 +23,8 @@ def qualify_sandbox() -> dict[str, Any]:
         "aggregate_limits_enforced": "NOT_RUN",
         "detached_descendant_cleanup": "NOT_RUN",
         "aggregate_process_cap_observed": "NOT_RUN",
+        "cpu_throttling_observed": "NOT_RUN",
+        "memory_oom_observed": "NOT_RUN",
         "workspace_writable": "NOT_RUN",
         "host_path_inaccessible": "NOT_RUN",
         "runtime_readonly": "NOT_RUN",
@@ -127,9 +129,53 @@ print(json.dumps(result, sort_keys=True))
             and limits.get("cgroup_empty_after_cleanup") is True
             else "FAIL"
         )
+        pids_events = limits.get("cgroup_metrics", {}).get("pids_events", {})
         checks["aggregate_process_cap_observed"] = (
-            "PASS" if observed.get("process_cap_observed") is True else "FAIL"
+            "PASS"
+            if observed.get("process_cap_observed") is True
+            and pids_events.get("max", 0) > 0
+            else "FAIL"
         )
+
+    # A deliberately tight quota must produce kernel CPU-throttle events.
+    try:
+        cpu_probe = run(
+            code=("import time\ndeadline=time.monotonic()+1.2\nx=0\n"
+                  "while time.monotonic()<deadline: x+=1\n"),
+            timeout_s=4.0, cpu_s=4, mem_mb=256, nproc=4,
+            require_full_isolation=True, cpu_quota_us=20_000,
+        )
+        cpu_stat = (cpu_probe.limits or {}).get("cgroup_metrics", {}).get("cpu_stat", {})
+        checks["cpu_throttling_observed"] = (
+            "PASS" if cpu_stat.get("nr_throttled", 0) > 0
+            and cpu_stat.get("throttled_usec", 0) > 0 else "FAIL"
+        )
+    except Exception:
+        checks["cpu_throttling_observed"] = "FAIL"
+
+    # Concurrent workers each fit RLIMIT_AS but together exceed memory.max.
+    memory_probe_code = (
+        "import subprocess,sys\n"
+        "worker='import time; x=bytearray(80*1024*1024); "
+        "[(x.__setitem__(i,1)) for i in range(0,len(x),4096)]; time.sleep(2)'\n"
+        "a=subprocess.Popen([sys.executable,'-c',worker])\n"
+        "b=subprocess.Popen([sys.executable,'-c',worker])\n"
+        "a.wait(); b.wait()\n"
+    )
+    try:
+        memory_probe = run(
+            code=memory_probe_code, timeout_s=6.0, cpu_s=5,
+            mem_mb=128, nproc=8, require_full_isolation=True,
+        )
+        memory_events = (memory_probe.limits or {}).get(
+            "cgroup_metrics", {}).get("memory_events", {})
+        checks["memory_oom_observed"] = (
+            "PASS" if memory_events.get("oom", 0) > 0
+            and (memory_events.get("oom_kill", 0)
+                 + memory_events.get("oom_group_kill", 0)) > 0 else "FAIL"
+        )
+    except Exception:
+        checks["memory_oom_observed"] = "FAIL"
 
     return {
         "passed": all(status == "PASS" for status in checks.values()),
@@ -137,7 +183,7 @@ print(json.dumps(result, sort_keys=True))
         "limitations": [
             "No seccomp syscall-filtering policy is certified.",
             "RLIMIT_NPROC is not a reliable aggregate process cap for privileged/root execution.",
-            "Cgroup v2 CPU, memory and process-count limits are configured per execution; this qualification does not yet stress the numeric memory or CPU ceilings.",
+            "CPU throttling and aggregate memory OOM checks require a live delegated Linux cgroup and are accepted only from kernel event counters.",
             "Disk I/O bandwidth/IOPS limits are not configured.",
             "Detached descendants are checked through cgroup-wide cleanup; deliberate cgroup migration or kernel-level escape resistance is not certified.",
             "Network reachability is probed against 1.1.1.1:53 only.",
