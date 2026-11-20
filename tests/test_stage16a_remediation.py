@@ -250,10 +250,14 @@ def test_orphan_optimizer_state_is_not_counted_as_trained(small_store):
 
 def test_moe_physical_parameter_ledger_separates_dense_reference():
     from cortex.model.configs import CORTEX_DEMO
-    from cortex.model.moe import CortexMoETransformer
+    from cortex.model.moe import (
+        CortexMoETransformer, estimate_moe_physical_parameters)
 
     model = CortexMoETransformer(CORTEX_DEMO)
     ledger = model.moe_param_count()
+    estimate = estimate_moe_physical_parameters(CORTEX_DEMO)
+    assert estimate["physical_total_parameters"] == (
+        ledger["physical_total_parameters"])
     assert ledger["dense_reference_parameters"] == (
         CORTEX_DEMO.theoretical_param_count())
     assert ledger["physical_total_parameters"] == model.actual_param_count()
