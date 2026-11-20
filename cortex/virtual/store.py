@@ -264,6 +264,29 @@ class VirtualParameterStore:
                 _np.ascontiguousarray(data[f"{name}_m"], dtype=_np.float32))
             st.v[name] = torch.from_numpy(
                 _np.ascontiguousarray(data[f"{name}_v"], dtype=_np.float32))
+        if "changed_evidence_known" in data:
+            st.changed_evidence_known = bool(int(data["changed_evidence_known"]))
+            st.changed_mask = {}
+            for name, p in (("A", st.A), ("B", st.B)):
+                mask_key = f"{name}_changed_mask"
+                if mask_key in data:
+                    mask = _np.ascontiguousarray(data[mask_key], dtype=_np.bool_)
+                    if mask.shape != tuple(p.shape):
+                        raise RuntimeError(
+                            f"persisted changed-mask shape mismatch for "
+                            f"{st.bank}/{st.row}/{name}")
+                    st.changed_mask[name] = torch.from_numpy(mask).to(p.device)
+                else:
+                    st.changed_evidence_known = False
+                    st.changed_mask[name] = torch.zeros_like(p, dtype=torch.bool)
+        else:
+            # Historical optimizer files prove optimizer steps, not which
+            # individual scalars actually changed.
+            st.changed_evidence_known = False
+            st.changed_mask = {
+                name: torch.zeros_like(p, dtype=torch.bool)
+                for name, p in st.params.items()
+            }
 
     # ---------- commit / recovery ----------
 
