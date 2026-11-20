@@ -344,6 +344,7 @@ class VirtualParameterStore:
                     shape.get("scalars", 2 * int(shape["dim"]) * int(shape["rank"])))
 
         persisted_updated_keys = set()
+        orphan_optimizer_keys = set()
         persisted_updated_scalars = 0
         optimizer_steps_by_key = {}
         for path in self.root.glob("adam-*.npz"):
@@ -351,6 +352,9 @@ class VirtualParameterStore:
             key = (int(bank_s), int(row_s))
             with np.load(path) as state:
                 if int(state["step_count"]) <= 0:
+                    continue
+                if key not in committed_keys:
+                    orphan_optimizer_keys.add(key)
                     continue
                 n = int(state["A_m"].size + state["B_m"].size)
                 shape_by_key[key] = n
@@ -399,13 +403,15 @@ class VirtualParameterStore:
             "demonstrably_trained": updated,
             "updates_applied_total": sum(optimizer_steps_by_key.values()),
             "persisted_optimizer_updated_scalars": persisted_updated_scalars,
+            "orphan_optimizer_state_slots": len(orphan_optimizer_keys),
             "partitions_touched": len(manifest["initialized_rows"]),
             "partitions_total": N_BANKS,
             "invariants_hold": (
                 exact_virtual_count() >= initialized >= received
                 >= updated and updated < exact_virtual_count()
                 and initialized_unknown == 0 and activated_unknown == 0
-                and received_unknown == 0 and updated_unknown == 0),
+                and received_unknown == 0 and updated_unknown == 0
+                and not orphan_optimizer_keys),
         }
 
     def _trained_updates(self) -> int:
