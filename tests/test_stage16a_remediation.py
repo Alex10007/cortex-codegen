@@ -96,3 +96,17 @@ def test_joint_trainer_updates_shared_virtual_slot_once_and_clears_gradients(
         assert slot.step_count == (1 if key in updated else 0)
         assert slot.A.grad is None
         assert slot.B.grad is None
+
+def test_2b_memory_estimate_includes_quadratic_attention():
+    from cortex.model.configs import CORTEX_2B
+    from cortex.training.scaling import estimate_memory_bytes
+
+    seq = CORTEX_2B.max_seq_len
+    rep = estimate_memory_bytes(CORTEX_2B, batch_size=1, seq_len=seq)
+    expected = (
+        CORTEX_2B.n_layers * CORTEX_2B.n_heads * seq * seq * 4 * 2)
+    assert rep["attention_matrix_bytes_est"] == expected
+    assert rep["activation_bytes_est"] >= expected
+    assert rep["total_bytes_est"] == (
+        rep["param_bytes"] + rep["grad_bytes"]
+        + rep["optimizer_bytes"] + rep["activation_bytes_est"])
