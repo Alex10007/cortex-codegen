@@ -76,6 +76,7 @@ def test_api_gate_requires_behavioral_qualification(monkeypatch):
     monkeypatch.setattr(sandbox, "_supports_bwrap", lambda: True)
     monkeypatch.setattr(qualification, "qualify_sandbox", lambda: {
         "passed": False, "checks": {"host_path_inaccessible": "FAIL"}})
+    api_module._cached_sandbox_qualification.cache_clear()
     with pytest.raises(HTTPException) as exc:
         api_module._require_full_sandbox()
     assert exc.value.status_code == 503
