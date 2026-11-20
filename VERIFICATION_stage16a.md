@@ -260,3 +260,15 @@ The behavioral qualification now attempts to exceed the aggregate process cap an
 **Verification:** changes are committed, but the new tests have **not been executed**. GitHub Actions still reports completed failed jobs with no step records and no logs (`steps: null`); this does not establish a test failure in the repository or a passing test suite. Live delegated-cgroup qualification remains outstanding.
 
 **Limitations unchanged:** no seccomp certification, no disk I/O enforcement, no kernel escape-resistance claim, and no live CPU/memory/pids stress qualification. No training, benchmark promotion, checkpoint/dataset mutation, merge, or `main` update.
+
+
+## Stage 16A.11 — cgroup configuration and evidence parsing boundaries
+
+- Enforced the documented cgroup v2 `cpu.max` period range of 1,000–1,000,000 microseconds. Positive-integer validation remains in place for all resource-limit inputs.
+- Counter parsing now rejects duplicate keys rather than silently accepting the last value.
+- `memory.current` must be a non-negative ASCII decimal integer; signed or otherwise malformed values fail closed.
+- Added regression cases for out-of-range CPU periods, duplicate counter keys, and malformed memory-current evidence.
+
+**Verification:** source and test changes committed to the remediation branch. These tests have not been executed; CI jobs still fail before any runner steps or logs are available. This increment therefore makes no test-pass or live-sandbox qualification claim.
+
+**Scope unchanged:** strict sandbox requires real Bubblewrap plus administrator-delegated cgroup v2; seccomp and disk I/O controls remain unconfigured; live CPU, memory and process-limit qualification is outstanding. No model training, benchmark promotion, checkpoint/dataset mutation, merge, or `main` update.
