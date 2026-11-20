@@ -42,8 +42,15 @@ class CgroupV2:
             raise CgroupUnavailable(
                 f"cgroup controllers unavailable={sorted(missing)} disabled={sorted(disabled)}; "
                 "administrator must delegate and enable cpu,memory,pids")
-        if mem_mb < 1 or nproc < 1 or cpu_quota_us < 1 or cpu_period_us < 1:
-            raise ValueError("cgroup resource limits must be positive")
+        limits = {
+            "mem_mb": mem_mb,
+            "nproc": nproc,
+            "cpu_quota_us": cpu_quota_us,
+            "cpu_period_us": cpu_period_us,
+        }
+        if any(type(value) is not int or value < 1
+               for value in limits.values()):
+            raise ValueError("cgroup resource limits must be positive integers")
 
         path = base / ("cortex-" + uuid.uuid4().hex)
         try:
@@ -127,6 +134,15 @@ class CgroupV2:
             counters[fields[0]] = int(fields[1])
         if not counters:
             raise CgroupUnavailable(f"no counters available in {path.name}")
+        required = {
+            "cpu.stat": {"nr_throttled", "throttled_usec"},
+            "memory.events": {"oom", "oom_kill", "oom_group_kill"},
+            "pids.events": {"max"},
+        }.get(path.name, set())
+        missing = required - counters.keys()
+        if missing:
+            raise CgroupUnavailable(
+                f"missing required counters in {path.name}: {sorted(missing)}")
         return counters
 
     def snapshot(self) -> dict[str, object]:
@@ -136,6 +152,8 @@ class CgroupV2:
         pids_events = self._read_counters(self.path / "pids.events")
         try:
             memory_current = int((self.path / "memory.current").read_text(encoding="ascii").strip())
+            if memory_current < 0:
+                raise ValueError("memory.current cannot be negative")
         except (OSError, ValueError) as exc:
             raise CgroupUnavailable(f"cannot read memory.current: {exc}") from exc
         return {
