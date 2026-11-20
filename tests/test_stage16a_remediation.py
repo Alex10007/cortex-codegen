@@ -434,3 +434,19 @@ def test_multi_slot_commit_publishes_one_manifest_transaction(
     assert torch.equal(restored_a.B.detach(), expected_a[1])
     assert torch.equal(restored_b.A.detach(), expected_b[0])
     assert torch.equal(restored_b.B.detach(), expected_b[1])
+
+
+
+def test_2b_moe_parameter_estimate_is_separate_from_dense_2b():
+    from cortex.model.configs import CORTEX_2B
+    from cortex.model.moe import estimate_moe_physical_parameters
+
+    report = estimate_moe_physical_parameters(CORTEX_2B)
+    assert report["dense_reference_parameters"] == 2_056_012_800
+    assert report["physical_total_parameters"] == 5_832_360_960
+    assert report["physical_total_parameters"] > (
+        report["dense_reference_parameters"])
+    assert report["physical_total_parameters"] == (
+        report["backbone_parameters"]
+        + report["physical_expert_parameters"]
+        + report["router_parameters"])
