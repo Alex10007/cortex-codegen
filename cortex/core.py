@@ -89,12 +89,24 @@ class CortexAgent:
                     raise RuntimeError("MoE physical checkpoint/lineage step mismatch")
                 routes = lineage.get("virtual_routes") or {}
                 if routes:
-                    if not self.virtual_store_path:
+                    store_root = (self.virtual_store_path
+                                  or lineage.get("virtual_store_root"))
+                    if not store_root:
                         raise FileNotFoundError(
                             "MoE checkpoint has virtual routes; configure "
-                            "CORTEX_VIRTUAL_STORE_DIR or virtual_store_path")
+                            "CORTEX_VIRTUAL_STORE_DIR or preserve the "
+                            "lineage-recorded virtual store")
                     from cortex.virtual.store import VirtualParameterStore
-                    store = VirtualParameterStore.open(self.virtual_store_path)
+                    store = VirtualParameterStore.open(store_root)
+                    expected_manifest_sha = lineage.get(
+                        "virtual_store_manifest_sha256")
+                    if expected_manifest_sha:
+                        actual_manifest_sha = __import__("hashlib").sha256(
+                            store.manifest_path.read_bytes()).hexdigest()
+                        if actual_manifest_sha != expected_manifest_sha:
+                            raise RuntimeError(
+                                "virtual store manifest does not match "
+                                "checkpoint lineage")
                     integrity = store.verify_integrity()
                     if not integrity["integrity_ok"]:
                         raise RuntimeError(
