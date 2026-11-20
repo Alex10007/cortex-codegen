@@ -7,6 +7,7 @@ import tempfile
 from typing import Any
 
 from cortex.execution.sandbox import NetworkIsolationUnavailable, _supports_bwrap, run
+from cortex.execution.resources import probe_cgroup_v2
 
 
 def qualify_sandbox() -> dict[str, Any]:
@@ -17,6 +18,7 @@ def qualify_sandbox() -> dict[str, Any]:
     """
     checks = {
         "bwrap_available": "PASS" if _supports_bwrap() else "FAIL",
+        "cgroup_v2_delegation": "PASS" if probe_cgroup_v2().get("available") else "FAIL",
         "isolated_execution": "NOT_RUN",
         "workspace_writable": "NOT_RUN",
         "host_path_inaccessible": "NOT_RUN",
@@ -24,9 +26,12 @@ def qualify_sandbox() -> dict[str, Any]:
         "proc_dev_available": "NOT_RUN",
         "network_unreachable": "NOT_RUN",
     }
-    if checks["bwrap_available"] != "PASS":
+    if checks["bwrap_available"] != "PASS" or checks["cgroup_v2_delegation"] != "PASS":
         return {"passed": False, "checks": checks,
-                "limitations": ["Bubblewrap is unavailable or its namespace probe failed."]}
+                "limitations": [
+                    "Bubblewrap namespace capability and delegated cgroup v2 controllers are both required.",
+                    "The cgroup probe verifies delegation; sandbox.run must still attach each launched process before exec.",
+                ]}
 
     with tempfile.TemporaryDirectory(prefix="cortex-qualification-host-") as host_dir:
         host_sentinel = os.path.join(host_dir, "host-sentinel.txt")
@@ -97,7 +102,8 @@ print(json.dumps(result, sort_keys=True))
         "limitations": [
             "No seccomp syscall-filtering policy is certified.",
             "RLIMIT_NPROC is not a reliable aggregate process cap for privileged/root execution.",
-            "CPU, memory, process-count and disk/output limits are not independently stress-qualified.",
+            "Cgroup v2 CPU, memory and process-count limits are configured per execution but are not yet stress-qualified against adversarial descendants.",
+            "Disk I/O bandwidth/IOPS limits are not configured.",
             "No cgroup enforcement or deliberate namespace/session escape resistance is certified.",
             "Network reachability is probed against 1.1.1.1:53 only.",
         ],
