@@ -234,3 +234,26 @@ def test_orphan_optimizer_state_is_not_counted_as_trained(small_store):
     assert coverage["scalars"]["optimizer_updated"] == 0
     with pytest.raises(RuntimeError, match="orphan optimizer state"):
         small_store.slot_state(4, 5, dim=32, rank=4)
+
+def test_moe_physical_parameter_ledger_separates_dense_reference():
+    from cortex.model.configs import CORTEX_DEMO
+    from cortex.model.moe import CortexMoETransformer
+
+    model = CortexMoETransformer(CORTEX_DEMO)
+    ledger = model.moe_param_count()
+    assert ledger["dense_reference_parameters"] == (
+        CORTEX_DEMO.theoretical_param_count())
+    assert ledger["physical_total_parameters"] == model.actual_param_count()
+    assert ledger["physical_total_parameters"] > (
+        ledger["dense_reference_parameters"])
+    assert ledger["total_with_virtual"] == (
+        ledger["physical_total_parameters"] + ledger["virtual_slot_parameters"])
+
+
+def test_persisted_slot_shape_cannot_be_reinterpreted(small_store):
+    store = small_store
+    store.slot_state(0, 6, dim=64, rank=8)
+    store.commit(step=0, txid="persisted-shape")
+    store._slots.clear()
+    with pytest.raises(ValueError, match="persisted slot"):
+        store.slot_state(0, 6, dim=64, rank=4)
