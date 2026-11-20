@@ -259,13 +259,22 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
             )
             launch_cmd = [sys.executable, "-c", bootstrap, str(gate_read), *full_cmd]
             try:
-                proc = subprocess.Popen(
-                    launch_cmd, cwd=(td if not bwrap else "/"), env=env,
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                    preexec_fn=_limits(cpu_s, mem_mb, nproc),
-                    start_new_session=(os.name == "posix"),
-                    pass_fds=(gate_read,),
-                )
+                try:
+                    proc = subprocess.Popen(
+                        launch_cmd, cwd=(td if not bwrap else "/"), env=env,
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                        preexec_fn=_limits(cpu_s, mem_mb, nproc),
+                        start_new_session=(os.name == "posix"),
+                        pass_fds=(gate_read,),
+                    )
+                except Exception:
+                    os.close(gate_write)
+                    try:
+                        cgroup.kill()
+                        cgroup.close()
+                    except Exception:
+                        pass
+                    raise
             finally:
                 os.close(gate_read)
             try:
@@ -320,12 +329,9 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
             except ProcessLookupError:
                 pass
         if cgroup is not None:
-            try:
-                cgroup.kill()
-            except CgroupUnavailable:
-                # A failed cgroup-wide kill is a security failure, not a
-                # successful cleanup; preserve it as a hard execution error.
-                raise
+            # cgroup.kill also terminates descendants that escaped the process
+            # group but remained in the delegated cgroup.
+            cgroup.kill()
         stdout_reader.join(timeout=5)
         stderr_reader.join(timeout=5)
         if stdout_reader.is_alive() or stderr_reader.is_alive():
