@@ -42,6 +42,9 @@ No training run was launched. No historical benchmark, dataset, Stage 12 champio
 - Legacy committed rows may be restored only when their optimizer tensors provide an exact A/B shape witness; ambiguous legacy rows fail closed.
 - Orphan optimizer files are not counted as trained slots and are rejected during loading.
 - Initialized, activated, gradient-receiving and optimizer-updated counts use unique `(bank,row)` identities and exact tensor shapes.
+- Per-slot boolean change masks now record which individual A/B scalars have numerically changed. `demonstrably_trained` is derived from these masks, separately from optimizer-updated capacity.
+- Legacy optimizer states without change masks are reported as unknown for demonstrated scalar change; the system no longer assumes every scalar in a slot changed merely because AdamW stepped.
+- The coordinator now snapshots virtual values before each step and records exact moved-scalar counts, mean absolute delta and maximum absolute delta.
 - Full 50,000-scalar bank rows are no longer counted as initialized LoRA slots.
 - Optimizer state files are written to temporary files, flushed and atomically replaced.
 - Multi-slot commits publish all row digests through one atomic manifest replacement.
@@ -53,6 +56,7 @@ No training run was launched. No historical benchmark, dataset, Stage 12 champio
 - MoE checkpoint loading requires its joint lineage, verifies physical checkpoint hash, virtual-store manifest hash, committed step and row integrity, then restores virtual routes.
 - Generation executes under inference mode to avoid building autograd graphs.
 - Project-context generation returns whether verified context was actually supplied.
+- Knowledge inserts cannot self-assert verification, and replacing a previously verified record resets its trust status until re-verified.
 
 ### 5. Verified project memory and knowledge
 
@@ -94,7 +98,7 @@ For the dense 2B configuration at batch 8 and sequence length 8,192, the revised
 - Masking of unattached virtual routes.
 - Virtual optimizer update uniqueness and gradient clearing.
 - Virtual-rank capacity and slot-shape compatibility.
-- Exact A+B virtual scalar counts.
+- Exact A+B virtual scalar counts and per-scalar numerical-change evidence.
 - Exact MoE physical parameter accounting.
 - Legacy slot restoration and orphan optimizer rejection.
 - Atomic multi-slot manifest publication and row-digest checks.
@@ -115,6 +119,7 @@ Existing Stage 8 accounting assertions were updated to use exact slot scalars ra
 - MoE physical model: parameter count is now reported honestly; the default 2B MoE model is larger than the 2.056B dense reference.
 - No Stage 16 coding-capability experiment has been run.
 - No new candidate is promoted; Stage 12 champion remains the champion.
+- **Historical accounting clarification:** Stage 7–15 optimizer-state files predate per-scalar change masks. Their slot/step counts prove optimizer updates, but do not prove that every scalar in each slot changed. The previously reported 216,834,048 virtual scalars should therefore be interpreted as optimizer-updated slot capacity; exact per-scalar numerical-change evidence for those legacy runs is unavailable. The new accounting reports those legacy slots as unknown rather than retroactively rewriting Stage 7–15 artifacts.
 - No merge to `main` was performed.
 
 ## Remaining gaps
