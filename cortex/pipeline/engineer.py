@@ -8,6 +8,8 @@ no patcher, the pipeline still validates the current repository state.
 """
 from __future__ import annotations
 
+import os
+import tempfile
 from pathlib import Path
 from typing import Any, Callable, Optional
 
@@ -18,6 +20,104 @@ from cortex.testing.engine import run_pytest
 
 Patcher = Callable[[Any], dict[str, str]]
 ObjectiveVerifier = Callable[[Any, dict[str, Any]], bool]
+
+
+def _apply_patch_set(repo_path: str, edits: dict[str, str]) -> list[str]:
+    """Validate and stage an entire patch set before publishing any file.
+
+    Replacements are atomic per file. If a later replacement fails, already
+    replaced files are restored from their original bytes (or removed if new).
+    This is rollback-capable, not a filesystem-wide atomic transaction.
+    """
+    root = Path(repo_path).resolve(strict=True)
+    if not root.is_dir():
+        raise ValueError("repository root must be an existing directory")
+
+    prepared: list[tuple[str, Path, str, bytes | None, int | None]] = []
+    seen: set[Path] = set()
+    for rel, content in edits.items():
+        if not isinstance(rel, str) or not rel:
+            raise ValueError("patch path must be a non-empty string")
+        rel_path = Path(rel)
+        if (rel_path.is_absolute() or ".." in rel_path.parts
+                or any(part in {".git", ".cortex-state"} for part in rel_path.parts)):
+            raise ValueError(f"patcher returned a protected path: {rel}")
+        if not isinstance(content, str) or len(content.encode("utf-8")) > 1_000_000:
+            raise ValueError(f"patch content invalid or exceeds 1MB: {rel}")
+
+        target = root / rel_path
+        # Reject symlink components rather than allowing aliases or races
+        # through an existing repository symlink.
+        cursor = root
+        for part in rel_path.parts:
+            cursor = cursor / part
+            if cursor.is_symlink():
+                raise ValueError(f"patcher path traverses a symlink: {rel}")
+        resolved = target.resolve()
+        if resolved == root or root not in resolved.parents:
+            raise ValueError(f"patcher path escapes repository: {rel}")
+        if resolved in seen:
+            raise ValueError(f"duplicate patch target: {rel}")
+        seen.add(resolved)
+        if target.exists() and not target.is_file():
+            raise ValueError(f"patch target is not a regular file: {rel}")
+        original = target.read_bytes() if target.exists() else None
+        mode = target.stat().st_mode & 0o777 if target.exists() else None
+        prepared.append((rel_path.as_posix(), target, content, original, mode))
+
+    staged: list[tuple[str, Path, Path, bytes | None, int | None]] = []
+    published: list[tuple[Path, bytes | None, int | None]] = []
+    try:
+        # Stage every replacement in the target directory so os.replace stays
+        # on the same filesystem and is atomic for each individual file.
+        for rel, target, content, original, mode in prepared:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            fd, temp_name = tempfile.mkstemp(prefix=".cortex-stage-", dir=target.parent)
+            temp_path = Path(temp_name)
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8", newline="") as stream:
+                    stream.write(content)
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                if mode is not None:
+                    os.chmod(temp_path, mode)
+            except BaseException:
+                temp_path.unlink(missing_ok=True)
+                raise
+            staged.append((rel, target, temp_path, original, mode))
+
+        for _rel, target, temp_path, original, mode in staged:
+            os.replace(temp_path, target)
+            published.append((target, original, mode))
+    except BaseException:
+        rollback_errors: list[str] = []
+        for target, original, mode in reversed(published):
+            try:
+                if original is None:
+                    target.unlink(missing_ok=True)
+                else:
+                    fd, restore_name = tempfile.mkstemp(
+                        prefix=".cortex-restore-", dir=target.parent)
+                    with os.fdopen(fd, "wb") as stream:
+                        stream.write(original)
+                        stream.flush()
+                        os.fsync(stream.fileno())
+                    restore_path = Path(restore_name)
+                    if mode is not None:
+                        os.chmod(restore_path, mode)
+                    os.replace(restore_path, target)
+            except OSError as exc:
+                rollback_errors.append(f"{target}: {exc}")
+        if rollback_errors:
+            raise RuntimeError(
+                "patch publication failed and rollback was incomplete: "
+                + "; ".join(rollback_errors))
+        raise
+    finally:
+        for _rel, _target, temp_path, _original, _mode in staged:
+            temp_path.unlink(missing_ok=True)
+
+    return [rel for rel, _target, _temp, _original, _mode in staged]
 
 
 def run_engineering_pipeline(objective: str, repo_path: str,
@@ -49,21 +149,9 @@ def run_engineering_pipeline(objective: str, repo_path: str,
     files_changed: list[str] = []
     if patcher is not None:
         edits = patcher(the_plan) or {}
-        root = Path(repo_path).resolve()
-        for rel, content in edits.items():
-            rel_path = Path(rel)
-            if (rel_path.is_absolute() or ".." in rel_path.parts
-                    or any(part in {".git", ".cortex-state"}
-                           for part in rel_path.parts)):
-                raise ValueError(f"patcher returned a protected path: {rel}")
-            if not isinstance(content, str) or len(content.encode("utf-8")) > 1_000_000:
-                raise ValueError(f"patch content invalid or exceeds 1MB: {rel}")
-            target = (root / rel_path).resolve()
-            if target != root and root not in target.parents:
-                raise ValueError(f"patcher path escapes repository: {rel}")
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(content, encoding="utf-8")
-            files_changed.append(rel_path.as_posix())
+        if not isinstance(edits, dict):
+            raise ValueError("patcher must return a dictionary of path-to-content edits")
+        files_changed = _apply_patch_set(repo_path, edits)
         audit.record("pipeline.apply_edits", {"files": files_changed})
 
     if test_command_top:
