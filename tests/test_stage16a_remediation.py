@@ -148,3 +148,14 @@ def test_fsdp_planner_refuses_2b_until_attention_fits_cluster_matrix():
     # refuse rather than claim the old under-estimated 2B memory requirement.
     with pytest.raises(RuntimeError, match="no cluster size"):
         required_gpus("cortex-2b", batch_size=8, gpu_memory_gb=80.0)
+
+
+
+def test_cluster_plans_never_emit_zero_microbatch():
+    from cortex.model.configs import CORTEX_2B
+    from cortex.training.scaling import cluster_plans
+
+    plans = cluster_plans(CORTEX_2B, batch_size=4)
+    assert plans["plans"]
+    assert all(p["micro_batch"] >= 1 for p in plans["plans"])
+    assert all(4 % p["world_size"] == 0 for p in plans["plans"])
