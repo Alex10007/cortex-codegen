@@ -98,6 +98,15 @@ def measure(store: vstore.VirtualParameterStore,
                 "rank": int(state["A_m"].shape[1]),
                 "scalars": int(state["A_m"].size + state["B_m"].size),
             }
+    # A live SlotState is an exact shape witness for its committed row even
+    # when an older manifest predates initialized_slot_shapes.
+    for (bank, row), slot in store._slots.items():
+        if (bank, row) in committed_key_set:
+            slot_shapes.setdefault(str(bank), {})[str(row)] = {
+                "dim": int(slot.A.shape[0]),
+                "rank": int(slot.A.shape[1]),
+                "scalars": int(slot.A.numel() + slot.B.numel()),
+            }
     initialized_scalars = sum(
         int(shape.get("scalars", 2 * int(shape["dim"]) * int(shape["rank"])))
         for rows in slot_shapes.values() for shape in rows.values())
