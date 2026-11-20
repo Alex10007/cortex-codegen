@@ -314,3 +314,31 @@ def test_moe_refuses_when_active_experts_cannot_fill_topk():
                  expert_ffn=4)
     with pytest.raises(RuntimeError, match="active experts"):
         moe(torch.ones(1, 2, 4))
+
+
+
+def test_agent_generation_uses_inference_mode(tmp_path):
+    from types import SimpleNamespace
+    from cortex.core import CortexAgent
+
+    class Tokenizer:
+        EOT = "<eot>"
+        eot_id = 2
+
+        def encode(self, text):
+            return [1, 3]
+
+        def decode(self, tokens):
+            return "generated"
+
+    class Model:
+        cfg = SimpleNamespace(max_seq_len=32)
+
+        def generate(self, tokens, **kwargs):
+            assert torch.is_inference_mode_enabled()
+            return tokens
+
+    agent = CortexAgent(state_dir=str(tmp_path / "agent"))
+    agent._tokenizer = Tokenizer()
+    agent._model = Model()
+    assert agent.generate("hello") == "generated"
