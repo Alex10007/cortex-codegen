@@ -272,3 +272,14 @@ The behavioral qualification now attempts to exceed the aggregate process cap an
 **Verification:** source and test changes committed to the remediation branch. These tests have not been executed; CI jobs still fail before any runner steps or logs are available. This increment therefore makes no test-pass or live-sandbox qualification claim.
 
 **Scope unchanged:** strict sandbox requires real Bubblewrap plus administrator-delegated cgroup v2; seccomp and disk I/O controls remain unconfigured; live CPU, memory and process-limit qualification is outstanding. No model training, benchmark promotion, checkpoint/dataset mutation, merge, or `main` update.
+
+
+## Stage 16A.12 — kernel-compatible CPU quota validation and fixture correction
+
+- Added the cgroup v2 CFS bandwidth minimum: `cpu_quota_us` must be at least 1,000 microseconds. The existing period range remains 1,000–1,000,000 microseconds. Quotas greater than the period remain permitted because they represent more than one CPU-equivalent of aggregate bandwidth.
+- Added a regression test for a sub-millisecond quota.
+- Corrected the Stage 16A.10/16A.11 test fixture strings so their embedded counter records contain actual line separators. The previous double-escaped fixture would have tested malformed-line rejection rather than the intended missing-counter/duplicate-counter cases.
+
+**Verification:** committed source and test changes only. No test suite has been executed and no live cgroup host has been qualified. GitHub Actions has previously failed before runner steps/logs; the new commits must still receive an actual executable test run.
+
+**No changes** to training, model weights, checkpoints, benchmark champion, datasets, PR merge status, or `main`.
