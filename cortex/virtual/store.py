@@ -164,6 +164,8 @@ class VirtualParameterStore:
         # to reinterpret it under a different shape: doing so would silently
         # corrupt learned values and optimizer lineage.
         manifest = _read_json(self.manifest_path)
+        committed = str(row) in manifest.get(
+            "initialized_rows", {}).get(str(bank), {})
         persisted_shape = manifest.get("initialized_slot_shapes", {}).get(
             str(bank), {}).get(str(row))
         if persisted_shape is not None:
@@ -172,7 +174,7 @@ class VirtualParameterStore:
                 raise ValueError(
                     f"persisted slot {key} has dim/rank {expected}; "
                     f"requested {(dim, rank)}")
-        elif str(row) in manifest.get("initialized_rows", {}).get(str(bank), {}):
+        elif committed:
             raise RuntimeError(
                 f"persisted slot {key} has no shape metadata; refusing "
                 "ambiguous legacy row reinterpretation")
@@ -183,9 +185,14 @@ class VirtualParameterStore:
         if n > BANK_COLS:
             raise ValueError(
                 f"slot needs {n} values > bank row {BANK_COLS}")
-        flat = torch_from(raw[:n])
-        if bool((flat == 0).all()):
-            # sparse hole: this row was never initialized
+        if committed:
+            # A committed all-zero slot is valid data, not an empty sparse
+            # hole. Only manifest membership authorizes loading persisted
+            # numerical values.
+            flat = torch_from(raw[:n])
+        else:
+            # Ignore uncommitted bytes left by an interrupted transaction.
+            # They are not part of the accepted lineage.
             if init_values is not None:
                 if len(init_values) != n:
                     raise ValueError(
@@ -198,7 +205,13 @@ class VirtualParameterStore:
         A = torch.nn.Parameter(flat[:dim * rank].view(dim, rank).clone())
         B = torch.nn.Parameter(flat[dim * rank:].view(rank, dim).clone())
         st = SlotState(bank=bank, row=row, A=A, B=B)
-        self._restore_opt_state(st, dim, rank)
+        opt_path = self.root / f"adam-{bank:05d}-{row:06d}.npz"
+        if committed:
+            self._restore_opt_state(st, dim, rank)
+        elif opt_path.exists():
+            raise RuntimeError(
+                f"orphan optimizer state for uncommitted virtual slot {key}; "
+                "refusing to adopt an incomplete transaction")
         self._slots[key] = st
         self.dirty.add(key)
         return st
