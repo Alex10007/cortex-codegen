@@ -31,8 +31,12 @@ def test_profile_and_services(app):
 def test_sandbox_and_knowledge_endpoints(app):
     client = _client(app)
     r = client.post("/sandbox/run", json={"code": "print('api-sandbox-ok')"})
-    assert r.status_code == 200
-    assert "api-sandbox-ok" in r.json()["stdout"]
+    if r.status_code == 503:
+        assert "bubblewrap" in r.json()["detail"].lower()
+    else:
+        assert r.status_code == 200
+        assert r.json()["limits"]["filesystem_isolated"] is True
+        assert "api-sandbox-ok" in r.json()["stdout"]
 
     r = client.post("/knowledge/query", json={"query": "anything", "k": 3})
     assert r.status_code == 200
