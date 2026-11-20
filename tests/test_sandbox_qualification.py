@@ -16,6 +16,7 @@ def test_qualification_reports_each_behavioral_boundary(monkeypatch):
         "network_unreachable": True,
     }
     monkeypatch.setattr(qualification, "_supports_bwrap", lambda: True)
+    monkeypatch.setattr(qualification, "probe_cgroup_v2", lambda: {"available": True})
     monkeypatch.setattr(qualification, "run", lambda **kwargs: SimpleNamespace(
         ok=True, stdout=json.dumps(observed)))
     report = qualification.qualify_sandbox()
@@ -49,6 +50,7 @@ def test_bwrap_presence_alone_is_not_qualification(monkeypatch):
 def test_probe_setup_failure_leaves_behavioral_checks_not_run(monkeypatch):
     from cortex.execution.sandbox import NetworkIsolationUnavailable
     monkeypatch.setattr(qualification, "_supports_bwrap", lambda: True)
+    monkeypatch.setattr(qualification, "probe_cgroup_v2", lambda: {"available": True})
     def fail(**kwargs):
         raise NetworkIsolationUnavailable("namespace setup denied")
     monkeypatch.setattr(qualification, "run", fail)
