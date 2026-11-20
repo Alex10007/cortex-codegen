@@ -43,11 +43,20 @@ try:
         result["workspace_writable"] = f.read() == "ok"
 except OSError:
     result["workspace_writable"] = False
+host_visible = False
 try:
     with open(host_path, encoding="utf-8") as f:
-        result["host_path_inaccessible"] = "CORTEX_HOST_SENTINEL" not in f.read()
+        host_visible = "CORTEX_HOST_SENTINEL" in f.read()
 except OSError:
-    result["host_path_inaccessible"] = True
+    pass
+try:
+    with open(host_path + ".write-probe", "w", encoding="utf-8") as f:
+        f.write("must-not-write")
+    os.unlink(host_path + ".write-probe")
+    host_visible = True
+except OSError:
+    pass
+result["host_path_inaccessible"] = not host_visible
 try:
     with open("/usr/.cortex-runtime-write-probe", "w", encoding="utf-8") as f:
         f.write("must-not-write")
