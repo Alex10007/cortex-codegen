@@ -142,10 +142,12 @@ class CortexAgent:
         return {"summary": summarize(findings),
                 "findings": [f.__dict__ for f in findings]}
 
-    def sandbox_run(self, code: str, timeout_s: float = 20.0) -> dict[str, Any]:
+    def sandbox_run(self, code: str, timeout_s: float = 20.0,
+                    require_full_isolation: bool = False) -> dict[str, Any]:
         from cortex.execution.sandbox import run
 
-        result = run(code=code, timeout_s=timeout_s, audit=self.audit.record)
+        result = run(code=code, timeout_s=timeout_s, audit=self.audit.record,
+                     require_full_isolation=require_full_isolation)
         return result.__dict__
 
     def eval_run(self, candidate: Optional[str] = None,
