@@ -154,7 +154,8 @@ def probe_cgroup_v2() -> dict[str, object]:
         }
     missing = CgroupV2.REQUIRED_CONTROLLERS - available
     disabled = CgroupV2.REQUIRED_CONTROLLERS - enabled
-    ok = base.is_absolute() and base.is_dir() and not missing and not disabled
+    ok = (base.is_absolute() and base.is_dir() and not base.is_symlink()
+          and not missing and not disabled)
     return {
         "available": ok,
         "status": "PASS" if ok else "FAIL",
