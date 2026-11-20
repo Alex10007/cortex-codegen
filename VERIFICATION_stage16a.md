@@ -191,3 +191,22 @@ Security scope and verification limits:
 - The new tests are committed as regression specifications but have not been executed in this remote GitHub editing session. A GitHub Actions job that never obtains a runner is not test evidence.
 
 **Stage 16A.4 status: IMPLEMENTED, NOT VERIFIED.** No model training, benchmark promotion, PR merge, or main-branch change was performed.
+
+
+## Stage 16A.5 — bounded output and descendant lifecycle
+
+Implemented:
+
+- Replaced unbounded `communicate()` capture with concurrent stdout/stderr drainers.
+- Retained output is capped at 4 MiB per stream. Readers continue draining after the cap, preventing pipe backpressure from deadlocking the child while bounding parent-process memory use.
+- Execution metadata reports the per-stream cap and whether either stream was truncated. Returned text includes an explicit truncation marker.
+- On timeout, the entire POSIX process group is killed. The same cleanup now runs after a normal direct-child exit, preventing ordinary background descendants from continuing or holding inherited output pipes open.
+- Added tests for simultaneous multi-megabyte stdout/stderr and background descendants surviving a normal parent exit.
+
+Limitations:
+
+- This is process-group cleanup, not a cgroup/container guarantee against a deliberately daemonized process that escapes its session or namespace. Full bubblewrap qualification and cgroup-level resource enforcement remain outstanding.
+- The tests have been added but have not been executed in this remote editing session. GitHub Actions runner allocation has not provided a usable test result.
+- No claim is made that bubblewrap mounts, network namespace, seccomp, or host-filesystem denial have been independently validated.
+
+**Stage 16A.5 status: IMPLEMENTED, NOT VERIFIED.** No model training, benchmark promotion, PR merge, or main-branch change was performed.

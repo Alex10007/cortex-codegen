@@ -18,6 +18,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from pathlib import Path
 from typing import Any, Callable, Sequence
@@ -218,22 +219,35 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
             full_cmd = cmd
         start = time.time()
         timed_out = False
+        max_output_bytes = 4 * 1024 * 1024  # per stream; memory use is bounded
+        captured = {"stdout": bytearray(), "stderr": bytearray()}
+        truncated = {"stdout": False, "stderr": False}
+
+        def drain(stream, key: str) -> None:
+            while True:
+                chunk = stream.read(64 * 1024)
+                if not chunk:
+                    return
+                remaining = max_output_bytes - len(captured[key])
+                if remaining > 0:
+                    captured[key].extend(chunk[:remaining])
+                if len(chunk) > remaining:
+                    truncated[key] = True
+
         proc = subprocess.Popen(
             full_cmd, cwd=(td if not bwrap else "/"), env=env,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             preexec_fn=_limits(cpu_s, mem_mb, nproc),
             start_new_session=(os.name == "posix"),
         )
+        stdout_reader = threading.Thread(
+            target=drain, args=(proc.stdout, "stdout"), daemon=True)
+        stderr_reader = threading.Thread(
+            target=drain, args=(proc.stderr, "stderr"), daemon=True)
+        stdout_reader.start()
+        stderr_reader.start()
         try:
-            out, err = proc.communicate(timeout=timeout_s)
-            rc = proc.returncode
-            if (require_full_isolation and bwrap and rc != 0
-                    and ((err or "").lower().startswith("bwrap:")
-                         or "namespace" in (err or "").lower()
-                         or "operation not permitted" in (err or "").lower())):
-                raise NetworkIsolationUnavailable(
-                    "bubblewrap could not establish required namespaces; "
-                    "refusing degraded execution")
+            proc.wait(timeout=timeout_s)
         except subprocess.TimeoutExpired:
             timed_out = True
             if os.name == "posix":
@@ -243,8 +257,34 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                     pass
             else:
                 proc.kill()
-            out, err = proc.communicate()
-            rc = proc.returncode
+            proc.wait()
+
+        # A command that backgrounds a child and exits must not leave that
+        # child running or holding the output pipes open.
+        if os.name == "posix":
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+        stdout_reader.join(timeout=5)
+        stderr_reader.join(timeout=5)
+        if stdout_reader.is_alive() or stderr_reader.is_alive():
+            raise RuntimeError("sandbox output pipes did not close after process cleanup")
+
+        rc = proc.returncode
+        out = bytes(captured["stdout"]).decode("utf-8", errors="replace")
+        err = bytes(captured["stderr"]).decode("utf-8", errors="replace")
+        if truncated["stdout"]:
+            out += "\\n[stdout truncated at 4 MiB]"
+        if truncated["stderr"]:
+            err += "\\n[stderr truncated at 4 MiB]"
+        if (require_full_isolation and bwrap and rc != 0
+                and ((err or "").lower().startswith("bwrap:")
+                     or "namespace" in (err or "").lower()
+                     or "operation not permitted" in (err or "").lower())):
+            raise NetworkIsolationUnavailable(
+                "bubblewrap could not establish required namespaces; "
+                "refusing degraded execution")
         dur = time.time() - start
 
     if filesystem_isolated:
@@ -265,7 +305,10 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                 "network_blocked": bool(netns or filesystem_isolated),
                 "filesystem_isolated": filesystem_isolated,
                 "user_namespace_isolated": filesystem_isolated,
-                "full_isolation_required": require_full_isolation},
+                "full_isolation_required": require_full_isolation,
+                "max_output_bytes_per_stream": max_output_bytes,
+                "stdout_truncated": truncated["stdout"],
+                "stderr_truncated": truncated["stderr"]},
     )
     if require_full_isolation and not filesystem_isolated:
         raise NetworkIsolationUnavailable(
