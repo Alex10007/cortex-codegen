@@ -54,20 +54,20 @@ def build_token_bin(dataset_jsonl: str, tokenizer_path: str,
     return out_bin, int(stream.shape[0])
 
 
-def required_gpus(config_name: str, batch_size: int) -> tuple[int, float]:
-    """Smallest world that fits the config per the cluster matrix, and its
-    per-GPU total GB estimate."""
+def required_gpus(config_name: str, batch_size: int,
+                  gpu_memory_gb: float = 40.0) -> tuple[int, float]:
+    """Smallest validated world that fits the per-device memory budget."""
     from cortex.model.configs import get_config
     from cortex.training.scaling import cluster_plans
 
     cfg = get_config(config_name)
     plans = cluster_plans(cfg, batch_size)
     for row in sorted(plans["plans"], key=lambda p: p["world_size"]):
-        if row["fits_40gb_gpu"]:
+        if row["per_gpu_total_gb_est"] <= gpu_memory_gb:
             return row["world_size"], row["per_gpu_total_gb_est"]
     raise RuntimeError(
         f"no cluster size in the validated matrix fits {config_name} "
-        f"(batch {batch_size})")
+        f"(batch {batch_size}, per-device budget {gpu_memory_gb:.2f} GB)")
 
 
 def main() -> int:
@@ -90,33 +90,62 @@ def main() -> int:
 
     profile = hardware_profile()
     cfg = CONFIGS[args.config]
-    wanted_world, per_gpu_gb = required_gpus(args.config, args.batch_size)
+    cuda = profile["cuda"]
+    total_devices = int(cuda.get("device_count", 0))
+    total_memory = cuda.get("total_memory_bytes", [])
+    free_memory = cuda.get("free_memory_bytes", [])
+    # Select the plan against the smallest physical device, not the largest.
+    device_budget_gb = (
+        min(total_memory) / 1e9 if total_devices and total_memory else 40.0)
+    wanted_world, _ = required_gpus(
+        args.config, args.batch_size, gpu_memory_gb=device_budget_gb)
+    plans = cluster_plans(cfg, args.batch_size)["plans"]
+    plan_by_world = {int(row["world_size"]): row for row in plans}
     world = args.world or wanted_world
+    refusal = None
+    if world not in plan_by_world:
+        refusal = f"world size {world} is not in the validated matrix"
+    elif world < wanted_world:
+        refusal = (f"world override {world} is below the required "
+                   f"minimum {wanted_world}")
+    selected = plan_by_world.get(world)
+    per_gpu_gb = (selected["per_gpu_total_gb_est"] if selected else None)
+    device_report = []
+    if cuda["available"]:
+        import torch
+        for i in range(min(world, total_devices)):
+            free, total = torch.cuda.mem_get_info(i)
+            device_report.append({
+                "device": i,
+                "free_gb": round(free / 1e9, 2),
+                "total_gb": round(total / 1e9, 2),
+            })
+        if total_devices < world:
+            refusal = (f"requested world {world} requires {world} GPUs, "
+                       f"but only {total_devices} are visible")
+        elif per_gpu_gb is not None and any(
+                d["free_gb"] < per_gpu_gb for d in device_report):
+            refusal = (
+                f"at least one GPU has less free memory than the "
+                f"{per_gpu_gb:.2f} GB per-device estimate")
+    elif args.config != "cortex-demo":
+        refusal = "CUDA is unavailable; full-scale training is blocked"
 
-    gpu_gib = None
-    if profile["cuda"]["available"]:
-        total_mem = 0.0
-        for i in range(profile["cuda"]["device_count"]):
-            free, total = __import__("torch").cuda.mem_get_info(i)
-            gpu_gib = max(gpu_gib or 0.0, total / 1024**3)
     needs = {"config": args.config,
              "params": cfg.theoretical_param_count(),
              "required_world": wanted_world,
+             "selected_world": world,
              "required_per_gpu_gb": per_gpu_gb,
-             "measured_cuda_available": profile["cuda"]["available"],
-             "measured_device_count": profile["cuda"].get("device_count", 0),
-             "measured_max_gpu_gib": gpu_gib}
+             "measured_cuda_available": cuda["available"],
+             "measured_device_count": total_devices,
+             "device_memory": device_report,
+             "device_budget_gb": round(device_budget_gb, 2)}
 
-    if not profile["cuda"]["available"] and args.config != "cortex-demo":
-        print(json.dumps({"status": "REFUSED-HARDWARE-GATE", **needs},
-                         indent=2))
-        print(
-            "2B training requires the validated GPU matrix "
-            f"(world {wanted_world} x >= {per_gpu_gb} GB). This host measured "
-            f"cuda={profile['cuda']['available']}, devices="
-            f"{profile['cuda'].get('device_count', 0)}. Nothing was trained "
-            "and nothing was simulated. Run with --config cortex-demo to "
-            "validate the launch mechanics.")
+    if refusal:
+        print(json.dumps({"status": "REFUSED-HARDWARE-GATE",
+                          "reason": refusal, **needs}, indent=2))
+        print("Nothing was trained and nothing was simulated. "
+              "Use --config cortex-demo only for mechanics validation.")
         return 2
 
     data_bin, n_tokens = build_token_bin(
