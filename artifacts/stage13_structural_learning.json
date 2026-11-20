@@ -1,0 +1,83 @@
+{
+  "kind": "cortex-stage13-structural-learning",
+  "owned_by": "Fibonera",
+  "workstream": "D-learning",
+  "hypothesis": "Python structural rules (indentation depth transitions, keyword/delimiter classes) are predictive patterns the model can learn; the indent-weighted objective improves held-out structural token accuracy vs the unweighted control",
+  "pre_registered": true,
+  "structural_token_accuracy_baseline_warm6": {
+    "n_batches": 2,
+    "accuracy_overall": 0.419,
+    "accuracy_whitespace": 0.9375,
+    "accuracy_structure_keyword": 0.7143,
+    "accuracy_delimiter": 0.55,
+    "accuracy_other": 0.18,
+    "token_counts": {
+      "whitespace": 32,
+      "structure_keyword": 7,
+      "delimiter": 40,
+      "other": 100,
+      "overall": 179
+    }
+  },
+  "post_by_arm": {
+    "control_recheck": {
+      "accuracy_whitespace": 0.9016,
+      "accuracy_structure_keyword": 0.678,
+      "accuracy_delimiter": 0.6667,
+      "accuracy_overall": 0.5414,
+      "heldout_eval_aligned_final": 2.9498
+    },
+    "structural_segmentation": {
+      "accuracy_whitespace": 0.8976,
+      "accuracy_structure_keyword": 0.7288,
+      "accuracy_delimiter": 0.6667,
+      "accuracy_overall": 0.5477,
+      "heldout_eval_aligned_final": 2.9754
+    },
+    "indent_weighted": {
+      "accuracy_whitespace": 0.9055,
+      "accuracy_structure_keyword": 0.6102,
+      "accuracy_delimiter": 0.6458,
+      "accuracy_overall": 0.5227,
+      "heldout_eval_aligned_final": 3.0249
+    },
+    "structural_indent_combined": {
+      "accuracy_whitespace": 0.9094,
+      "accuracy_structure_keyword": 0.661,
+      "accuracy_delimiter": 0.6562,
+      "accuracy_overall": 0.5352,
+      "heldout_eval_aligned_final": 2.995
+    }
+  },
+  "interpretation": {
+    "measured_margin": "indent-aligned accuracy whitespace 0.9055 vs control 0.9016 at held-out 3.0249 vs 2.9498",
+    "promotion_role": "supporting capability evidence only; promotion is decided solely by the Workstream-K gates"
+  },
+  "indentation_program_structure_focus": [
+    "def",
+    "class",
+    "if",
+    "elif",
+    "else",
+    "for",
+    "while",
+    "try",
+    "except",
+    "finally",
+    "with",
+    "return",
+    "yield"
+  ],
+  "experiment": {
+    "experiment_id": "stage13-D-learning",
+    "parent_commit": "a8c4e98",
+    "source_commit": "402de4691ef7",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "indentation-sensitive weighting teaches depth transitions as predictive patterns (measured via per-class held-out accuracy)",
+    "acceptance_criteria": "single-variable arms vs control; no parser or formatter substituted for learning",
+    "started": "2026-11-20T12:03:00+0000",
+    "finished": "2026-11-20T12:03:00+0000",
+    "decision": "EXECUTED"
+  }
+}

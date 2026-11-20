@@ -66,9 +66,100 @@ def chunk_record(rec: dict[str, Any], tok, seq_len: int,
     return windows
 
 
+def _structural_cuts(ids: list[int], tok, seq_len: int,
+                     prompt_len: int) -> tuple[list[int], int]:
+    """Backward-search clean boundary positions (decoded prefix ends with a
+    newline and no open delimiter/quote) at at most one window stride apart;
+    falls back to a hard width-spaced cut when no clean boundary is
+    reachable. Returns (cuts, n_clean_cuts)."""
+    from cortex.evaluation.autoregressive_diagnostics import structure_scan
+
+    L = len(ids)
+    cuts: list[int] = []
+    n_clean = 0
+    start = 0
+    lower = prompt_len
+    while True:
+        upper = min(start + seq_len, L)
+        if upper <= lower:
+            break
+        best = None
+        for s in range(upper, lower, -1):
+            text = tok.decode(ids[:s])
+            if text.endswith("\n") and not structure_scan(text)[
+                    "unbalanced"]:
+                best = s
+                break
+        if best is None:
+            best = upper
+        else:
+            n_clean += 1
+        cuts.append(best)
+        start = best - 1
+        lower = best
+    return cuts, n_clean
+
+
+def chunk_record_structural(
+        rec: dict[str, Any], tok, seq_len: int,
+        prompt_style: str = "legacy",
+        ) -> list[tuple[list[int], list[int]]] | None:
+    """Stage-13 structural segmentation: same (ids, labels) stream and
+    shift semantics as chunk_record (every completion token supervised
+    exactly once; window k starts at the previous window's final token),
+    but window boundaries are placed at structurally clean statement
+    boundaries (newline + closed delimiters/quotes) instead of a fixed
+    stride. Falls back to a width-spaced hard cut when no clean boundary
+    is reachable, so the stream is always fully covered. Returns None
+    when the instruction alone cannot fit one window (never truncated,
+    counted by the caller)."""
+    prompt, completion = record_ids(rec, tok, prompt_style)
+    if len(prompt) + 1 > seq_len:
+        return None
+    ids = prompt + completion
+    labels = [-100] * len(prompt) + completion[:]
+    L = len(ids)
+    if L <= seq_len:
+        return [(ids, labels)]
+
+    cuts, _ = _structural_cuts(ids, tok, seq_len, len(prompt))
+
+    windows: list[tuple[list[int], list[int]]] = []
+    covered = 0
+    for end in cuts:
+        start = covered - 1 if covered else 0
+        windows.append((ids[start:end], labels[start:end]))
+        covered = end
+    if covered < L:
+        windows.append((ids[covered - 1:], labels[covered - 1:]))
+    return windows
+
+
+def structural_cut_summary(recs: list[dict[str, Any]], tok, seq_len: int,
+                           prompt_style: str = "legacy") -> dict[str, int]:
+    """Measured clean-vs-fallback boundary statistics over records that
+    require multi-window structural segmentation."""
+    records = n_cuts = n_clean = 0
+    for rec in recs:
+        prompt, completion = record_ids(rec, tok, prompt_style)
+        if len(prompt) + 1 > seq_len:
+            continue
+        ids: list[int] = prompt + completion
+        if len(ids) <= seq_len:
+            continue
+        records += 1
+        cuts, clean = _structural_cuts(ids, tok, seq_len, len(prompt))
+        n_cuts += len(cuts)
+        n_clean += clean
+    return {"records_needing_cuts": records, "cuts": n_cuts,
+            "clean_cuts": n_clean,
+            "fallback_hard_cuts": n_cuts - n_clean}
+
+
 def make_batch_chunked(recs: list[dict[str, Any]], tok, seq_len: int,
                        prompt_style: str = "legacy",
-                       complete_rows_only: bool = False):
+                       complete_rows_only: bool = False,
+                       segmentation: str = "fixed"):
     """Batch of shifted rows from possibly over-long records. A record the
     legacy silently dropped here contributes one or more rows with real
     supervised targets. With `complete_rows_only`, windows whose decoded
@@ -86,7 +177,11 @@ def make_batch_chunked(recs: list[dict[str, Any]], tok, seq_len: int,
     batch_labels: list[list[int]] = []
     n_windows = n_dropped_windows = 0
     for rec in recs:
-        windows = chunk_record(rec, tok, seq_len, prompt_style)
+        if segmentation == "structural":
+            windows = chunk_record_structural(rec, tok, seq_len,
+                                              prompt_style)
+        else:
+            windows = chunk_record(rec, tok, seq_len, prompt_style)
         if windows is None:
             continue
         for win_ids, win_labels in windows:
@@ -114,13 +209,15 @@ def make_batch_chunked(recs: list[dict[str, Any]], tok, seq_len: int,
 
 
 def completion_coverage(recs: list[dict[str, Any]], tok,
-                        seq_len: int) -> dict[str, Any]:
+                        seq_len: int, segmentation: str = "fixed") -> dict[str, Any]:
     """Measured guarantee: every completion token (incl. EOT) appears as an
     unmasked target exactly once for every record, via full stream
     reconstruction from the windows."""
     total_targets = 0
     for rec in recs:
-        windows = chunk_record(rec, tok, seq_len)
+        windows = (chunk_record_structural(rec, tok, seq_len)
+                   if segmentation == "structural"
+                   else chunk_record(rec, tok, seq_len))
         if windows is None:
             continue
         _, completion = record_ids(rec, tok)

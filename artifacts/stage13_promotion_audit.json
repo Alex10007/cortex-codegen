@@ -1,0 +1,72 @@
+{
+  "kind": "cortex-stage13-promotion-audit",
+  "owned_by": "Fibonera",
+  "workstream": "K-promotion",
+  "gates": {
+    "gate1_structural_improvement": {
+      "definition": "reproducible reduction in persistent syntax defects and incorrect indentation transitions vs the stage-12 champion",
+      "ok": false,
+      "measured": {
+        "champion_syntax_valid_rate": 0.0,
+        "control_syntax_valid_rate": 0.0
+      }
+    },
+    "gate2_complete_generation": {
+      "definition": "increase in complete, syntactically valid programs under unchanged evaluation conditions",
+      "ok": false,
+      "measured": {
+        "champion_complete_program_rate": 0.0,
+        "control_complete_program_rate": 0.0
+      }
+    },
+    "gate3_functional_correctness": {
+      "definition": "at least one generated program compiles, executes and passes independent tests",
+      "ok": false,
+      "measured": "any arm pass@1 > 0 on v1/v3 (execution verified)"
+    },
+    "gate4_generalization": {
+      "definition": "success on previously unseen tasks and perturbed formulations",
+      "ok": false,
+      "measured": {
+        "perturbed_pass_at_1": 0.0
+      }
+    },
+    "gate5_capability_promotion": {
+      "definition": "at least one independently verified pass@1 on an immutable unseen benchmark",
+      "ok": false,
+      "measured": "identical evidence to gate3 by definition",
+      "requires_heldout_ok": true
+    }
+  },
+  "champion_arm": "control_recheck",
+  "champion_metrics": {
+    "heldout_native_final": 2.9435,
+    "heldout_eval_aligned_final": 2.9498,
+    "v1_pass_at_1": 0.0,
+    "v3_pass_at_1": 0.0,
+    "syntax_valid_rate": 0.0,
+    "complete_program_rate": 0.0
+  },
+  "heldout_loss_gate": {
+    "limit": 3.3015,
+    "ok": true
+  },
+  "gates_passed": 0,
+  "promotion_decision": "NOT PROMOTED - pass@1 remains 0.0 (or held-out regression); negative result preserved; stage-12 champion retained",
+  "rollback": {
+    "baseline_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage12-chunked_control.pt",
+    "procedure": "restore the stage-12 champion (artifacts are gitignored and additive; stage-13 checkpoints do not overwrite stage-12 files)"
+  },
+  "experiment": {
+    "experiment_id": "stage13-K-promotion-audit",
+    "parent_commit": "a8c4e98",
+    "source_commit": "402de4691ef7",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "the pre-registered 5-gate hierarchy is applied exactly as registered before any stage-13 execution; pass@1 = 0 implies NOT PROMOTED regardless of loss or syntax improvements",
+    "acceptance_criteria": "gates evaluated from measured per-task results; champion selected under the pre-registered rule",
+    "started": "2026-11-20T12:03:37+0000",
+    "finished": "2026-11-20T12:03:37+0000",
+    "decision": "NOT PROMOTED"
+  }
+}

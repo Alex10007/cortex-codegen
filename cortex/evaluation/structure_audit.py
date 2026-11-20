@@ -142,20 +142,26 @@ def audit_dataset_structure(recs: Iterable[dict[str, Any]]) -> dict[str, Any]:
 
 def chunk_boundary_audit(recs: list[dict[str, Any]], tok,
                          seq_len: int,
-                         prompt_style: str = "legacy") -> dict[str, Any]:
+                         prompt_style: str = "legacy",
+                         segmentation: str = "fixed") -> dict[str, Any]:
     """For every chunked-stream window: does the window boundary fall
     inside an open syntactic construct (unbalanced delimiters or an open
     quote), and does the supervised target of each row END inside an open
     construct? Rows are windows exactly as make_batch_chunked builds them,
     decoded back through the same tokenizer."""
-    from cortex.training.longcontext import chunk_record
+    from cortex.training.longcontext import (chunk_record,
+                                             chunk_record_structural)
 
     n_rows = 0
     n_input_end_open = 0
     per_split_kind = {"open_delimiter": 0, "open_quote": 0,
                       "clean": 0}
     for rec in recs:
-        windows = chunk_record(rec, tok, seq_len, prompt_style)
+        if segmentation == "structural":
+            windows = chunk_record_structural(rec, tok, seq_len,
+                                              prompt_style)
+        else:
+            windows = chunk_record(rec, tok, seq_len, prompt_style)
         if not windows:
             continue
         for win_ids, _ in windows:

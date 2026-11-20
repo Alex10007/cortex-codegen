@@ -111,6 +111,88 @@ def structure_scan(text: str) -> dict[str, Any]:
     }
 
 
+def lexical_state(text: str) -> dict[str, Any]:
+    """Fine-grained lexical state at the end of `text` for stage-13
+    structural analysis: current indentation depth of the last line,
+    whether the text sits mid-line, open-string state and delimiter
+    depths. Extends structure_scan (kept unchanged)."""
+    base = structure_scan(text)
+    tail = text.split("\n")[-1]
+    return {
+        "line_indent_spaces": len(tail) - len(tail.lstrip(" ")), 
+        "mid_line": tail != "" and not text.endswith("\n"),
+        "last_line_blank_or_comment": tail.strip() == "" 
+        or tail.strip().startswith("#"),
+        **base,
+    }
+
+
+def classify_structural_failure(traj: dict[str, Any]) -> dict[str, Any]:
+    """Stage-13 structural taxonomy: combine the incrementally-replayed
+    first-invalid analysis with the per-step lexical history to attribute
+    the defect (indent increase/decrease, missing indent, missing colon,
+    unclosed delimiter/quote, premature/complete EOT, truncation, ...).
+    `first_invalid_index` i refers to prefix i (i tokens); the offending
+    token is therefore generated token i, i.e. steps[i-1]."""
+    fi = traj["first_invalid"]
+    idx = fi.get("first_invalid_index")
+    if idx is None:
+        if fi.get("failure_class") == "valid_program":
+            return {"taxonomy": "complete_program", "evidence": fi}
+        stopped = traj.get("stopped") or ""
+        if stopped.startswith("repetition"):
+            tax = "repetition_degeneration_truncation"
+        elif stopped.startswith("max_new_tokens"):
+            tax = "truncated_generation_max_new_tokens"
+        else:
+            tax = "premature_eot_open_construct"
+        return {"taxonomy": tax,
+                "evidence": {**fi, "stopped": stopped,
+                             "n_tokens": traj["completion_length_tokens"]}}
+    steps = traj["steps"]
+    bad = steps[max(idx - 1, 0)] if steps else {}
+    lex = bad.get("lex_before") or {}
+    token = bad.get("token_text", "")
+    cat = fi.get("category")
+    common = {"step": idx, "token_text": token, "token_id":
+              bad.get("token_id"), "lex_before": {
+        k: lex.get(k) for k in ("line_indent_spaces", "mid_line",
+                                "open_quote", "paren_depth",
+                                "brace_depth")},
+        "parser_message": fi.get("parser_message")}
+    if cat == "premature_stop_open_construct":
+        return {"taxonomy": "premature_eot_open_construct",
+                "evidence": common}
+    if cat == "missing_colon":
+        return {"taxonomy": "missing_colon", "evidence": common}
+    if cat in ("missing_closing_delimiter", "invalid_string_or_quote"):
+        return {"taxonomy": "unclosed_delimiter_or_string",
+                "evidence": common}
+    if cat in ("invalid_indentation_transition", "incorrect_indentation"):
+        indent = -1
+        if token and "\n" in token:
+            after_nl = token.split("\n")[-1]
+            indent = len(after_nl) - len(after_nl.lstrip(" "))
+        prev_indent = lex.get("line_indent_spaces") or 0
+        msg = (fi.get("parser_message") or "").lower()
+        if "unindent" in msg:
+            tax = "incorrect_indent_decrease"
+        elif indent >= 0 and indent < prev_indent:
+            tax = "incorrect_indent_decrease"
+        elif indent > prev_indent and cat == "incorrect_indentation":
+            tax = "unexpected_indentation"
+        elif indent > prev_indent:
+            tax = "incorrect_indent_increase"
+        else:
+            tax = "unexpected_indentation_transition"
+        common = dict(common, token_line_indent=indent)
+        return {"taxonomy": tax, "evidence": common}
+    if cat == "unexpected_end_of_sequence":
+        return {"taxonomy": "incomplete_block_missing_indent",
+                "evidence": common}
+    return {"taxonomy": str(cat or "other"), "evidence": common}
+
+
 def classify_hard_error(err: dict[str, Any]) -> str:
     """Map a hard SyntaxError record to the stage-12 failure taxonomy."""
     msg = (err.get("message") or "").lower()
@@ -303,11 +385,20 @@ def trajectory_generate(model, tok, prompt_text: str, decoding: dict,
         top = torch.topk(probs, k=min(5, probs.size(-1)))
         nxt = torch.multinomial(probs, num_samples=1)
         nid = int(nxt)
+        lex_before = lexical_state(tok.decode(generated_ids)) \
+            if generated_ids else lexical_state("")
         generated_ids.append(nid)
         nxt = nxt.unsqueeze(0)
         comp = tok.decode(generated_ids)
         steps.append({
             "step": i + 1,
+            "lex_before": {
+                "line_indent_spaces": lex_before["line_indent_spaces"],
+                "mid_line": lex_before["mid_line"],
+                "open_quote": lex_before["open_quote"],
+                "paren_depth": lex_before["paren_depth"],
+                "brace_depth": lex_before["brace_depth"],
+                "bracket_depth": lex_before["bracket_depth"]},
             "token_id": nid,
             "token_text": tok.decode([nid]),
             "top5": [{"id": int(t), "p": round(float(p), 6)}

@@ -1,0 +1,330 @@
+{
+  "kind": "cortex-stage13-intelligence-subsystems",
+  "owned_by": "Fibonera",
+  "workstream": "J-intelligence",
+  "moe_probe": {
+    "kind": "cortex-moe-specialization-probe",
+    "n_layers": 4,
+    "per_layer": [
+      {
+        "n_observations": 5,
+        "n_experts": 12,
+        "top_k": 2,
+        "mean_entropy_bits": 3.4502,
+        "mean_max_prob": 0.1594,
+        "js_first_vs_last_batch": 0.00060023,
+        "expert0_vs_1_weight_cosine": -0.001367
+      },
+      {
+        "n_observations": 5,
+        "n_experts": 12,
+        "top_k": 2,
+        "mean_entropy_bits": 3.4502,
+        "mean_max_prob": 0.1594,
+        "js_first_vs_last_batch": 0.00310559,
+        "expert0_vs_1_weight_cosine": 0.001147
+      },
+      {
+        "n_observations": 5,
+        "n_experts": 12,
+        "top_k": 2,
+        "mean_entropy_bits": 3.4502,
+        "mean_max_prob": 0.1594,
+        "js_first_vs_last_batch": 0.00108245,
+        "expert0_vs_1_weight_cosine": -0.001961
+      },
+      {
+        "n_observations": 5,
+        "n_experts": 12,
+        "top_k": 2,
+        "mean_entropy_bits": 3.4502,
+        "mean_max_prob": 0.1594,
+        "js_first_vs_last_batch": 0.00061075,
+        "expert0_vs_1_weight_cosine": 0.00024
+      }
+    ],
+    "root_cause": {
+      "max_entropy_bits_n_experts": 3.585,
+      "mean_entropy": [
+        3.4502,
+        3.4502,
+        3.4502,
+        3.4502
+      ],
+      "near_uniform_routing": true,
+      "hypothesis": [
+        "router weights are freshly initialized (warm-start carries dense mlp into expert 0 only; the router linear is new) so logits ~ 0 and posteriors ~ uniform; mean-over-tokens posteriors then differ practically not at all between families (JS ~ 0) unless the router is trained"
+      ],
+      "test": "compare router parameter movement and gradient norms (gradient_flow + router_movement)"
+    }
+  },
+  "moe_probe_latest_joint_physical": {
+    "kind": "cortex-moe-specialization-probe",
+    "n_layers": 4,
+    "per_layer": [
+      {
+        "n_observations": 5,
+        "n_experts": 12,
+        "top_k": 2,
+        "mean_entropy_bits": 3.5606,
+        "mean_max_prob": 0.1156,
+        "js_first_vs_last_batch": 0.00224543,
+        "expert0_vs_1_weight_cosine": 0.007558
+      },
+      {
+        "n_observations": 5,
+        "n_experts": 12,
+        "top_k": 2,
+        "mean_entropy_bits": 3.5606,
+        "mean_max_prob": 0.1156,
+        "js_first_vs_last_batch": 0.00314004,
+        "expert0_vs_1_weight_cosine": 0.008036
+      },
+      {
+        "n_observations": 5,
+        "n_experts": 12,
+        "top_k": 2,
+        "mean_entropy_bits": 3.5606,
+        "mean_max_prob": 0.1156,
+        "js_first_vs_last_batch": 0.00294104,
+        "expert0_vs_1_weight_cosine": 0.011054
+      },
+      {
+        "n_observations": 5,
+        "n_experts": 12,
+        "top_k": 2,
+        "mean_entropy_bits": 3.5606,
+        "mean_max_prob": 0.1156,
+        "js_first_vs_last_batch": 0.00103193,
+        "expert0_vs_1_weight_cosine": 0.007943
+      }
+    ],
+    "root_cause": {
+      "max_entropy_bits_n_experts": 3.585,
+      "mean_entropy": [
+        3.5606,
+        3.5606,
+        3.5606,
+        3.5606
+      ],
+      "near_uniform_routing": true,
+      "hypothesis": [
+        "router weights are freshly initialized (warm-start carries dense mlp into expert 0 only; the router linear is new) so logits ~ 0 and posteriors ~ uniform; mean-over-tokens posteriors then differ practically not at all between families (JS ~ 0) unless the router is trained"
+      ],
+      "test": "compare router parameter movement and gradient norms (gradient_flow + router_movement)"
+    }
+  },
+  "moe_probe_available": true,
+  "divergent_reasoning": {
+    "aggregate": {
+      "kind": "cortex-divergent-reasoning-eval",
+      "n_tasks": 2,
+      "n_hypotheses_per_task": 3,
+      "temperatures": [
+        0.2,
+        0.7,
+        1.0
+      ],
+      "repair_round": true,
+      "pass_at_1_index0": 0.0,
+      "pass_at_n": 0.0,
+      "pass_via_repair": 0.0,
+      "contradiction_rate": 0.0,
+      "mean_convergence": 1.0,
+      "distinct_candidate_rate": 1.0,
+      "failure_categories_round1": {
+        "passed": 0,
+        "syntax": 0,
+        "import": 0,
+        "runtime": 6,
+        "assertion": 0,
+        "timeout": 0,
+        "empty": 0,
+        "unknown": 0
+      },
+      "tokens_consumed": 1440,
+      "seconds_elapsed": 14.39,
+      "grading": "each hypothesis graded by sandboxed pytest execution"
+    },
+    "per_task": [
+      {
+        "task_id": "t-palindrome",
+        "hypotheses_round1": [
+          {
+            "round": "divergent",
+            "temperature": 0.2,
+            "candidate_head": "\n\n    \"\"\"\n    return self.is_name(args)\n    return self._is_name(self)\n    if self.get_name:\n        return self._is_name(self.name)\n    return self._get_name(self)\n    if self._get_name:\n        return self._get_args(self.get_name(self.get_value)\n    return self._get_name(self)\n<|endoftext|>",
+            "sha1": "1e14359b4b91622a",
+            "nonempty": true,
+            "passed": false,
+            "failure_category": "runtime",
+            "grade": {
+              "exit_code": 2,
+              "stderr_tail": ""
+            }
+          },
+          {
+            "round": "divergent",
+            "temperature": 0.7,
+            "candidate_head": "\n<|endoftext|>",
+            "sha1": "f818589bc71de9fd",
+            "nonempty": true,
+            "passed": false,
+            "failure_category": "runtime",
+            "grade": {
+              "exit_code": 2,
+              "stderr_tail": ""
+            }
+          },
+          {
+            "round": "divergent",
+            "temperature": 1.0,
+            "candidate_head": "\n\n    If *func with input_kwargs: If the a default value.\n    :param version: Override a\n    with input are used to a list.\n\n    >>> list(self.path.is_other(self)\n    \"\"\"\n    return c.value if\n    if not None::\n        for if raise ValueError(\"k of in self.read() in self.items else 0\n<|endoftext|>",
+            "sha1": "890d0a98f1889d6c",
+            "nonempty": true,
+            "passed": false,
+            "failure_category": "runtime",
+            "grade": {
+              "exit_code": 2,
+              "stderr_tail": ""
+            }
+          }
+        ],
+        "repair_round": [
+          {
+            "round": "repair",
+            "temperature": 0.2,
+            "candidate_head": "\n\ndef __init__(self, **kwargs):\n        \"\"\"Return the default is a list of the first it.\n\n        >>> _is_name('1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0",
+            "sha1": "1523920600c7bd2c",
+            "nonempty": true,
+            "passed": false,
+            "failure_category": "runtime",
+            "grade": {
+              "exit_code": 2,
+              "stderr_tail": ""
+            },
+            "repair_category_targeted": "runtime"
+          }
+        ],
+        "distinct_candidates": 4,
+        "n_passed_total": 0,
+        "contradiction": false,
+        "convergence": 1.0,
+        "repair_recovered": false,
+        "verified_selection": null,
+        "verified_candidate_found": false,
+        "failure_breakdown_round1": {
+          "passed": 0,
+          "syntax": 0,
+          "import": 0,
+          "runtime": 3,
+          "assertion": 0,
+          "timeout": 0,
+          "empty": 0,
+          "unknown": 0
+        },
+        "seconds_elapsed": 7.29,
+        "tokens_used": 720
+      },
+      {
+        "task_id": "t-fizzbuzz",
+        "hypotheses_round1": [
+          {
+            "round": "divergent",
+            "temperature": 0.2,
+            "candidate_head": "\n\n<|endoftext|>",
+            "sha1": "cfa01f09b49f4bcf",
+            "nonempty": true,
+            "passed": false,
+            "failure_category": "runtime",
+            "grade": {
+              "exit_code": 2,
+              "stderr_tail": ""
+            }
+          },
+          {
+            "round": "divergent",
+            "temperature": 0.7,
+            "candidate_head": "\n                    [0`` if 2.0/2'))\n                    if None:\n                raise ValueError(\"d % (2.items(\"1.com/x1\")\n        self.release('x1.stream.items(http.text)\n    else:\n        if len(data, b):\n            raise ValueError(\"x0.0 is not None\n        else:\n            # TODO:\n         ",
+            "sha1": "4978d1943c40e756",
+            "nonempty": true,
+            "passed": false,
+            "failure_category": "runtime",
+            "grade": {
+              "exit_code": 2,
+              "stderr_tail": ""
+            }
+          },
+          {
+            "round": "divergent",
+            "temperature": 1.0,
+            "candidate_head": "\n<|endoftext|>",
+            "sha1": "f818589bc71de9fd",
+            "nonempty": true,
+            "passed": false,
+            "failure_category": "runtime",
+            "grade": {
+              "exit_code": 2,
+              "stderr_tail": ""
+            }
+          }
+        ],
+        "repair_round": [
+          {
+            "round": "repair",
+            "temperature": 0.2,
+            "candidate_head": "\n\ndef __init__(self, other):\n        \"\"\"Return the list of the version.\n\n        >>> list(self.is_name(self.read(self.get(self.get(self.get(self.get('0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0",
+            "sha1": "9d312dc51a65f77a",
+            "nonempty": true,
+            "passed": false,
+            "failure_category": "runtime",
+            "grade": {
+              "exit_code": 2,
+              "stderr_tail": ""
+            },
+            "repair_category_targeted": "runtime"
+          }
+        ],
+        "distinct_candidates": 4,
+        "n_passed_total": 0,
+        "contradiction": false,
+        "convergence": 1.0,
+        "repair_recovered": false,
+        "verified_selection": null,
+        "verified_candidate_found": false,
+        "failure_breakdown_round1": {
+          "passed": 0,
+          "syntax": 0,
+          "import": 0,
+          "runtime": 3,
+          "assertion": 0,
+          "timeout": 0,
+          "empty": 0,
+          "unknown": 0
+        },
+        "seconds_elapsed": 7.1,
+        "tokens_used": 720
+      }
+    ]
+  },
+  "plain_decoding_comparison": {
+    "n_tasks": 2,
+    "pass_at_1_divergent_index0": 0.0,
+    "task_pass_rate_divergent_pass_at_k": 0.0,
+    "repair_recovered_rate": 0.0,
+    "pass_at_1_plain": 0.0,
+    "note": "same 2 tasks, same model; divergent numbers come from execution-verified candidates only; divergent task-level pass uses 3 hypotheses + repair, so it is pass@k semantics and is not compared as pass@1"
+  },
+  "experiment": {
+    "experiment_id": "stage13-J-intelligence-subsystems",
+    "parent_commit": "a8c4e98",
+    "source_commit": "402de4691ef7",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "the existing MoE and divergent-reasoning subsystems are probed with real batches/tasks; measured routing statistics and execution-verified candidate correctness decide their verdicts",
+    "acceptance_criteria": "no new experts or reasoning engines; routing JS divergence is not treated as specialization; candidate correctness is execution-verified only",
+    "started": "2026-11-20T12:11:02+0000",
+    "finished": "2026-11-20T12:11:21+0000",
+    "decision": "EXECUTED"
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "kind": "cortex-stage13-generation-control",
+  "owned_by": "Fibonera",
+  "workstream": "E-generation-control",
+  "eot_semantics": {
+    "definition": "EOT (tokenizer id 200) is the completion terminator: record_ids supervises `code + \\n + EOT` so EOT is a trained completion target exactly once per record and generation stops on it via model.generate/trajectory_generate",
+    "not_redefined": true,
+    "exploratory_decoding_policy": "eot_gated trajectory_generate masks EOT only while the completion sits inside an open construct (inference policy, NOT a model change)"
+  },
+  "stop_classification_from_workstream_a": {
+    "dense-warm6-parent": {
+      "stopped_by_eot": 10,
+      "stopped_by_eot_with_complete_program": 0,
+      "premature_or_truncated": 5,
+      "n_tasks": 15,
+      "stopped_distribution": {
+        "eot": 10,
+        "max_new_tokens": 5
+      }
+    },
+    "stage12-chunked_control": {
+      "stopped_by_eot": 9,
+      "stopped_by_eot_with_complete_program": 0,
+      "premature_or_truncated": 6,
+      "n_tasks": 15,
+      "stopped_distribution": {
+        "eot": 9,
+        "max_new_tokens": 6
+      }
+    }
+  },
+  "exploratory_eot_gated_run": {
+    "checkpoint": "stage12-chunked_control",
+    "n_tasks": 3,
+    "parse_rate": 0.0,
+    "complete_rate": 0.0,
+    "per_task": [
+      {
+        "task_id": "t-palindrome",
+        "parses": false,
+        "complete": false,
+        "n_tokens": 1,
+        "stopped": "eot"
+      },
+      {
+        "task_id": "t-fizzbuzz",
+        "parses": false,
+        "complete": false,
+        "n_tokens": 166,
+        "stopped": "eot"
+      },
+      {
+        "task_id": "t-wordcount",
+        "parses": false,
+        "complete": false,
+        "n_tokens": 1,
+        "stopped": "eot"
+      }
+    ]
+  },
+  "caps": {
+    "avg_generated_tokens_exploratory": 56.0
+  },
+  "experiment": {
+    "experiment_id": "stage13-E-generation-control",
+    "parent_commit": "a8c4e98",
+    "source_commit": "402de4691ef7",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "EOT self-emission inside open constructs is a consequence of the 49.84% mid-construct training windows, not of a decoding defect; EOT is the trained completion terminator (supervised exactly once per record as the final completion target)",
+    "acceptance_criteria": "EOT semantics documented, not redefined; eot-gated decoding is an EXPLORATORY inference-time policy and never evidence of model learning; fixed decoding stays primary",
+    "started": "2026-11-20T12:02:58+0000",
+    "finished": "2026-11-20T12:03:00+0000",
+    "decision": "EXECUTED"
+  }
+}
