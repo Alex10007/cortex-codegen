@@ -300,3 +300,22 @@ The strict and degraded execution paths now use one cleanup routine after proces
 **Verification status:** implementation and regression tests are committed to the remediation branch. The tests have not been executed in this session. CI must run them on an actual runner; source inspection is not a test pass. The strict sandbox remains NOT RUNTIME-VERIFIED until delegated cgroup v2 + Bubblewrap qualification passes on a supported Linux host.
 
 **Known limits:** this increment does not certify seccomp, disk I/O limits, host-kernel escape resistance, or deliberate privileged cgroup migration. It also does not replace live CPU/memory/process-limit qualification. No model training, checkpoint/data changes, benchmark promotion, PR merge, or main update occurred.
+
+
+## Stage 16A.14 — runner retry and pre-launch cgroup cleanup
+
+Follow-up inspection found one remaining resource-lifecycle edge: after a strict-run cgroup was created, failures while allocating the launch gate pipe or preparing the gated bootstrap command could occur before the process-lifecycle cleanup routine was entered. The cgroup could therefore remain allocated despite no child process having started.
+
+Changes:
+- Launch gate preparation is now guarded. If pipe allocation or bootstrap-command preparation fails, the code closes any gate descriptors already allocated, kills the new cgroup, waits for it to become empty, and attempts removal.
+- Cleanup errors are attached to the primary setup exception rather than silently discarded.
+- The earlier Stage 16A.13 cleanup flow remains unchanged for successfully launched processes.
+
+Runner investigation:
+- Re-ran the failed GitHub Actions test job for run 44839586322 (job 136644367994). GitHub accepted the retry, but the retried job again completed with failure, no step summaries, and no retrievable logs. The deploy job was skipped.
+- The branch's configured workflow uses ubuntu-latest; this connector exposes no repository Actions settings, hosted-runner diagnostics, or runner registration controls. The available evidence establishes only that the job failed before any step was reported. It does not identify the underlying account, billing, policy, or GitHub runner-service cause.
+- The latest commit has not yet produced a verifiable Python test execution. No tests are claimed as passed.
+
+**Status:** pre-launch cleanup edge addressed in source; executable verification remains BLOCKED. Strict sandbox remains NOT RUNTIME-VERIFIED. The next useful action requires a functioning GitHub-hosted runner or an administrator-provisioned, registered self-hosted Linux runner. Do not change the workflow to self-hosted until such a runner is online and authorized.
+
+No model training, checkpoint/data changes, benchmark promotion, PR merge, or main-branch update occurred.
