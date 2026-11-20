@@ -46,11 +46,21 @@ def run_engineering_pipeline(objective: str, repo_path: str,
     files_changed: list[str] = []
     if patcher is not None:
         edits = patcher(the_plan) or {}
+        root = Path(repo_path).resolve()
         for rel, content in edits.items():
-            target = Path(repo_path) / rel
+            rel_path = Path(rel)
+            if (rel_path.is_absolute() or ".." in rel_path.parts
+                    or any(part in {".git", ".cortex-state"}
+                           for part in rel_path.parts)):
+                raise ValueError(f"patcher returned a protected path: {rel}")
+            if not isinstance(content, str) or len(content.encode("utf-8")) > 1_000_000:
+                raise ValueError(f"patch content invalid or exceeds 1MB: {rel}")
+            target = (root / rel_path).resolve()
+            if target != root and root not in target.parents:
+                raise ValueError(f"patcher path escapes repository: {rel}")
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content, encoding="utf-8")
-            files_changed.append(rel)
+            files_changed.append(rel_path.as_posix())
         audit.record("pipeline.apply_edits", {"files": files_changed})
 
     if test_command_top:
@@ -63,21 +73,32 @@ def run_engineering_pipeline(objective: str, repo_path: str,
     sec_summary = summarize(findings)
 
     tests_ok = bool(test_report and test_report.get("ok"))
-    verified = tests_ok and sec_summary["critical"] == 0
+    implementation_performed = bool(files_changed)
+    validation_passed = tests_ok and sec_summary["critical"] == 0
+    # Passing the existing repository test suite is baseline validation, not
+    # evidence that the requested objective was implemented.
+    verified = validation_passed and implementation_performed
+    status = ("verified" if verified else
+              "baseline-validated-no-implementation"
+              if validation_passed else
+              "tests-failed" if test_report else "insecure-or-untested")
 
     report = {
         "objective": objective,
         "repo": repo_path,
-        "status": "verified" if verified else ("tests-failed" if test_report
-                                               else "insecure-or-untested"),
+        "status": status,
         "plan": the_plan.to_dict(),
         "files_changed": files_changed,
         "tests": test_report,
         "security": {"summary": sec_summary,
                      "findings": [f.__dict__ for f in findings][:50]},
         "verified": verified,
+        "implementation_performed": implementation_performed,
+        "validation_passed": validation_passed,
     }
     audit.record("pipeline.result", {"objective": objective,
                                      "status": report["status"],
-                                     "verified": verified})
+                                     "verified": verified,
+                                     "implementation_performed": implementation_performed,
+                                     "validation_passed": validation_passed})
     return report
