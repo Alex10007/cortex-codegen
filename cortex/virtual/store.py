@@ -160,6 +160,23 @@ class VirtualParameterStore:
                     f"B{tuple(st.B.shape)}, requested A{(dim, rank)} / "
                     f"B{(rank, dim)}")
             return st
+        # A committed row has an established tensor interpretation. Refuse
+        # to reinterpret it under a different shape: doing so would silently
+        # corrupt learned values and optimizer lineage.
+        manifest = _read_json(self.manifest_path)
+        persisted_shape = manifest.get("initialized_slot_shapes", {}).get(
+            str(bank), {}).get(str(row))
+        if persisted_shape is not None:
+            expected = (int(persisted_shape["dim"]), int(persisted_shape["rank"]))
+            if expected != (dim, rank):
+                raise ValueError(
+                    f"persisted slot {key} has dim/rank {expected}; "
+                    f"requested {(dim, rank)}")
+        elif str(row) in manifest.get("initialized_rows", {}).get(str(bank), {}):
+            raise RuntimeError(
+                f"persisted slot {key} has no shape metadata; refusing "
+                "ambiguous legacy row reinterpretation")
+
         page = self.page(bank)
         raw = np.asarray(page[row])
         n = 2 * dim * rank
@@ -199,11 +216,11 @@ class VirtualParameterStore:
             return
         st.step_count = int(data["step_count"])
         for name, p in (("A", st.A), ("B", st.B)):
-            if data[f"{name}_m"].shape != tuple(p.shape):
-                st.step_count = 0
-                st.m.clear()
-                st.v.clear()
-                return
+            if (data[f"{name}_m"].shape != tuple(p.shape)
+                    or data[f"{name}_v"].shape != tuple(p.shape)):
+                raise RuntimeError(
+                    f"persisted optimizer state shape mismatch for "
+                    f"{st.bank}/{st.row}/{name}; refusing to discard state")
             st.m[name] = torch.from_numpy(
                 _np.ascontiguousarray(data[f"{name}_m"], dtype=_np.float32))
             st.v[name] = torch.from_numpy(
