@@ -26,6 +26,7 @@ def persisted_optimizer_scan(
     stepped that slot (step only increments after a real gradient pass)."""
     slots_updated = 0
     params_per_slot = None
+    optimizer_updated_scalars = 0
     steps: list[int] = []
     for f in sorted(store.root.glob("adam-*.npz")):
         with np.load(f) as z:
@@ -33,8 +34,12 @@ def persisted_optimizer_scan(
             if sc <= 0:
                 continue
             slots_updated += 1
+            slot_scalars = int(z["A_m"].size + z["B_m"].size)
+            optimizer_updated_scalars += slot_scalars
             if params_per_slot is None:
-                params_per_slot = int(z["A_m"].size + z["B_m"].size)
+                params_per_slot = slot_scalars
+            elif params_per_slot != slot_scalars:
+                params_per_slot = -1  # heterogeneous slot shapes
             steps.append(sc)
     if steps:
         arr = np.asarray(steps, dtype=np.float64)
@@ -43,8 +48,10 @@ def persisted_optimizer_scan(
                     "max": int(arr.max()), "total": int(arr.sum())}
     else:
         per_slot = {"n": 0}
-    return {"slots_updated": slots_updated,
+    return {"n_allocated": vstore.exact_virtual_count(),
+            "slots_updated": slots_updated,
             "params_per_slot": params_per_slot,
+            "optimizer_updated_scalars": optimizer_updated_scalars,
             "optimizer_steps_per_slot": per_slot}
 
 
@@ -55,6 +62,12 @@ def measure(store: vstore.VirtualParameterStore,
     committed = manifest["initialized_rows"]
     rows_per_bank = {str(b): len(rows) for b, rows in committed.items()}
     rows_total = sum(rows_per_bank.values())
+    slot_shapes = manifest.get("initialized_slot_shapes", {})
+    initialized_scalars = sum(
+        int(shape.get("scalars", 2 * int(shape["dim"]) * int(shape["rank"])))
+        for rows in slot_shapes.values() for shape in rows.values())
+    known_shape_rows = sum(len(rows) for rows in slot_shapes.values())
+    unknown_shape_rows = max(0, rows_total - known_shape_rows)
     participation = participation or []
 
     # live in-process slot state (this session only)
@@ -92,7 +105,8 @@ def measure(store: vstore.VirtualParameterStore,
             pps = st.A.numel() + st.B.numel()
             break
 
-    persisted_updated_scalars = persisted["slots_updated"] * (pps or 0)
+    persisted_updated_scalars = int(
+        persisted.get("optimizer_updated_scalars", 0))
     part_updated_scalars = len(part_slots) * (pps or 0)
     received_scalars = max(live_grad_params, part_updated_scalars,
                            persisted_updated_scalars)
@@ -121,7 +135,9 @@ def measure(store: vstore.VirtualParameterStore,
     dist = update_distribution(participation)
     scalars = {
         "allocated": vstore.exact_virtual_count(),
-        "initialized": rows_total * BANK_COLS,
+        "initialized": initialized_scalars,
+        "initialized_unknown_rows": unknown_shape_rows,
+        "initialized_exact": unknown_shape_rows == 0,
         "activated": activated_scalars,
         "received_gradients": received_scalars,
         "received_gradients_scalars": scalars_with_grad,
