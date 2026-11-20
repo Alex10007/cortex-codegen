@@ -7,7 +7,6 @@ controller hierarchy itself.
 from __future__ import annotations
 
 import os
-import shutil
 import uuid
 import time
 from pathlib import Path
@@ -29,7 +28,7 @@ class CgroupV2:
                nproc: int, cpu_quota_us: int = 100_000,
                cpu_period_us: int = 100_000) -> "CgroupV2":
         base = Path(root)
-        if not base.is_absolute() or not base.is_dir():
+        if not base.is_absolute() or not base.is_dir() or base.is_symlink():
             raise CgroupUnavailable("CORTEX_CGROUP_ROOT must be an existing absolute delegated cgroup v2 directory")
         controllers_file = base / "cgroup.controllers"
         subtree_file = base / "cgroup.subtree_control"
@@ -57,12 +56,19 @@ class CgroupV2:
             cls._write(path / "memory.max", str(mem_mb * 1024 * 1024))
             cls._write(path / "pids.max", str(nproc))
             swap_file = path / "memory.swap.max"
-            if swap_file.exists():
-                cls._write(swap_file, "0")
+            if not swap_file.exists():
+                raise CgroupUnavailable("memory.swap.max is unavailable; swap cannot be bounded")
+            cls._write(swap_file, "0")
+            oom_group = path / "memory.oom.group"
+            if not oom_group.exists():
+                raise CgroupUnavailable("memory.oom.group is unavailable")
+            cls._write(oom_group, "1")
             if not (path / "cgroup.procs").exists():
                 raise CgroupUnavailable("cgroup.procs is unavailable")
             if not (path / "cgroup.kill").exists():
                 raise CgroupUnavailable("cgroup.kill is unavailable; process-tree cleanup cannot be guaranteed")
+            if not (path / "cgroup.events").exists():
+                raise CgroupUnavailable("cgroup.events is unavailable; process-tree exit cannot be verified")
             return cls(path)
         except Exception:
             try:
