@@ -110,3 +110,32 @@ def test_2b_memory_estimate_includes_quadratic_attention():
     assert rep["total_bytes_est"] == (
         rep["param_bytes"] + rep["grad_bytes"]
         + rep["optimizer_bytes"] + rep["activation_bytes_est"])
+
+def test_virtual_accounting_uses_slot_shapes_not_full_bank_rows(small_store):
+    from cortex.virtual.coverage import measure, persisted_optimizer_scan
+
+    slot = small_store.slot_state(2, 3, dim=64, rank=8)
+    small_store.commit(step=0, txid="shape-accounting")
+    expected = slot.A.numel() + slot.B.numel()
+    accounting = small_store.accounting()
+    coverage = measure(small_store)
+    scan = persisted_optimizer_scan(small_store)
+    assert accounting["initialized"] == expected
+    assert accounting["initialized_exact"] is True
+    assert accounting["initialized_unknown_rows"] == 0
+    assert coverage["scalars"]["initialized"] == expected
+    assert coverage["scalars"]["initialized_exact"] is True
+    assert scan["n_allocated"] == vstore.exact_virtual_count()
+
+
+def test_legacy_slot_without_shape_or_optimizer_is_reported_unknown(small_store):
+    slot = small_store.slot_state(1, 2, dim=32, rank=4)
+    small_store.commit(step=0, txid="legacy-shape")
+    manifest = json.loads(small_store.manifest_path.read_text())
+    manifest.pop("initialized_slot_shapes")
+    small_store.manifest_path.write_text(json.dumps(manifest))
+    small_store.manifest = manifest
+    accounting = small_store.accounting()
+    assert accounting["initialized"] == 0
+    assert accounting["initialized_unknown_rows"] == 1
+    assert accounting["initialized_exact"] is False
