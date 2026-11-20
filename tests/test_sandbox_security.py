@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 
 import pytest
@@ -30,7 +31,7 @@ def test_workspace_copy_rejects_symlinks_without_reading_targets(link_kind):
             run(code="print('should not execute')", workspace=str(source))
 
 
-@pytest.mark.skipif(os.name != "posix", reason="process-group termination is POSIX-specific")
+@pytest.mark.skipif(os.name != "posix" or not Path("/proc").exists(), reason="Linux /proc is required")
 def test_timeout_kills_descendant_processes():
     with tempfile.TemporaryDirectory() as td:
         pid_file = Path(td) / "child.pid"
@@ -44,8 +45,17 @@ def test_timeout_kills_descendant_processes():
         result = run(code=parent_code, timeout_s=1.0)
         assert result.timed_out
         child_pid = int(pid_file.read_text())
-        with pytest.raises(ProcessLookupError):
-            os.kill(child_pid, 0)
+        deadline = time.monotonic() + 2.0
+        while time.monotonic() < deadline:
+            try:
+                state = Path(f"/proc/{child_pid}/stat").read_text().split()[2]
+            except FileNotFoundError:
+                break
+            if state == "Z":  # terminated; awaiting init's reap
+                break
+            time.sleep(0.05)
+        else:
+            pytest.fail(f"descendant process {child_pid} survived timeout")
 
 
 def test_workspace_copy_rejects_fifo_and_other_special_files():

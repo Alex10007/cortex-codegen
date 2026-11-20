@@ -130,16 +130,20 @@ def _copy_workspace_no_symlinks(source: str, destination: str) -> None:
                 actual = os.fstat(file_fd)
                 if not stat.S_ISREG(actual.st_mode):
                     raise ValueError(f"workspace entry changed during copy: {name}")
-                copied_bytes += actual.st_size
-                if copied_bytes > max_bytes:
-                    raise ValueError("workspace exceeds the 2 GiB copy limit")
                 target_fd = os.open(
                     name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | nofollow,
                     0o600, dir_fd=dst_fd)
                 try:
-                    with os.fdopen(os.dup(file_fd), "rb") as source_file, \\
+                    with os.fdopen(os.dup(file_fd), "rb") as source_file, \
                             os.fdopen(os.dup(target_fd), "wb") as target_file:
-                        shutil.copyfileobj(source_file, target_file, length=1024 * 1024)
+                        while True:
+                            chunk = source_file.read(1024 * 1024)
+                            if not chunk:
+                                break
+                            copied_bytes += len(chunk)
+                            if copied_bytes > max_bytes:
+                                raise ValueError("workspace exceeds the 2 GiB copy limit")
+                            target_file.write(chunk)
                     os.fchmod(target_fd, stat.S_IMODE(actual.st_mode) & 0o777)
                 finally:
                     os.close(target_fd)
