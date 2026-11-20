@@ -18,7 +18,9 @@ def test_qualification_reports_each_behavioral_boundary(monkeypatch):
     monkeypatch.setattr(qualification, "_supports_bwrap", lambda: True)
     monkeypatch.setattr(qualification, "probe_cgroup_v2", lambda: {"available": True})
     monkeypatch.setattr(qualification, "run", lambda **kwargs: SimpleNamespace(
-        ok=True, stdout=json.dumps(observed)))
+        ok=True, stdout=json.dumps(observed), limits={
+            "cgroup_v2_enforced": True, "aggregate_cpu_limit": True,
+            "aggregate_memory_limit": True, "aggregate_process_limit": True}))
     report = qualification.qualify_sandbox()
     assert report["passed"] is True
     assert set(report["checks"].values()) == {"PASS"}
