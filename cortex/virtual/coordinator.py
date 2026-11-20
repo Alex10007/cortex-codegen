@@ -29,7 +29,7 @@ import torch
 
 from cortex.model.moe import CortexMoETransformer
 from cortex.model.virtual_slot import VirtualAdamW
-from cortex.virtual.store import BANK_ROWS, VirtualParameterStore
+from cortex.virtual.store import BANK_COLS, BANK_ROWS, VirtualParameterStore
 
 VIRT_LR = 1e-3
 PHYS_LR = 3e-4
@@ -40,7 +40,7 @@ class JointTrainer:
     def __init__(self, cfg, tokenizer, store: VirtualParameterStore,
                  out_dir: str | Path, init_checkpoint: str | None = None,
                  phys_lr: float = PHYS_LR, virt_lr: float = VIRT_LR,
-                 virtual_rank: int = 64, seed: int = 4242):
+                 virtual_rank: int | None = None, seed: int = 4242):
         self.cfg = cfg
         self.model = CortexMoETransformer(cfg)
         self.tok = tokenizer
@@ -51,7 +51,7 @@ class JointTrainer:
             self.model.parameters(), lr=phys_lr,
             betas=(0.9, 0.98), weight_decay=0.01)
         self.virt_opt = VirtualAdamW(lr=virt_lr)
-        self.virtual_rank = virtual_rank
+        self.virtual_rank = self.resolve_virtual_rank(cfg.dim, virtual_rank)
         self.seed = seed
         self.step_count = 0
         self.active_routes: dict[int, tuple[int, int]] = {}
@@ -82,6 +82,30 @@ class JointTrainer:
         if getattr(self.store, "manifest", None):
             self.step_count = int(
                 self.store.manifest.get("committed_step", 0) or 0)
+
+    @staticmethod
+    def resolve_virtual_rank(dim: int, requested: int | None = None) -> int:
+        """Choose a slot rank that fits one physical bank row.
+
+        A LoRA slot stores A[dim, rank] and B[rank, dim], so its exact
+        scalar footprint is 2 * dim * rank. The default is capped at 64
+        and at the row capacity; explicit oversized ranks fail closed.
+        """
+        if dim <= 0:
+            raise ValueError("model dimension must be positive")
+        max_rank = BANK_COLS // (2 * dim)
+        if max_rank < 1:
+            raise ValueError(
+                f"model dimension {dim} cannot fit a rank-1 slot in "
+                f"a {BANK_COLS}-scalar bank row")
+        if requested is None:
+            return min(64, max_rank)
+        rank = int(requested)
+        if rank < 1 or rank > max_rank:
+            raise ValueError(
+                f"virtual rank {rank} requires {2 * dim * rank} scalars; "
+                f"bank row capacity is {BANK_COLS} (maximum rank {max_rank})")
+        return rank
 
     @staticmethod
     def _adapt_dense_state(state: dict) -> tuple[dict, bool]:
@@ -144,6 +168,24 @@ class JointTrainer:
         return [self.store._slots[k] for k in self.active_routes.values()
                 if k in self.store._slots]
 
+    def _unique_active_slots(self) -> list:
+        """Return each shared (bank,row) SlotState exactly once.
+
+        Different objects claiming the same persisted identity would make
+        gradient accumulation and optimizer ownership ambiguous, so refuse
+        that state instead of silently double-updating it.
+        """
+        unique: dict[tuple[int, int], object] = {}
+        for layer in self.model.moe_layers:
+            for slot in layer.virtual_slots.values():
+                key = (int(slot.bank), int(slot.row))
+                prior = unique.get(key)
+                if prior is not None and prior is not slot:
+                    raise RuntimeError(
+                        f"multiple SlotState objects own virtual slot {key}")
+                unique[key] = slot
+        return list(unique.values())
+
     # -- training -------------------------------------------------------------
 
     def train_step(self, recs: list[dict[str, Any]], seq_len: int,
@@ -165,6 +207,14 @@ class JointTrainer:
             return None
         pad = x == self.tok.pad_id
         self.model.train()
+        # The same SlotState object is shared by a route across every MoE
+        # layer. Clear its prior-step gradients once before the new forward
+        # pass so this step's gradient is the sum of this step's layer
+        # contributions only.
+        active_slots = self._unique_active_slots()
+        for slot in active_slots:
+            slot.A.grad = None
+            slot.B.grad = None
         logits, loss = self.model(x, y, pad_mask=pad)
         n_tok = int((y != -100).sum())
         self.phys_opt.zero_grad(set_to_none=True)
@@ -173,12 +223,15 @@ class JointTrainer:
             self.model.parameters(), CLIP_NORM)
         self.phys_opt.step()
 
+        # One optimizer update per unique persisted slot, after gradients
+        # from all MoE layers have accumulated into the shared leaf tensors.
         slot_steps: list[dict[str, float]] = []
-        for layer in self.model.moe_layers:
-            for slot in layer.virtual_slots.values():
-                rec = self.virt_opt.step(slot)
-                if rec:
-                    slot_steps.append(rec)
+        for slot in active_slots:
+            rec = self.virt_opt.step(slot)
+            if rec:
+                slot_steps.append(rec)
+            slot.A.grad = None
+            slot.B.grad = None
         distinct = {(s["bank"], s["row"]) for s in slot_steps}
         self.step_count += 1
         entry = {
