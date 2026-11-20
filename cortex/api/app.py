@@ -59,6 +59,16 @@ def _resolve_allowed_repo_path(repo_path: str) -> str:
     return str(candidate)
 
 
+def _require_full_sandbox() -> None:
+    from cortex.execution.sandbox import _supports_bwrap
+
+    if not _supports_bwrap():
+        raise HTTPException(
+            status_code=503,
+            detail="code execution disabled: working bubblewrap user/pid/"
+                   "network namespace isolation is unavailable")
+
+
 def create_app(agent=None, api_token: str | None = None) -> FastAPI:
     from cortex.core import CortexAgent
 
@@ -92,6 +102,7 @@ def create_app(agent=None, api_token: str | None = None) -> FastAPI:
     def sandbox_run(req: SandboxRequest) -> dict[str, Any]:
         from cortex.execution.sandbox import NetworkIsolationUnavailable
 
+        _require_full_sandbox()
         try:
             return agent.sandbox_run(
                 req.code, timeout_s=req.timeout_s, require_full_isolation=True)
@@ -116,6 +127,7 @@ def create_app(agent=None, api_token: str | None = None) -> FastAPI:
 
     @app.post("/pipeline/run", dependencies=[Depends(require_auth)])
     def pipeline_run(req: PipelineRequest) -> dict[str, Any]:
+        _require_full_sandbox()
         return agent.run_pipeline(
             req.objective, _resolve_allowed_repo_path(req.repo_path),
             authorize_destructive=req.authorize_destructive)
@@ -126,6 +138,7 @@ def create_app(agent=None, api_token: str | None = None) -> FastAPI:
             raise HTTPException(
                 status_code=422,
                 detail="candidate is required unless reference=true")
+        _require_full_sandbox()
         return agent.eval_run(candidate=req.candidate, reference=req.reference)
 
     return app
