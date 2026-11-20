@@ -110,7 +110,10 @@ class MoEFFN(nn.Module):
             y.index_add_(0, rows.nonzero(as_tuple=True)[0], w[rows, None] * out)
 
         n = h.size(0)
-        f = counts.to(probs.dtype) / max(n, 1)
+        # With top-k dispatch, each token contributes k assignments. Normalize
+        # by N*k so expert fractions sum to one, matching the load-balancing
+        # objective's probability mass convention.
+        f = counts.to(probs.dtype) / max(n * self.top_k, 1)
         p_mean = probs.mean(0)
         self.last_counts = counts.detach()
         self.last_probs = p_mean.detach()
