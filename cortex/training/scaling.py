@@ -30,12 +30,18 @@ def hardware_profile() -> dict[str, Any]:
         if line.startswith("MemTotal:"):
             ram_bytes = int(line.split()[1]) * 1024
             break
+    device_count = torch.cuda.device_count() if torch.cuda.is_available() else 0
     gpu = {
         "available": torch.cuda.is_available(),
-        "device_count": torch.cuda.device_count() if torch.cuda.is_available() else 0,
+        "device_count": device_count,
         "names": ([torch.cuda.get_device_name(i)
-                   for i in range(torch.cuda.device_count())]
-                  if torch.cuda.is_available() else []),
+                   for i in range(device_count)] if device_count else []),
+        "total_memory_bytes": (
+            [int(torch.cuda.get_device_properties(i).total_memory)
+             for i in range(device_count)] if device_count else []),
+        "free_memory_bytes": (
+            [int(torch.cuda.mem_get_info(i)[0]) for i in range(device_count)]
+            if device_count else []),
         "bf16_supported": (torch.cuda.is_available()
                            and bool(torch.cuda.is_bf16_supported())),
     }
@@ -71,18 +77,28 @@ def estimate_memory_bytes(cfg: ModelConfig, batch_size: int,
     grad_bytes = param_bytes
     optim_bytes = params * 8
     per_tok_per_layer = 12 * cfg.dim
-    act_bytes = cfg.n_layers * batch_size * seq_len * per_tok_per_layer * 4
+    linear_activation_bytes = (
+        cfg.n_layers * batch_size * seq_len * per_tok_per_layer * 4)
+    # CausalSelfAttention materializes [batch, heads, seq, seq] scores and
+    # softmax probabilities. Count both conservatively in fp32; autocast does
+    # not guarantee that all attention intermediates remain low precision.
+    attention_matrix_bytes = (
+        cfg.n_layers * batch_size * cfg.n_heads * seq_len * seq_len * 4 * 2)
+    act_bytes = linear_activation_bytes + attention_matrix_bytes
     return {
         "params": params,
         "param_bytes": param_bytes,
         "grad_bytes": grad_bytes,
         "optimizer_bytes": optim_bytes,
+        "linear_activation_bytes_est": linear_activation_bytes,
+        "attention_matrix_bytes_est": attention_matrix_bytes,
         "activation_bytes_est": act_bytes,
         "total_bytes_est": param_bytes + grad_bytes + optim_bytes + act_bytes,
         "total_gb_est": round((param_bytes + grad_bytes + optim_bytes
                                + act_bytes) / 1e9, 2),
-        "note": ("parameters and AdamW states dominate; activation estimate "
-                 "uses 12 x dim per token per layer including MLP, fp32"),
+        "note": ("conservative fp32 activation estimate includes linear "
+                 "activations plus two batch x heads x sequence x sequence "
+                 "attention matrices per layer; actual peak must be measured"),
     }
 
 
@@ -93,8 +109,9 @@ def training_plan(cfg: ModelConfig, batch_size: int = 8,
     host = hardware_profile()
     fits_slow = mem["total_bytes_est"] <= host["ram_bytes"]
     minimal = estimate_memory_bytes(cfg, 1, seq_len, amp=True)
-    fits_single_gpu = (host["cuda"]["available"]
-                       and minimal["total_bytes_est"] <= 80e9)
+    fits_single_gpu = any(
+        minimal["total_bytes_est"] <= free_bytes
+        for free_bytes in host["cuda"].get("free_memory_bytes", []))
     if fits_slow:
         strategy = "single-host (tightly padded to RAM; expect heavy paging)"
     elif fits_single_gpu:
