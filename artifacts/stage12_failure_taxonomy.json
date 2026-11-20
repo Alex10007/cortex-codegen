@@ -1,0 +1,76 @@
+{
+ "kind": "cortex-stage12-failure-taxonomy",
+ "owned_by": "Fibonera",
+ "scope": "free-running generation failures on the immutable v1+v3 suites (15 tasks/subject), instrumented by workstream A",
+ "definitions": {
+  "invalid_token_direct": "a single emitted token makes an incrementally-valid prefix parse-invalid and the error persists to the end of the output",
+  "structural_inconsistency": "the persisting parser error was inherited from an earlier prefix (not introduced by the newest token)",
+  "incomplete_only_never_invalid": "no prefix is ever hard-invalid; the output is open-state at stop (premature stop / truncation)",
+  "categories": {
+   "incorrect_indentation": "emitted token starts an indentation transition the parser rejects (dominant direct class)",
+   "premature_stop_open_construct": "generation stopped while the program was still syntactically open",
+   "other_parser_confirmed_syntax_error": "parser-confirmed syntax error not better classified above"
+  }
+ },
+ "counts_by_subject": {
+  "dense-control": {
+   "first_invalid_class": {
+    "invalid_token_direct": 13,
+    "incomplete_only_never_invalid": 2
+   },
+   "first_invalid_category": {
+    "incorrect_indentation": 11,
+    "premature_stop_open_construct": 2,
+    "other_parser_confirmed_syntax_error": 2
+   },
+   "directly_introduced_share": 0.8667,
+   "stopped": {
+    "eot": 10,
+    "max_new_tokens": 5
+   }
+  },
+  "stage11-legacy": {
+   "first_invalid_class": {
+    "invalid_token_direct": 15
+   },
+   "first_invalid_category": {
+    "incorrect_indentation": 15
+   },
+   "directly_introduced_share": 1.0,
+   "stopped": {
+    "eot": 15
+   }
+  },
+  "stage11-chunked": {
+   "first_invalid_class": {
+    "invalid_token_direct": 15
+   },
+   "first_invalid_category": {
+    "incorrect_indentation": 12,
+    "other_parser_confirmed_syntax_error": 3
+   },
+   "directly_introduced_share": 1.0,
+   "stopped": {
+    "eot": 13,
+    "max_new_tokens": 2
+   }
+  }
+ },
+ "aggregate_over_schools": {
+  "incorrect_indentation": 38,
+  "other_parser_confirmed_syntax_error": 5,
+  "premature_stop_open_construct": 2
+ },
+ "stage_comparison": {
+  "stage10": {
+   "share_syntax_errors": 0.9,
+   "n_diagnostics": 30,
+   "note": "27 syntax + 3 truncation across 30 failed generations"
+  },
+  "stage11": {
+   "share_syntax_errors": 1.0,
+   "note": "both arms, corrected 30-diagnostic protocol"
+  },
+  "stage12": "first-invalid-token analysis: 43/45 task-subject rows are directly-introduced persistent syntax defects, dominated by indentation transitions; 2/45 (dense control) are premature stops"
+ }
+}

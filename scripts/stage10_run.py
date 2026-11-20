@@ -132,11 +132,13 @@ def _now_iso() -> str:
 
 
 def sft_dense_steps(model, batch_of, tok, seq_len, steps, lr, log=None,
-                    chunked: bool = False):
+                    chunked: bool = False, prompt_style: str = "legacy"):
     """Plain dense AdamW SFT (the stage-6 procedure); `batch_of` maps
     step index -> list[records]. With `chunked`, the stage-6 long-sequence
     path (make_batch_chunked) is used so over-long records contribute real
-    supervised rows instead of being silently skipped by make_batch."""
+    supervised rows instead of being silently skipped by make_batch. With
+    `prompt_style="eval_aligned"`, training prompts match the benchmark
+    prompt surface form (stage-12 sequence-boundary alignment)."""
     if chunked:
         from cortex.training.longcontext import make_batch_chunked as _mb
     else:
@@ -147,7 +149,7 @@ def sft_dense_steps(model, batch_of, tok, seq_len, steps, lr, log=None,
     losses = []
     steps_executed = 0
     for i in range(steps):
-        x, y = _mb(batch_of(i), tok, seq_len)
+        x, y = _mb(batch_of(i), tok, seq_len, prompt_style)
         if x is None:
             continue
         _, loss = model(x, y, pad_mask=x == tok.pad_id)

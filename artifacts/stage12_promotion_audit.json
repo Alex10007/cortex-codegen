@@ -1,0 +1,50 @@
+{
+  "kind": "cortex-stage12-promotion-audit",
+  "owned_by": "Fibonera",
+  "workstream": "H-promotion",
+  "baseline_checkpoint": {
+    "path": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage6/stage6-epoch-002.pt",
+    "sha256": "831f9ac648a8ac8268651cbb75f33e2287633da923a2dd9697d4953eb567f5f2"
+  },
+  "champion_arm": "chunked_control",
+  "candidate_metrics": {
+    "pass_at_1": 0.0,
+    "syntax_valid_rate": 0.0,
+    "complete_program_rate": 0.0,
+    "execution_attempted_rate": 1.0
+  },
+  "parent_metrics": {
+    "pass_at_1": 0.0,
+    "syntax_valid_rate": 0.0,
+    "complete_program_rate": 0.0,
+    "execution_attempted_rate": 1.0
+  },
+  "heldout_gate": {
+    "candidate_eval_aligned_final": 2.9498,
+    "limit": 3.3015,
+    "ok": true
+  },
+  "pass_at_1_gate": {
+    "ok": false
+  },
+  "no_regression_gate": {
+    "ok": true
+  },
+  "promotion_decision": "NOT PROMOTED - separate metrics recorded; baseline checkpoint preserved for rollback",
+  "rollback": {
+    "procedure": "restore warm-6 lineage checkpoint recorded here; stage12 arm checkpoints are gitignored and additive",
+    "baseline_sha256": "831f9ac648a8ac8268651cbb75f33e2287633da923a2dd9697d4953eb567f5f2"
+  },
+  "experiment": {
+    "experiment_id": "stage12-H-promotion-audit",
+    "parent_commit": "a8c4e98",
+    "source_commit": "082c5ebc953a",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "promotion adds capability only when no existing verified metric regresses; metrics remain separate (syntax/completion/execution/functional/generalization), never merged into one score",
+    "acceptance_criteria": "promotion decision re-derives from per-task execution results",
+    "started": "2026-11-20T07:33:49+0000",
+    "finished": "2026-11-20T07:33:49+0000",
+    "decision": "NOT PROMOTED"
+  }
+}

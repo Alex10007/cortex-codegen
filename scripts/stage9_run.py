@@ -728,7 +728,9 @@ def stage_e_divergent(subject) -> dict:
 
 # ---------------------------------------------------------------- workstream F
 
-def gen_fixed_decoding(subject, instruction: str, mode: str = "module") -> str:
+def gen_fixed_decoding(subject, instruction: str, mode: str = "module",
+                       decoding: dict | None = None) -> str:
+    dec = DECODING if decoding is None else decoding
     if mode == "multi-file":
         prompt = (subject.tokenizer.EOT + "\n" + instruction +
                   "\nReply with fenced code blocks labeled by file name.\n")
@@ -738,8 +740,8 @@ def gen_fixed_decoding(subject, instruction: str, mode: str = "module") -> str:
     ids = subject.tokenizer.encode(prompt)
     x = torch.tensor([ids[-200:]], dtype=torch.long)
     gen = subject.model.generate(
-        x, max_new_tokens=DECODING["max_new_tokens"],
-        temperature=DECODING["temperature"], top_k=DECODING["top_k"],
+        x, max_new_tokens=dec["max_new_tokens"],
+        temperature=dec["temperature"], top_k=dec["top_k"],
         eot_id=subject.tokenizer.eot_id)
     text = subject.tokenizer.decode(gen[0].tolist()[len(x[0]) - 1:])
     if mode == "module":

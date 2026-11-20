@@ -21,18 +21,32 @@ import json
 from typing import Any
 
 
-def record_ids(rec: dict[str, Any], tok) -> tuple[list[int], list[int]]:
-    prompt = tok.encode(rec["instruction"] + "\n")
+def eval_prompt_text(rec: dict[str, Any], tok) -> str:
+    """The exact benchmark prompt surface form (stage-9 fixed decoding):
+    EOT, newline, "# Task:" header, instruction. Used by the eval-aligned
+    prompt style so training context matches free-running evaluation."""
+    return tok.EOT + "\n" + "# Task: " + rec["instruction"] + "\n"
+
+
+def record_ids(rec: dict[str, Any], tok,
+               prompt_style: str = "legacy") -> tuple[list[int], list[int]]:
+    if prompt_style not in ("legacy", "eval_aligned"):
+        raise ValueError(f"unknown prompt_style: {prompt_style}")
+    if prompt_style == "eval_aligned":
+        prompt = tok.encode(eval_prompt_text(rec, tok))
+    else:
+        prompt = tok.encode(rec["instruction"] + "\n")
     completion = tok.encode(rec["code"].strip() + "\n" + tok.EOT)
     return prompt, completion
 
 
-def chunk_record(rec: dict[str, Any], tok,
-                 seq_len: int) -> list[tuple[list[int], list[int]]] | None:
+def chunk_record(rec: dict[str, Any], tok, seq_len: int,
+                 prompt_style: str = "legacy",
+                 ) -> list[tuple[list[int], list[int]]] | None:
     """Split one record into raw (ids, labels) windows covering the stream
     exactly. Returns None when the instruction alone cannot fit one window
     (counted by the caller, never truncated)."""
-    prompt, completion = record_ids(rec, tok)
+    prompt, completion = record_ids(rec, tok, prompt_style)
     if len(prompt) + 1 > seq_len:
         return None
     ids = prompt + completion
@@ -52,21 +66,35 @@ def chunk_record(rec: dict[str, Any], tok,
     return windows
 
 
-def make_batch_chunked(recs: list[dict[str, Any]], tok, seq_len: int):
+def make_batch_chunked(recs: list[dict[str, Any]], tok, seq_len: int,
+                       prompt_style: str = "legacy",
+                       complete_rows_only: bool = False):
     """Batch of shifted rows from possibly over-long records. A record the
     legacy silently dropped here contributes one or more rows with real
-    supervised targets."""
+    supervised targets. With `complete_rows_only`, windows whose decoded
+    text ends inside an open syntactic construct (unclosed delimiter or
+    unterminated quote - stage-12 measured 49.84%% of chunked windows) are
+    excluded so every window ends at a structurally clean boundary."""
     import torch
+
+    if complete_rows_only:
+        from cortex.evaluation.structure_audit import structure_scan
 
     pad_id = tok.pad_id
     width = seq_len - 1
     batch_ids: list[list[int]] = []
     batch_labels: list[list[int]] = []
+    n_windows = n_dropped_windows = 0
     for rec in recs:
-        windows = chunk_record(rec, tok, seq_len)
+        windows = chunk_record(rec, tok, seq_len, prompt_style)
         if windows is None:
             continue
         for win_ids, win_labels in windows:
+            n_windows += 1
+            if complete_rows_only and structure_scan(
+                    tok.decode(win_ids))["unbalanced"]:
+                n_dropped_windows += 1
+                continue
             if len(win_ids) < seq_len:
                 # final/clamped window: pad the raw window to the full
                 # stream width first, then shift - byte-identical to the

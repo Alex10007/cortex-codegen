@@ -1,0 +1,99 @@
+{
+  "kind": "cortex-stage12-structure-learning",
+  "owned_by": "Fibonera",
+  "workstream": "B-structure",
+  "dataset_structure": {
+    "n_records": 332,
+    "parses_rate": 0.988,
+    "complete_program_rate": 0.988,
+    "with_class_rate": 0.0,
+    "with_imports_rate": 0.009,
+    "delimiters_balanced_rate": 1.0,
+    "docstring_records_rate": 0.988,
+    "function_len_astnodes_avg": 24.9,
+    "function_len_astnodes_max": 156,
+    "nesting_depth_avg": 2.14,
+    "nesting_depth_max": 9
+  },
+  "per_split": {
+    "train": {
+      "n_records": 241,
+      "parses_rate": 0.9834,
+      "complete_program_rate": 0.9834,
+      "with_class_rate": 0.0,
+      "with_imports_rate": 0.0041,
+      "delimiters_balanced_rate": 1.0,
+      "docstring_records_rate": 0.9834,
+      "function_len_astnodes_avg": 25.5,
+      "function_len_astnodes_max": 156,
+      "nesting_depth_avg": 2.1,
+      "nesting_depth_max": 7
+    },
+    "val": {
+      "n_records": 26,
+      "parses_rate": 1.0,
+      "complete_program_rate": 1.0,
+      "with_class_rate": 0.0,
+      "with_imports_rate": 0.0385,
+      "delimiters_balanced_rate": 1.0,
+      "docstring_records_rate": 1.0,
+      "function_len_astnodes_avg": 19.3,
+      "function_len_astnodes_max": 44,
+      "nesting_depth_avg": 1.88,
+      "nesting_depth_max": 5
+    },
+    "heldout": {
+      "n_records": 65,
+      "parses_rate": 1.0,
+      "complete_program_rate": 1.0,
+      "with_class_rate": 0.0,
+      "with_imports_rate": 0.0154,
+      "delimiters_balanced_rate": 1.0,
+      "docstring_records_rate": 1.0,
+      "function_len_astnodes_avg": 25.0,
+      "function_len_astnodes_max": 87,
+      "nesting_depth_avg": 2.38,
+      "nesting_depth_max": 9
+    }
+  },
+  "chunked_legacy_stream_boundaries": {
+    "n_windows": 319,
+    "pct_window_end_inside_open_construct": 0.4984,
+    "pct_window_end_clean": 0.5016,
+    "kinds": {
+      "open_delimiter": 18,
+      "open_quote": 141,
+      "clean": 160
+    },
+    "n_supervised_targets_snapshot_note": "target-end construct state measured via the SAME window text (input row) - the streamed completion token layout is shared"
+  },
+  "chunked_eval_aligned_stream_boundaries": {
+    "n_windows": 318,
+    "pct_window_end_inside_open_construct": 0.5157,
+    "pct_window_end_clean": 0.48429999999999995,
+    "kinds": {
+      "open_delimiter": 18,
+      "open_quote": 146,
+      "clean": 154
+    },
+    "n_supervised_targets_snapshot_note": "target-end construct state measured via the SAME window text (input row) - the streamed completion token layout is shared"
+  },
+  "findings": {
+    "chunked_windows_ending_inside_open_construct": 0.4984,
+    "dominant_open_kind": "clean",
+    "dataset_is_single_function_dominated": true,
+    "complete_program_rate": 0.988
+  },
+  "experiment": {
+    "experiment_id": "stage12-B-structure",
+    "parent_commit": "a8c4e98",
+    "source_commit": "082c5ebc953a",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "the training stream under-represents program structures beyond single complete functions and the chunked stream cuts windows mid-construct, training unterminated docstring fragments",
+    "acceptance_criteria": "metrics from parsed records and the actual chunked stream; no synthetic records",
+    "started": "2026-11-20T06:24:25+0000",
+    "finished": "2026-11-20T06:24:26+0000",
+    "decision": "EXECUTED"
+  }
+}

@@ -112,14 +112,20 @@ def load_split(jsonl_path: str, split: str) -> list[dict[str, Any]]:
     return recs
 
 
-def make_batch(recs: list[dict[str, Any]], tok, seq_len: int):
+def make_batch(recs: list[dict[str, Any]], tok, seq_len: int,
+               prompt_style: str = "legacy"):
     import torch
+
+    from cortex.training.longcontext import eval_prompt_text
 
     pad_id = tok.pad_id
     batch_ids: list[list[int]] = []
     batch_labels: list[list[int]] = []
     for rec in recs:
-        prompt = tok.encode(rec["instruction"] + "\n")
+        if prompt_style == "eval_aligned":
+            prompt = tok.encode(eval_prompt_text(rec, tok))
+        else:
+            prompt = tok.encode(rec["instruction"] + "\n")
         completion = tok.encode(rec["code"].strip() + "\n" + tok.EOT)
         if len(prompt) + len(completion) + 1 > seq_len:
             continue
@@ -136,7 +142,8 @@ def make_batch(recs: list[dict[str, Any]], tok, seq_len: int):
 
 
 def evaluate_heldout(model: CortexTransformer, recs: list[dict[str, Any]], tok,
-                     seq_len: int, batch_size: int = 8) -> float | None:
+                     seq_len: int, batch_size: int = 8,
+                     prompt_style: str = "legacy") -> float | None:
     import torch
 
     model.eval()
@@ -144,7 +151,8 @@ def evaluate_heldout(model: CortexTransformer, recs: list[dict[str, Any]], tok,
     weights: list[int] = []
     with torch.no_grad():
         for i in range(0, len(recs), batch_size):
-            x, y = make_batch(recs[i:i + batch_size], tok, seq_len)
+            x, y = make_batch(recs[i:i + batch_size], tok, seq_len,
+                              prompt_style=prompt_style)
             if x is None:
                 continue
             logits, _ = model(x, pad_mask=x == tok.pad_id)

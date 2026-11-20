@@ -1,0 +1,48 @@
+{
+  "kind": "cortex-stage12-capacity-readiness",
+  "owned_by": "Fibonera",
+  "workstream": "G-capacity",
+  "hardware": {
+    "cpu_cores": 5,
+    "ram_total_gb": 5.92,
+    "ram_available_gb": 5.44,
+    "has_cuda": false,
+    "cuda_devices": 0
+  },
+  "architectures": {
+    "cortex_demo_actual_params": 8071296,
+    "cortex_demo_expected": 8071296,
+    "cortex_2b_theoretical": 2056012800,
+    "cortex_2b_count_is_2056012800": true
+  },
+  "gradient_participation_demo_model": {
+    "total_param_tensors": 51,
+    "tensors_with_grad": 51,
+    "tensors_with_nonzero_grad": 51,
+    "scalar_participation_estimate": "per-scalar coverage is tracked by the virtual store scan; dense demo model participates fully"
+  },
+  "sequence_length_requirements": {
+    "training_window": 256,
+    "measured_avg_prompt_tokens_legacy": 146.5,
+    "2b_training_memory_estimate_gb": 46.0,
+    "holding": "stage-10 measured; unchanged"
+  },
+  "two_b_training_decision": "BLOCKED - 0 CUDA devices; ~46 GB RAM required vs measured available",
+  "gpu_procurement": "requires explicit Fibonera authorization; none granted; $0.00 spent",
+  "two_b_gate_feasible_locally": {
+    "feasible": false,
+    "reason": "needs ~46.0 GB RAM (16 B/param x1.5 activations headroom), available 5.4 GB"
+  },
+  "experiment": {
+    "experiment_id": "stage12-G-capacity-readiness",
+    "parent_commit": "a8c4e98",
+    "source_commit": "082c5ebc953a",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "demo-scale capacity, sequence-length and hardware requirements are re-measured; 2B training remains gated on GPUs",
+    "acceptance_criteria": "no procurement, no expenditure, no simulated GPU claims",
+    "started": "2026-11-20T07:33:48+0000",
+    "finished": "2026-11-20T07:33:49+0000",
+    "decision": "BLOCKED"
+  }
+}
