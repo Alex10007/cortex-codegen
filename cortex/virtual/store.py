@@ -386,6 +386,8 @@ class VirtualParameterStore:
         persisted_updated_keys = set()
         orphan_optimizer_keys = set()
         persisted_updated_scalars = 0
+        persisted_changed_by_key = {}
+        changed_unknown_keys = set()
         optimizer_steps_by_key = {}
         for path in self.root.glob("adam-*.npz"):
             bank_s, row_s = path.stem.removeprefix("adam-").split("-", 1)
@@ -401,10 +403,22 @@ class VirtualParameterStore:
                 persisted_updated_keys.add(key)
                 optimizer_steps_by_key[key] = int(state["step_count"])
                 persisted_updated_scalars += n
+                if ("changed_evidence_known" in state
+                        and "A_changed_mask" in state
+                        and "B_changed_mask" in state):
+                    persisted_changed_by_key[key] = int(
+                        np.count_nonzero(state["A_changed_mask"])
+                        + np.count_nonzero(state["B_changed_mask"]))
+                    if int(state["changed_evidence_known"]) != 1:
+                        changed_unknown_keys.add(key)
+                else:
+                    persisted_changed_by_key[key] = 0
+                    changed_unknown_keys.add(key)
 
         live_keys = set(self._slots)
         live_grad_keys = set()
         live_updated_keys = set()
+        live_changed_by_key = {}
         for key, st in self._slots.items():
             n = st.A.numel() + st.B.numel()
             shape_by_key.setdefault(key, n)
@@ -415,6 +429,12 @@ class VirtualParameterStore:
                 live_updated_keys.add(key)
                 optimizer_steps_by_key[key] = max(
                     optimizer_steps_by_key.get(key, 0), int(st.step_count))
+                live_changed_by_key[key] = sum(
+                    int(torch.count_nonzero(st.changed_mask.get(
+                        name, torch.zeros_like(p, dtype=torch.bool))))
+                    for name, p in st.params.items())
+                if not st.changed_evidence_known:
+                    changed_unknown_keys.add(key)
 
         activated_keys = committed_keys | live_keys | persisted_updated_keys
         received_keys = live_grad_keys | persisted_updated_keys
@@ -429,6 +449,11 @@ class VirtualParameterStore:
         activated, activated_unknown = scalar_count(activated_keys)
         received, received_unknown = scalar_count(received_keys)
         updated, updated_unknown = scalar_count(updated_keys)
+        changed_by_key = dict(persisted_changed_by_key)
+        changed_by_key.update(live_changed_by_key)
+        demonstrably_trained = int(sum(
+            changed_by_key.get(key, 0) for key in updated_keys))
+        changed_unknown = len(changed_unknown_keys & updated_keys)
         return {
             "allocated": exact_virtual_count(),
             "initialized": initialized,
@@ -440,7 +465,9 @@ class VirtualParameterStore:
             "received_gradients_unknown_slots": received_unknown,
             "optimizer_updated": updated,
             "optimizer_updated_unknown_slots": updated_unknown,
-            "demonstrably_trained": updated,
+            "demonstrably_trained": demonstrably_trained,
+            "demonstrably_trained_unknown_slots": changed_unknown,
+            "demonstrably_trained_exact": changed_unknown == 0,
             "updates_applied_total": sum(optimizer_steps_by_key.values()),
             "persisted_optimizer_updated_scalars": persisted_updated_scalars,
             "orphan_optimizer_state_slots": len(orphan_optimizer_keys),
@@ -451,7 +478,7 @@ class VirtualParameterStore:
                 >= updated and updated < exact_virtual_count()
                 and initialized_unknown == 0 and activated_unknown == 0
                 and received_unknown == 0 and updated_unknown == 0
-                and not orphan_optimizer_keys),
+                and changed_unknown == 0 and not orphan_optimizer_keys),
         }
 
     def _trained_updates(self) -> int:
