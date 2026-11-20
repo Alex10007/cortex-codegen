@@ -197,16 +197,23 @@ class CortexMoETransformer(CortexTransformer):
                    for slot in slots.values())
 
     def moe_param_count(self) -> dict[str, int]:
-        phys = sum(
-            p.numel() for layer in self.moe_layers for p in layer.experts.parameters())
-        phys += sum(layer.router.weight.numel() for layer in self.moe_layers)
+        """Report dense reference, physical MoE components and virtual slots
+        as separate ledgers; never label the MoE model as the dense 2B model."""
+        physical_experts = sum(
+            p.numel() for layer in self.moe_layers
+            for p in layer.experts.parameters())
+        routers = sum(layer.router.weight.numel() for layer in self.moe_layers)
+        physical_total = self.actual_param_count()
+        backbone = physical_total - physical_experts - routers
+        virtual = self.virtual_param_count()
         return {
-            "backbone_and_dense_mlp": self.actual_param_count() - phys,
-            "physical_experts_routers": phys,
-            "virtual_parameters": self.virtual_param_count(),
-            "total_actual": self.actual_param_count(),
-            "total_with_virtual": (
-                self.actual_param_count() + self.virtual_param_count()),
+            "dense_reference_parameters": self.cfg.theoretical_param_count(),
+            "backbone_parameters": backbone,
+            "physical_expert_parameters": physical_experts,
+            "router_parameters": routers,
+            "physical_total_parameters": physical_total,
+            "virtual_slot_parameters": virtual,
+            "total_with_virtual": physical_total + virtual,
         }
 
     # -- loss ----------------------------------------------------------------
