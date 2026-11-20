@@ -283,3 +283,20 @@ The behavioral qualification now attempts to exceed the aggregate process cap an
 **Verification:** committed source and test changes only. No test suite has been executed and no live cgroup host has been qualified. GitHub Actions has previously failed before runner steps/logs; the new commits must still receive an actual executable test run.
 
 **No changes** to training, model weights, checkpoints, benchmark champion, datasets, PR merge status, or `main`.
+
+
+## Stage 16A.13 — unified sandbox lifecycle cleanup
+
+The strict and degraded execution paths now use one cleanup routine after process launch:
+
+- Process-group termination is attempted on every normal exit, timeout, and exceptional path; non-POSIX execution terminates a still-running direct child.
+- A strict run issues cgroup-wide termination, waits for the direct child to be reaped, joins output readers, verifies the cgroup is empty, captures kernel counters, and attempts cgroup removal.
+- Cleanup failures are no longer silently discarded. They are surfaced as an execution failure; if another exception already triggered cleanup, the original exception remains primary and receives a cleanup-failure note.
+- Output-reader startup failures and unexpected process-wait failures now enter the same cleanup path.
+- Cgroup creation was moved until after command/isolation planning, reducing the interval in which a setup exception could leave an unused cgroup behind.
+- The launch-failure and cgroup-attachment-failure paths now attempt explicit cgroup cleanup and preserve cleanup errors as exception notes rather than swallowing them.
+- Added regressions for successful process/cgroup cleanup, cgroup-kill failure reporting after direct-child reaping, and injected failure starting the second output reader.
+
+**Verification status:** implementation and regression tests are committed to the remediation branch. The tests have not been executed in this session. CI must run them on an actual runner; source inspection is not a test pass. The strict sandbox remains NOT RUNTIME-VERIFIED until delegated cgroup v2 + Bubblewrap qualification passes on a supported Linux host.
+
+**Known limits:** this increment does not certify seccomp, disk I/O limits, host-kernel escape resistance, or deliberate privileged cgroup migration. It also does not replace live CPU/memory/process-limit qualification. No model training, checkpoint/data changes, benchmark promotion, PR merge, or main update occurred.
