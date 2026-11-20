@@ -1,0 +1,307 @@
+{
+  "kind": "cortex-stage16-report",
+  "owned_by": "Fibonera",
+  "stage": 16,
+  "summary": {
+    "parent_commit": "799a217",
+    "baseline": "PASS",
+    "baseline_free_running_failure_reproduction": {
+      "n_probes": 8,
+      "parse_rate": 0.0,
+      "eot_stop_count": 6,
+      "failures_at_first_indent_transition": 8,
+      "training_fragment_continuations": 0
+    },
+    "exposure_dataset": {
+      "attempted": 96,
+      "aligned_rows_count": 0,
+      "early_rows_count": 24,
+      "skip_reasons": {
+        "does_not_fit_seq256": 71,
+        "prefix_diverged_truncated_to_early_row": 24,
+        "prefix_covers_full_completion": 1
+      },
+      "divergence_positions": {
+        "n_diverged": 25,
+        "mean_first_divergence": 1.12,
+        "max_first_divergence": 2
+      },
+      "prefix_lengths_mean": 44.6
+    },
+    "free_running_parse_rate_by_arm": {
+      "control": 0.125,
+      "exposure_const": 0.125,
+      "exposure_early": 0.0,
+      "exposure_sched": 0.125,
+      "exposure_sched_rep2": 0.125
+    },
+    "heldout_eval_aligned_by_arm": {
+      "control": 2.9038,
+      "exposure_const": 2.9038,
+      "exposure_early": 2.714,
+      "exposure_sched": 2.9038,
+      "exposure_sched_rep2": 2.9038
+    },
+    "phase2_acceptance": false,
+    "structural_first_transition_error_examples": {
+      "control": 3,
+      "primary": 3
+    },
+    "record_length_stats": {
+      "n_records": 306,
+      "total_tokens_mean": 464.7,
+      "total_tokens_max": 2046,
+      "total_tokens_over_256": 216,
+      "retention": {
+        "256": 0.2941,
+        "512": 0.719,
+        "1024": 0.9346
+      }
+    },
+    "cortex_s_feasibility": {
+      "live_param_count": 41997312,
+      "probe_seq_width": 511,
+      "secs_per_step_mean": 0.86,
+      "peak_rss_delta_mb": 0.0,
+      "param_count_matches_declared": true
+    },
+    "objective_grad_cosine": {
+      "cosine_lm_vs_structural_weighted": -0.4395,
+      "cosine_lm_vs_combined": -0.232,
+      "cosine_structural_weighted_vs_combined": 0.9759
+    },
+    "weighted_arm_vs_exposure_const_parse_rate": -0.125,
+    "feedback": {
+      "success_count": 1,
+      "candidates": 12,
+      "target_bearing_steps": 600,
+      "heldout_vs_stage15_reference": 0.3035
+    },
+    "self_correction": {
+      "direct_successes": 0,
+      "n_repaired": 11,
+      "repair_successes": 0,
+      "first_attempt_success_rate": 0.0,
+      "success_after_corrections": 0.0,
+      "average_correction_attempts": 3.0
+    },
+    "capability_pass_at_1": {
+      "v1_pass_at_1": 0.0,
+      "v3_pass_at_1": 0.0,
+      "t15-unseen_pass_at_1": 0.0,
+      "t16-unseen_pass_at_1": 0.0,
+      "v1_syntax_valid_rate": 0.0,
+      "v3_syntax_valid_rate": 0.0,
+      "v1_complete_program_rate": 0.0,
+      "v3_complete_program_rate": 0.0
+    },
+    "perturbed_pass_at_1": 0.0,
+    "unseen_pass_at_k": {
+      "k": 3,
+      "n_tasks": 8,
+      "pass_at_1_mean": 0.0,
+      "tasks_with_at_least_one_pass": 0,
+      "per_task": [
+        {
+          "task_id": "t16-binary-add",
+          "passes": 0,
+          "samples": [
+            {
+              "sample": 0,
+              "temperature": 0.2,
+              "passed": false
+            },
+            {
+              "sample": 1,
+              "temperature": 0.7,
+              "passed": false
+            },
+            {
+              "sample": 2,
+              "temperature": 1.0,
+              "passed": false
+            }
+          ]
+        },
+        {
+          "task_id": "t16-flatten-dict",
+          "passes": 0,
+          "samples": [
+            {
+              "sample": 0,
+              "temperature": 0.2,
+              "passed": false
+            },
+            {
+              "sample": 1,
+              "temperature": 0.7,
+              "passed": false
+            },
+            {
+              "sample": 2,
+              "temperature": 1.0,
+              "passed": false
+            }
+          ]
+        },
+        {
+          "task_id": "t16-run-length-encode",
+          "passes": 0,
+          "samples": [
+            {
+              "sample": 0,
+              "temperature": 0.2,
+              "passed": false
+            },
+            {
+              "sample": 1,
+              "temperature": 0.7,
+              "passed": false
+            },
+            {
+              "sample": 2,
+              "temperature": 1.0,
+              "passed": false
+            }
+          ]
+        },
+        {
+          "task_id": "t16-merge-intervals",
+          "passes": 0,
+          "samples": [
+            {
+              "sample": 0,
+              "temperature": 0.2,
+              "passed": false
+            },
+            {
+              "sample": 1,
+              "temperature": 0.7,
+              "passed": false
+            },
+            {
+              "sample": 2,
+              "temperature": 1.0,
+              "passed": false
+            }
+          ]
+        },
+        {
+          "task_id": "t16-bank-account-class",
+          "passes": 0,
+          "samples": [
+            {
+              "sample": 0,
+              "temperature": 0.2,
+              "passed": false
+            },
+            {
+              "sample": 1,
+              "temperature": 0.7,
+              "passed": false
+            },
+            {
+              "sample": 2,
+              "temperature": 1.0,
+              "passed": false
+            }
+          ]
+        },
+        {
+          "task_id": "t16-top-words",
+          "passes": 0,
+          "samples": [
+            {
+              "sample": 0,
+              "temperature": 0.2,
+              "passed": false
+            },
+            {
+              "sample": 1,
+              "temperature": 0.7,
+              "passed": false
+            },
+            {
+              "sample": 2,
+              "temperature": 1.0,
+              "passed": false
+            }
+          ]
+        },
+        {
+          "task_id": "t16-fib-memo",
+          "passes": 0,
+          "samples": [
+            {
+              "sample": 0,
+              "temperature": 0.2,
+              "passed": false
+            },
+            {
+              "sample": 1,
+              "temperature": 0.7,
+              "passed": false
+            },
+            {
+              "sample": 2,
+              "temperature": 1.0,
+              "passed": false
+            }
+          ]
+        },
+        {
+          "task_id": "t16-rotate-matrix",
+          "passes": 0,
+          "samples": [
+            {
+              "sample": 0,
+              "temperature": 0.2,
+              "passed": false
+            },
+            {
+              "sample": 1,
+              "temperature": 0.7,
+              "passed": false
+            },
+            {
+              "sample": 2,
+              "temperature": 1.0,
+              "passed": false
+            }
+          ]
+        }
+      ]
+    },
+    "moe_divergent": {
+      "moe_available": true,
+      "divergent_report": true
+    },
+    "two_b_gate": "BLOCKED - unchanged since stage 9",
+    "virtual_store_recount": {
+      "slots_updated": 35292,
+      "unchanged_35292": true,
+      "n_allocated": null
+    },
+    "promotion_decision": "NOT PROMOTED",
+    "promotion_gates_passed": 2,
+    "promotion_gate_statuses": {
+      "gateA_reproducibility": "FAIL",
+      "gateB_free_running_structure": "FAIL",
+      "gateC_complete_programs": "FAIL",
+      "gateD_functional_correctness": "FAIL",
+      "gateE_generalization": "FAIL",
+      "gateF_self_correction": "FAIL",
+      "gateG_regression_control": "PASS",
+      "gateH_independent_audit": "PASS"
+    },
+    "independent_audit_summary": "13 PASS / 0 FAIL",
+    "fingerprint_v1": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177",
+    "fingerprint_v2": "64ea2c020004af92854aebdde0557678293313b06881fdf5b5abb54e8729c8a3",
+    "fingerprint_v3": "c70feb13b061a35b9b3940296c40ea8365aa57089b325050ef238dc93774ccbb",
+    "fingerprint_t15_unseen": "0d0bff384bc234b4fa8b5fe01914678f4e38333dfad2ddb3c920ceb3d7eb05a7",
+    "fingerprint_t16_unseen": "eb496a4a5ec6c341db82b92d8fb6f0c5f685ab406c7c2087320a6f2fbdab3096",
+    "spend_usd": 0.0,
+    "gpu_hours": 0.0,
+    "authoritative_store_untouched": true
+  }
+}

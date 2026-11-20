@@ -1,0 +1,633 @@
+{
+  "kind": "cortex-stage16-generalization",
+  "owned_by": "Fibonera",
+  "workstream": "8-generalization",
+  "unseen_suite_fingerprint": "eb496a4a5ec6c341db82b92d8fb6f0c5f685ab406c7c2087320a6f2fbdab3096",
+  "harness_sanity": {
+    "per_task": [
+      {
+        "task_id": "t16-binary-add",
+        "reference_passes": true
+      },
+      {
+        "task_id": "t16-flatten-dict",
+        "reference_passes": true
+      },
+      {
+        "task_id": "t16-run-length-encode",
+        "reference_passes": true
+      },
+      {
+        "task_id": "t16-merge-intervals",
+        "reference_passes": true
+      },
+      {
+        "task_id": "t16-bank-account-class",
+        "reference_passes": true
+      },
+      {
+        "task_id": "t16-top-words",
+        "reference_passes": true
+      },
+      {
+        "task_id": "t16-fib-memo",
+        "reference_passes": true
+      },
+      {
+        "task_id": "t16-rotate-matrix",
+        "reference_passes": true
+      }
+    ],
+    "all_references_pass": true
+  },
+  "contamination": {
+    "n_tasks": 8,
+    "instruction_in_train": 0,
+    "instruction_in_benchmarks": 0,
+    "instruction_in_stage15_unseen": 0
+  },
+  "capability": {
+    "v1_pass_at_1": 0.0,
+    "v1_n_tasks": 3,
+    "v1_syntax_valid_rate": 0.0,
+    "v1_complete_program_rate": 0.0,
+    "v3_pass_at_1": 0.0,
+    "v3_n_tasks": 12,
+    "v3_syntax_valid_rate": 0.0,
+    "v3_complete_program_rate": 0.0,
+    "t15-unseen_pass_at_1": 0.0,
+    "t15-unseen_n_tasks": 8,
+    "t15-unseen_syntax_valid_rate": 0.0,
+    "t15-unseen_complete_program_rate": 0.0,
+    "t16-unseen_pass_at_1": 0.0,
+    "t16-unseen_n_tasks": 8,
+    "t16-unseen_syntax_valid_rate": 0.0,
+    "t16-unseen_complete_program_rate": 0.0
+  },
+  "per_task": [
+    {
+      "suite": "v1",
+      "task_id": "t-palindrome",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v1",
+      "task_id": "t-fizzbuzz",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v1",
+      "task_id": "t-wordcount",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-run-length-encode",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-interval-merge",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-sql-sqlite-aggregate",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-sql-sqlite-window-free",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-debug-off-by-one",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-debug-mutation",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-testgen-cases",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-refactor-fluent",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-api-handler",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-security-safe-substitute",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-performance-sort-k",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-multi-call-node",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "t15-unseen",
+      "task_id": "t15-matrix-transpose",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "t15-unseen",
+      "task_id": "t15-caesar-shift",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "t15-unseen",
+      "task_id": "t15-multi-function-stats",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "t15-unseen",
+      "task_id": "t15-closure-adder",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "t15-unseen",
+      "task_id": "t15-safe-div",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "t15-unseen",
+      "task_id": "t15-word-counter-class",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "t15-unseen",
+      "task_id": "t15-group-by-length",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "t15-unseen",
+      "task_id": "t15-window-max",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "t16-unseen",
+      "task_id": "t16-binary-add",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "t16-unseen",
+      "task_id": "t16-flatten-dict",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "t16-unseen",
+      "task_id": "t16-run-length-encode",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "t16-unseen",
+      "task_id": "t16-merge-intervals",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "t16-unseen",
+      "task_id": "t16-bank-account-class",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "t16-unseen",
+      "task_id": "t16-top-words",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "t16-unseen",
+      "task_id": "t16-fib-memo",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "t16-unseen",
+      "task_id": "t16-rotate-matrix",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    }
+  ],
+  "perturbation": {
+    "n_probes": 14,
+    "pass_at_1": 0.0,
+    "seed_base": 20261900,
+    "per_probe": [
+      {
+        "task_id": "t-palindrome-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t-fizzbuzz-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t-wordcount-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-run-length-encode-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-interval-merge-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-sql-sqlite-aggregate-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-sql-sqlite-window-free-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-debug-off-by-one-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-debug-mutation-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-refactor-fluent-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-api-handler-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-security-safe-substitute-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-performance-sort-k-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-multi-call-node-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      }
+    ],
+    "rejected": [
+      {
+        "task_id": "t3-testgen-cases",
+        "reason": "no def/class found"
+      }
+    ]
+  },
+  "unseen_pass_at_k": {
+    "k": 3,
+    "n_tasks": 8,
+    "pass_at_1_mean": 0.0,
+    "tasks_with_at_least_one_pass": 0,
+    "per_task": [
+      {
+        "task_id": "t16-binary-add",
+        "passes": 0,
+        "samples": [
+          {
+            "sample": 0,
+            "temperature": 0.2,
+            "passed": false
+          },
+          {
+            "sample": 1,
+            "temperature": 0.7,
+            "passed": false
+          },
+          {
+            "sample": 2,
+            "temperature": 1.0,
+            "passed": false
+          }
+        ]
+      },
+      {
+        "task_id": "t16-flatten-dict",
+        "passes": 0,
+        "samples": [
+          {
+            "sample": 0,
+            "temperature": 0.2,
+            "passed": false
+          },
+          {
+            "sample": 1,
+            "temperature": 0.7,
+            "passed": false
+          },
+          {
+            "sample": 2,
+            "temperature": 1.0,
+            "passed": false
+          }
+        ]
+      },
+      {
+        "task_id": "t16-run-length-encode",
+        "passes": 0,
+        "samples": [
+          {
+            "sample": 0,
+            "temperature": 0.2,
+            "passed": false
+          },
+          {
+            "sample": 1,
+            "temperature": 0.7,
+            "passed": false
+          },
+          {
+            "sample": 2,
+            "temperature": 1.0,
+            "passed": false
+          }
+        ]
+      },
+      {
+        "task_id": "t16-merge-intervals",
+        "passes": 0,
+        "samples": [
+          {
+            "sample": 0,
+            "temperature": 0.2,
+            "passed": false
+          },
+          {
+            "sample": 1,
+            "temperature": 0.7,
+            "passed": false
+          },
+          {
+            "sample": 2,
+            "temperature": 1.0,
+            "passed": false
+          }
+        ]
+      },
+      {
+        "task_id": "t16-bank-account-class",
+        "passes": 0,
+        "samples": [
+          {
+            "sample": 0,
+            "temperature": 0.2,
+            "passed": false
+          },
+          {
+            "sample": 1,
+            "temperature": 0.7,
+            "passed": false
+          },
+          {
+            "sample": 2,
+            "temperature": 1.0,
+            "passed": false
+          }
+        ]
+      },
+      {
+        "task_id": "t16-top-words",
+        "passes": 0,
+        "samples": [
+          {
+            "sample": 0,
+            "temperature": 0.2,
+            "passed": false
+          },
+          {
+            "sample": 1,
+            "temperature": 0.7,
+            "passed": false
+          },
+          {
+            "sample": 2,
+            "temperature": 1.0,
+            "passed": false
+          }
+        ]
+      },
+      {
+        "task_id": "t16-fib-memo",
+        "passes": 0,
+        "samples": [
+          {
+            "sample": 0,
+            "temperature": 0.2,
+            "passed": false
+          },
+          {
+            "sample": 1,
+            "temperature": 0.7,
+            "passed": false
+          },
+          {
+            "sample": 2,
+            "temperature": 1.0,
+            "passed": false
+          }
+        ]
+      },
+      {
+        "task_id": "t16-rotate-matrix",
+        "passes": 0,
+        "samples": [
+          {
+            "sample": 0,
+            "temperature": 0.2,
+            "passed": false
+          },
+          {
+            "sample": 1,
+            "temperature": 0.7,
+            "passed": false
+          },
+          {
+            "sample": 2,
+            "temperature": 1.0,
+            "passed": false
+          }
+        ]
+      }
+    ]
+  },
+  "experiment": {
+    "experiment_id": "stage16-8-unseen-generalization",
+    "parent_commit": "799a217",
+    "source_commit": "799a21758b1a",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "any free-running capability achieved on training-distribution tasks transfers to the NEW 8-task t16 unseen suite (functions, classes, recursion, data structures, algorithms) and to perturbed formulations",
+    "acceptance_criteria": "8 authored t16 tasks with execution-validated reference solutions (harness sanity must pass first), fingerprint eb496a4a5ec6c341..., zero contamination documented; perturbation probes at seed_base 20261900; pass@3 sampling at temperatures 0.2/0.7/1.0; tasks never exposed to training",
+    "started": "2026-11-20T21:15:13+0000",
+    "finished": "2026-11-20T21:17:00+0000",
+    "decision": "EXECUTED"
+  }
+}

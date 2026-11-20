@@ -1,0 +1,322 @@
+{
+  "kind": "cortex-stage16-objective-ablation",
+  "owned_by": "Fibonera",
+  "workstream": "5-objective",
+  "gradient_interference": {
+    "conditions_run": [
+      "lm",
+      "structural_weighted",
+      "combined"
+    ],
+    "loss_values": {
+      "lm": 1.0728,
+      "structural_weighted": 8.4082,
+      "combined": 4.7405
+    },
+    "grad_norms": {
+      "lm": 4.8541,
+      "structural_weighted": 21.557,
+      "combined": 9.9536
+    },
+    "cosine_similarity": {
+      "cosine_lm_vs_structural_weighted": -0.4395,
+      "cosine_lm_vs_combined": -0.232,
+      "cosine_structural_weighted_vs_combined": 0.9759
+    },
+    "model_state": "stage16-exposure_const endpoint",
+    "batch": "first 8 exposure rows (aligned + early)"
+  },
+  "exposure_weight_arm": {
+    "arm": "exposure_weight",
+    "config": {
+      "rate": "const",
+      "weighted_loss": true,
+      "data_pool": "dataset_v3_train_fixed"
+    },
+    "seed": 20261815,
+    "steps": 3000,
+    "lr": 5e-05,
+    "batch": 4,
+    "heldout_native_initial": 3.3015,
+    "heldout_eval_aligned_initial": 3.3026,
+    "curve": [
+      {
+        "step": 0,
+        "heldout_native": 3.3015,
+        "heldout_eval_aligned": 3.3026
+      },
+      {
+        "step": 500,
+        "heldout_native": 6.1535,
+        "heldout_eval_aligned": 6.17
+      },
+      {
+        "step": 1000,
+        "heldout_native": 6.7369,
+        "heldout_eval_aligned": 6.742
+      },
+      {
+        "step": 1500,
+        "heldout_native": 7.1481,
+        "heldout_eval_aligned": 7.1508
+      },
+      {
+        "step": 2000,
+        "heldout_native": 7.348,
+        "heldout_eval_aligned": 7.357
+      },
+      {
+        "step": 2500,
+        "heldout_native": 7.9076,
+        "heldout_eval_aligned": 7.9087
+      },
+      {
+        "step": 3000,
+        "heldout_native": 7.95,
+        "heldout_eval_aligned": 7.9511
+      }
+    ],
+    "heldout_native_final": 7.95,
+    "heldout_eval_aligned_final": 7.9511,
+    "loss_first": 6.9138,
+    "loss_last": 1.5145,
+    "target_bearing_steps": 3000,
+    "exposure_step_frac": 0.0,
+    "supervised_tokens_per_step_mean": 594.7,
+    "grad_norm_samples": [
+      9.8838,
+      3.1479,
+      3.7008,
+      4.6737,
+      3.6943,
+      3.6776,
+      4.2124,
+      5.7634,
+      5.3212,
+      5.4188,
+      4.3162,
+      4.9552,
+      7.3812,
+      4.6478,
+      5.1119,
+      16.6648,
+      5.7111,
+      5.9078,
+      6.5622,
+      5.2905,
+      5.6309,
+      9.2103,
+      6.3568,
+      5.7017,
+      5.0263,
+      5.6442,
+      6.8929,
+      4.9471,
+      4.7809,
+      5.2672
+    ],
+    "grad_norm_mean": 5.85,
+    "capability": {
+      "n_tasks": 15,
+      "pass_at_1": 0.0,
+      "v1_pass_at_1": 0.0,
+      "v3_pass_at_1": 0.0,
+      "syntax_valid_rate": 0.0,
+      "complete_program_rate": 0.0,
+      "execution_attempted_rate": 1.0
+    },
+    "structural_token_accuracy": {
+      "n_batches": 6,
+      "accuracy_overall": 0.0266,
+      "accuracy_whitespace": 0.0984,
+      "accuracy_structure_keyword": 0.0508,
+      "accuracy_delimiter": 0.0208,
+      "accuracy_other": 0.0026,
+      "token_counts": {
+        "whitespace": 254,
+        "structure_keyword": 59,
+        "delimiter": 192,
+        "other": 775,
+        "overall": 1280
+      }
+    },
+    "free_running_probes": {
+      "n_probes": 8,
+      "parse_rate": 0.0,
+      "complete_program_rate": 0.0,
+      "per_probe": [
+        {
+          "probe": "nested_function",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "unexpected_indentation_transition",
+          "stopped": "repetition_degeneracy_at_step_29",
+          "eot_step": null,
+          "n_generated_tokens": 29,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 4
+          }
+        },
+        {
+          "probe": "nested_control",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "other_parser_confirmed_syntax_error",
+          "stopped": "eot",
+          "eot_step": 1,
+          "n_generated_tokens": 1,
+          "first_invalid": {
+            "first_invalid_index": 1,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "other_parser_confirmed_syntax_error",
+            "parser_message": "invalid syntax",
+            "error_line": 1,
+            "error_column": 1
+          }
+        },
+        {
+          "probe": "class_with_methods",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "missing_opening_delimiter",
+          "stopped": "repetition_degeneracy_at_step_50",
+          "eot_step": null,
+          "n_generated_tokens": 50,
+          "first_invalid": {
+            "first_invalid_index": 1,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "missing_opening_delimiter",
+            "parser_message": "unmatched ')'",
+            "error_line": 1,
+            "error_column": 1
+          }
+        },
+        {
+          "probe": "exception_handling",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "unexpected_indentation_transition",
+          "stopped": "repetition_degeneracy_at_step_27",
+          "eot_step": null,
+          "n_generated_tokens": 27,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 8
+          }
+        },
+        {
+          "probe": "imports_and_module",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "unexpected_indentation_transition",
+          "stopped": "repetition_degeneracy_at_step_16",
+          "eot_step": null,
+          "n_generated_tokens": 16,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 7
+          }
+        },
+        {
+          "probe": "multi_function",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "unexpected_indentation_transition",
+          "stopped": "repetition_degeneracy_at_step_49",
+          "eot_step": null,
+          "n_generated_tokens": 49,
+          "first_invalid": {
+            "first_invalid_index": 4,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 3,
+            "error_column": 1
+          }
+        },
+        {
+          "probe": "docstring_program",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "unexpected_indentation_transition",
+          "stopped": "repetition_degeneracy_at_step_67",
+          "eot_step": null,
+          "n_generated_tokens": 67,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 1
+          }
+        },
+        {
+          "probe": "longer_program",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "unexpected_indentation_transition",
+          "stopped": "repetition_degeneracy_at_step_116",
+          "eot_step": null,
+          "n_generated_tokens": 116,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 1
+          }
+        }
+      ]
+    },
+    "seconds": 999.5,
+    "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_weight.pt"
+  },
+  "findings": {
+    "weighted_arm_vs_control_parse_rate": -0.125,
+    "weighted_arm_vs_exposure_const_parse_rate": -0.125,
+    "weighted_arm_heldout_eval_aligned": 7.9511
+  },
+  "experiment": {
+    "experiment_id": "stage16-5-objective-and-optimization",
+    "parent_commit": "799a217",
+    "source_commit": "799a21758b1a",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "the structural-transition-weighted objective (measured in isolation in stages 13/15) combined with autoregressive exposure on the SAME batches grants measurable gradient support for structure without degrading ordinary token prediction: the combined arm differs from the exposure-only arm in free-running structure",
+    "acceptance_criteria": "REAL gradient interference measured on one fixed model state (exposure_const endpoint) for plain CE, structural-weighted CE (_weighted_ce, stage-13 formulation) and their combination: grad norms + pairwise cosine similarity recorded; ONE real 3000-step optimizer arm (exposure_weight, pre-registered seed) implements the single untested combination; completion-only masking asserted everywhere; no arbitrary weights beyond the stage-13/15 measured 3.0",
+    "started": "2026-11-20T20:52:24+0000",
+    "finished": "2026-11-20T21:09:52+0000",
+    "decision": "EXECUTED"
+  }
+}

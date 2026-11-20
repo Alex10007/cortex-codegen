@@ -1,0 +1,96 @@
+{
+  "kind": "cortex-stage16-capacity-audit",
+  "owned_by": "Fibonera",
+  "workstream": "10-capacity",
+  "hardware": {
+    "has_cuda": false,
+    "cuda_devices": 0,
+    "ram_total_gb": 5.92,
+    "ram_available_gb": 5.28
+  },
+  "two_b_gate": {
+    "feasible": false,
+    "reason": "needs ~46.0 GB RAM (16 B/param x1.5 activations headroom), available 5.3 GB",
+    "decision": "BLOCKED - unchanged since stage 9"
+  },
+  "virtual_store_recount": {
+    "slots_updated": 35292,
+    "unchanged_35292": true,
+    "n_allocated": null
+  },
+  "stage16_checkpoint_recovery": [
+    {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-control.pt",
+      "exists": true,
+      "restores": true,
+      "steps": 3000
+    },
+    {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_const.pt",
+      "exists": true,
+      "restores": true,
+      "steps": 3000
+    },
+    {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched.pt",
+      "exists": true,
+      "restores": true,
+      "steps": 3000
+    },
+    {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched_rep2.pt",
+      "exists": true,
+      "restores": true,
+      "steps": 3000
+    },
+    {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_early.pt",
+      "exists": true,
+      "restores": true,
+      "steps": 3000
+    },
+    {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_weight.pt",
+      "exists": true,
+      "restores": true,
+      "steps": 3000
+    },
+    {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-complete_curriculum.pt",
+      "exists": true,
+      "restores": true,
+      "steps": 3000
+    },
+    {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-feedback_grounded.pt",
+      "exists": true,
+      "restores": true,
+      "steps": 600
+    },
+    {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage14-structural_h6000.pt",
+      "exists": true,
+      "restores": true,
+      "steps": 6000
+    }
+  ],
+  "cortex_s_reference": {
+    "declared": 41997312,
+    "max_seq_len": 1024,
+    "status": "ModelStatus.DECLARED"
+  },
+  "spend_usd": 0.0,
+  "gpu_hours": 0.0,
+  "experiment": {
+    "experiment_id": "stage16-10-capacity-and-virtual-accounting",
+    "parent_commit": "799a217",
+    "source_commit": "799a21758b1a",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "virtual coverage is recounted, GPU re-qualified and every stage-16 checkpoint verified to restore into the reference architecture; no parameters are claimed trained beyond the authoritative recount",
+    "acceptance_criteria": "allocated/init/updated scalar classes separated; 2B gate result recorded with honest hardware blockers; checkpoint recovery executes real torch.load + state_dict load; the authoritative store recount must equal 35292",
+    "started": "2026-11-20T21:28:46+0000",
+    "finished": "2026-11-20T21:29:05+0000",
+    "decision": "BLOCKED"
+  }
+}
