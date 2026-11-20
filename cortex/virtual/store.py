@@ -200,6 +200,13 @@ class VirtualParameterStore:
 
         page = self.page(bank)
         raw = np.asarray(page[row])
+        if committed:
+            expected_digest = manifest["initialized_rows"][str(bank)][str(row)]
+            actual_digest = hashlib.sha256(raw.tobytes()).hexdigest()
+            if actual_digest != expected_digest:
+                raise RuntimeError(
+                    f"committed virtual row digest mismatch for {key}; "
+                    "refusing to load corrupted or partially committed values")
         n = 2 * dim * rank
         if n > BANK_COLS:
             raise ValueError(
@@ -261,13 +268,11 @@ class VirtualParameterStore:
     # ---------- commit / recovery ----------
 
     def commit(self, step: int, txid: str) -> list[dict[str, Any]]:
-        """Commit all dirty slots behind one manifest transaction boundary.
+        """Publish all dirty slot values with one manifest commit point.
 
-        Bank values and optimizer files are flushed first. The manifest is
-        atomically replaced once, only after every row is durable. A crash
-        before that point leaves uncommitted bytes (ignored on reload) and
-        orphan optimizer files (detected and refused), never a partial
-        accepted commit frontier.
+        Bank rows and optimizer files are flushed before the manifest is
+        atomically replaced. Until that replacement, newly written state is
+        uncommitted and cannot be adopted by a fresh process.
         """
         from cortex.model.virtual_slot import slot_adam_states
 
@@ -278,25 +283,22 @@ class VirtualParameterStore:
             page = self.page(bank)
             n = st.A.numel() + st.B.numel()
             flat = np.empty(n, dtype=np.float32)
-            flat[:st.A.numel()] = st.A.detach().cpu().numpy().reshape(-1)
-            flat[st.A.numel():] = st.B.detach().cpu().numpy().reshape(-1)
+            flat[:st.A.numel()] = st.A.detach().numpy().reshape(-1)
+            flat[st.A.numel():] = st.B.detach().numpy().reshape(-1)
             page[row, :n] = flat
             page.flush()
-            bank_path = self.root / bank_filename(bank)
-            with open(bank_path, "r+b") as bank_file:
-                os.fsync(bank_file.fileno())
             digest = hashlib.sha256(
                 np.asarray(page[row]).tobytes()).hexdigest()
 
             opt_states = slot_adam_states(st)
             if opt_states:
                 opt_path = self.root / f"adam-{bank:05d}-{row:06d}.npz"
-                tmp_opt = self.root / (
-                    f".{opt_path.name}.tmp{os.getpid()}")
-                with open(tmp_opt, "wb") as opt_file:
-                    np.savez(opt_file, **opt_states)
-                    opt_file.flush()
-                    os.fsync(opt_file.fileno())
+                tmp_opt = opt_path.with_suffix(
+                    opt_path.suffix + f".tmp{os.getpid()}")
+                with open(tmp_opt, "wb") as fh:
+                    np.savez(fh, **opt_states)
+                    fh.flush()
+                    os.fsync(fh.fileno())
                 os.replace(tmp_opt, opt_path)
 
             commits.append({"bank": bank, "row": row, "step": step,
@@ -313,13 +315,14 @@ class VirtualParameterStore:
             manifest["coverage_rows_per_bank"][bank] = len(
                 rows_map[str(bank)])
 
-        if commits:
-            manifest["committed_step"] = max(
-                int(manifest.get("committed_step", 0)), int(step))
-            manifest["transaction_id"] = txid
-            _atomic_json(self.manifest_path, manifest)
-            self.manifest = manifest
-            self.dirty.clear()
+        # Monotonic training watermark and transaction id are part of the
+        # same atomic manifest publication as every row digest above.
+        manifest["committed_step"] = max(
+            int(manifest.get("committed_step", 0)), int(step))
+        manifest["transaction_id"] = txid
+        _atomic_json(self.manifest_path, manifest)
+        self.manifest = manifest
+        self.dirty.clear()
         return commits
 
     def verify_integrity(self) -> dict[str, Any]:
