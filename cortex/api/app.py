@@ -12,6 +12,7 @@ import os
 import sqlite3
 from pathlib import Path
 from typing import Any
+from functools import lru_cache
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -70,16 +71,27 @@ def _resolve_allowed_repo_path(repo_path: str) -> str:
     return str(candidate)
 
 
+@lru_cache(maxsize=1)
+def _cached_sandbox_qualification() -> dict[str, Any]:
+    from cortex.execution.qualification import qualify_sandbox
+
+    return qualify_sandbox()
+
+
 def _require_full_sandbox() -> None:
     from cortex.execution.sandbox import _supports_bwrap
-    from cortex.execution.qualification import qualify_sandbox
 
     if not _supports_bwrap():
         raise HTTPException(
             status_code=503,
             detail="code execution disabled: working bubblewrap user/pid/"
                    "network namespace isolation is unavailable")
-    report = qualify_sandbox()
+    try:
+        report = _cached_sandbox_qualification()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=f"sandbox behavioral qualification could not complete: {type(exc).__name__}") from exc
     if not report.get("passed"):
         failed = [name for name, status in report.get("checks", {}).items()
                   if status != "PASS"]
