@@ -124,6 +124,7 @@ class CortexTransformer(nn.Module):
             loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.reshape(-1))
         return logits, loss
 
+    @torch.inference_mode()
     def generate(self, tokens: torch.Tensor, max_new_tokens: int,
                  temperature: float = 1.0, top_k: int = 50,
                  eot_id: int | None = None) -> torch.Tensor:
