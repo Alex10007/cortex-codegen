@@ -191,3 +191,46 @@ def test_agent_loads_joint_moe_checkpoint_with_virtual_lineage(
     assert model.virtual_param_count() > 0
     assert model.moe_param_count()["physical_total_parameters"] == (
         model.actual_param_count())
+
+def test_legacy_committed_slot_restores_from_optimizer_shape_witness(small_store):
+    from cortex.model.virtual_slot import VirtualAdamW
+
+    slot = small_store.slot_state(3, 4, dim=32, rank=4)
+    ((torch.randn(2, 32) @ slot.A) @ slot.B).sum().backward()
+    VirtualAdamW().step(slot)
+    expected_a = slot.A.detach().clone()
+    expected_b = slot.B.detach().clone()
+    small_store.commit(step=1, txid="legacy-optimizer-witness")
+    manifest = json.loads(small_store.manifest_path.read_text())
+    manifest.pop("initialized_slot_shapes")
+    small_store.manifest_path.write_text(json.dumps(manifest))
+
+    restored_store = vstore.VirtualParameterStore.open(small_store.root)
+    restored = restored_store.slot_state(3, 4, dim=32, rank=4)
+    assert torch.equal(restored.A.detach(), expected_a)
+    assert torch.equal(restored.B.detach(), expected_b)
+    assert restored.step_count == 1
+
+
+def test_orphan_optimizer_state_is_not_counted_as_trained(small_store):
+    from cortex.model.virtual_slot import VirtualAdamW, slot_adam_states
+    from cortex.virtual.coverage import measure
+
+    slot = small_store.slot_state(4, 5, dim=32, rank=4)
+    ((torch.randn(2, 32) @ slot.A) @ slot.B).sum().backward()
+    VirtualAdamW().step(slot)
+    npz_path = small_store.root / "adam-00004-000005.npz"
+    import numpy as np
+    np.savez(npz_path, **slot_adam_states(slot))
+    small_store._slots.clear()
+    small_store.dirty.clear()
+
+    accounting = small_store.accounting()
+    coverage = measure(small_store)
+    assert accounting["orphan_optimizer_state_slots"] == 1
+    assert accounting["optimizer_updated"] == 0
+    assert accounting["invariants_hold"] is False
+    assert coverage["persisted_optimizer_scan"]["orphan_optimizer_slots"] == 1
+    assert coverage["scalars"]["optimizer_updated"] == 0
+    with pytest.raises(RuntimeError, match="orphan optimizer state"):
+        small_store.slot_state(4, 5, dim=32, rank=4)
