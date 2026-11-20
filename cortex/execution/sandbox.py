@@ -104,8 +104,8 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
         usersite = site.getusersitepackages()
         if os.path.isdir(usersite):
             env["PYTHONPATH"] = usersite
-        bwrap = shutil.which("bwrap")
-        if require_full_isolation and not _supports_bwrap():
+        bwrap = shutil.which("bwrap") if _supports_bwrap() else None
+        if require_full_isolation and not bwrap:
             raise NetworkIsolationUnavailable(
                 "full sandbox isolation requires working bubblewrap "
                 "user/pid/network namespaces; refusing same-user host execution")
