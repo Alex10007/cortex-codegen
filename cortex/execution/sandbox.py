@@ -255,7 +255,8 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
             gate_read, gate_write = os.pipe()
             bootstrap = (
                 "import os,sys; fd=int(sys.argv[1]); "
-                "os.read(fd,1); os.close(fd); os.execvp(sys.argv[2],sys.argv[2:])"
+                "if not os.read(fd,1): os._exit(126); "
+                "os.close(fd); os.execvp(sys.argv[2],sys.argv[2:])"
             )
             launch_cmd = [sys.executable, "-c", bootstrap, str(gate_read), *full_cmd]
             try:
