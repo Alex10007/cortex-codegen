@@ -11,10 +11,10 @@ from cortex.execution.resources import probe_cgroup_v2
 
 
 def qualify_sandbox() -> dict[str, Any]:
-    """Exercise workspace, host-path, runtime-mount, proc/dev and network boundaries.
+    """Exercise filesystem, network, aggregate process and cgroup cleanup boundaries.
 
-    This focused probe does not certify seccomp, cgroups, resource-limit
-    enforcement, namespace escape resistance, or kernel exploit resistance.
+    This focused probe does not certify seccomp, numeric CPU/memory ceilings,
+    deliberate cgroup migration, or kernel exploit resistance.
     """
     checks = {
         "bwrap_available": "PASS" if _supports_bwrap() else "FAIL",
@@ -22,6 +22,7 @@ def qualify_sandbox() -> dict[str, Any]:
         "isolated_execution": "NOT_RUN",
         "aggregate_limits_enforced": "NOT_RUN",
         "detached_descendant_cleanup": "NOT_RUN",
+        "aggregate_process_cap_observed": "NOT_RUN",
         "workspace_writable": "NOT_RUN",
         "host_path_inaccessible": "NOT_RUN",
         "runtime_readonly": "NOT_RUN",
@@ -82,6 +83,16 @@ child = subprocess.Popen(
     [sys.executable, "-c", "import time; time.sleep(60)"],
     start_new_session=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 result["detached_child_pid"] = child.pid
+spawned = [child]
+for _ in range(31):
+    try:
+        spawned.append(subprocess.Popen(
+            [sys.executable, "-c", "import time; time.sleep(60)"],
+            start_new_session=True, stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL))
+    except OSError:
+        break
+result["process_cap_observed"] = len(spawned) < 32
 print(json.dumps(result, sort_keys=True))
 """.replace("__HOST_SENTINEL__", repr(host_sentinel))
 
@@ -115,6 +126,9 @@ print(json.dumps(result, sort_keys=True))
             if isinstance(observed.get("detached_child_pid"), int)
             and limits.get("cgroup_empty_after_cleanup") is True
             else "FAIL"
+        )
+        checks["aggregate_process_cap_observed"] = (
+            "PASS" if observed.get("process_cap_observed") is True else "FAIL"
         )
 
     return {
