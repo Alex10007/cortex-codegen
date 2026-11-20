@@ -123,14 +123,14 @@ def create_app(agent=None, api_token: str | None = None) -> FastAPI:
     @app.post("/generate", dependencies=[Depends(require_auth)])
     def generate(req: GenerateRequest) -> dict[str, Any]:
         try:
-            output = agent.generate(
+            output = agent.generate_with_metadata(
                 req.prompt, max_new_tokens=req.max_new_tokens,
                 temperature=req.temperature, project=req.project)
         except FileNotFoundError as exc:
             raise HTTPException(status_code=503, detail=str(exc))
         except ValueError as exc:
             raise HTTPException(status_code=413, detail=str(exc))
-        return {"text": output, "project_context_used": bool(req.project)}
+        return output
 
     @app.get("/knowledge/capacity", dependencies=[Depends(require_auth)])
     def knowledge_capacity() -> dict[str, Any]:
