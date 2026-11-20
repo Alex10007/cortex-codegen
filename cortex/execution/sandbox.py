@@ -373,7 +373,12 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                 "full_isolation_required": require_full_isolation,
                 "max_output_bytes_per_stream": max_output_bytes,
                 "stdout_truncated": truncated["stdout"],
-                "stderr_truncated": truncated["stderr"]},
+                "stderr_truncated": truncated["stderr"],
+                "cgroup_v2_enforced": cgroup is not None,
+                "aggregate_cpu_limit": cgroup is not None,
+                "aggregate_memory_limit": cgroup is not None,
+                "aggregate_process_limit": cgroup is not None,
+                "io_limit": "NOT_CONFIGURED"},
     )
     if require_full_isolation and not filesystem_isolated:
         raise NetworkIsolationUnavailable(
