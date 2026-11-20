@@ -130,7 +130,7 @@ Existing Stage 8 accounting assertions were updated to use exact slot scalars ra
 3. Add explicit device placement for virtual slot parameters and optimizer state; the current `JointTrainer` remains CPU-oriented and is not yet a qualified GPU joint-training path.
 4. Build a qualified distributed MoE + virtual training path; the existing 2B FSDP script trains the dense transformer and does not establish full 502B joint distributed training.
 5. Integrate a model-backed patcher into the engineering pipeline; current pipeline still accepts an injected patcher and does not autonomously implement changes through the API.
-6. Add API rate limiting and complete production security controls.
+6. Complete production security controls, including multi-host rate limiting and reverse-proxy deployment policy.
 7. Improve semantic retrieval beyond hashed n-gram vectors and evaluate retrieval quality.
 8. Clarify the repository's Apache-2.0 metadata versus Fibonera's intended IP/licensing policy. No license change was made.
 9. Reconcile the default `main` branch/Hugging Face deployment with the Fibonera Cortex implementation only after owner review.
@@ -154,3 +154,21 @@ This is rollback-capable multi-file publication, **not** a filesystem-wide atomi
 The branch head at this report update is expected to include the Stage 16A.2 commits; verify the live ref before treating this report as current. GitHub Actions run [44809511172](https://github.com/Alex10007/cortex-codegen/actions/runs/44809511172) again failed before runner startup (`runner_id=0`, empty steps). None of the new tests have an execution result from that run.
 
 **Stage 16A.2 status: implemented, tests written, NOT VERIFIED.** No model training, benchmark promotion, PR merge, or main-branch change was performed.
+
+
+## Stage 16A.3 — shared-state API rate limiting
+
+Implemented on the remediation branch:
+
+- Added `cortex/api/rate_limit.py`, a SQLite-backed sliding-window limiter. Each request uses a short `BEGIN IMMEDIATE` transaction, so multiple API worker processes sharing the same local database cannot independently exceed the same bucket budget.
+- Database rows store SHA-256 bucket identifiers rather than bearer tokens, client addresses, or raw principal strings. The database file is restricted to mode 0600 where supported; the limiter fails closed with HTTP 503 if its storage cannot be used.
+- Added a configurable database path (`CORTEX_RATE_LIMIT_DB`) and configurable per-minute budgets to `create_app`.
+- Authenticated requests share a token-principal budget (default 120/minute); failed authentication attempts share a direct peer-address budget (default 20/minute); expensive generation, execution, evaluation, repository-analysis and security-scan routes receive an additional budget (default 20/minute).
+- HTTP 429 responses include `Retry-After`. `/health` remains public and exempt. Forwarded client-IP headers are intentionally not trusted; behind a reverse proxy, failed-auth throttling therefore keys on the socket peer unless a trusted-proxy design is added.
+- Added 8 rate-limit tests for shared database state, concurrent workers, authenticated budgets, failed-auth throttling, expensive-route budgets, identity hashing, sliding-window expiry and principal isolation.
+
+**Scope limits:** this is process-shared on one host, not a multi-host distributed limiter. A deployment spanning multiple hosts needs a shared backend such as Redis or an equivalent atomic service. The API currently uses one configured bearer token, so authenticated budgets are per configured token rather than per end-user account. The local rate-limit database must be placed on a reliable local filesystem; do not assume SQLite locking semantics on arbitrary network filesystems.
+
+**Verification:** source and tests are committed, but none of these tests have been executed in this environment. GitHub Actions run [44810168757](https://github.com/Alex10007/cortex-codegen/actions/runs/44810168757) again failed before runner startup (`runner_id=0`, no steps). This provides no evidence of a passing or failing test suite.
+
+**Stage 16A.3 status: IMPLEMENTED, NOT VERIFIED.** No model training, benchmark promotion, PR merge, or main-branch change was performed.
