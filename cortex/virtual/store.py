@@ -82,6 +82,7 @@ class VirtualParameterStore:
             "committed_step": 0,
             "transaction_id": None,
             "initialized_rows": {},
+            "initialized_slot_shapes": {},
             "coverage_rows_per_bank": [0] * N_BANKS,
             "owned_by": "Fibonera",
         }
@@ -240,6 +241,12 @@ class VirtualParameterStore:
             m = _read_json(self.manifest_path)
             rows_map = m["initialized_rows"]
             rows_map.setdefault(str(bank), {})[str(row)] = digest
+            shapes = m.setdefault("initialized_slot_shapes", {})
+            shapes.setdefault(str(bank), {})[str(row)] = {
+                "dim": int(st.A.shape[0]),
+                "rank": int(st.A.shape[1]),
+                "scalars": int(st.A.numel() + st.B.numel()),
+            }
             m["coverage_rows_per_bank"][bank] = len(rows_map[str(bank)])
             # lineage watermark is monotonic: a later commit at a lower step
             # (e.g. a fresh trainer resuming against the same store) must
@@ -275,9 +282,15 @@ class VirtualParameterStore:
         from cortex.model.virtual_slot import slot_adam_states
 
         allocated = exact_virtual_count()
-        initialized = sum(len(v) for v in
-                          _read_json(self.manifest_path)
-                          ["initialized_rows"].values()) * BANK_COLS
+        manifest = _read_json(self.manifest_path)
+        shape_map = manifest.get("initialized_slot_shapes", {})
+        initialized = sum(
+            int(shape.get("scalars", 2 * int(shape["dim"]) * int(shape["rank"])))
+            for rows in shape_map.values() for shape in rows.values())
+        committed_rows = sum(len(rows) for rows in
+                             manifest["initialized_rows"].values())
+        known_shape_rows = sum(len(rows) for rows in shape_map.values())
+        unknown_shape_rows = max(0, committed_rows - known_shape_rows)
         activated = grads = updated = 0
         for st in self._slots.values():
             activated += st.A.numel() + st.B.numel()
@@ -294,6 +307,8 @@ class VirtualParameterStore:
         return {
             "allocated": allocated,
             "initialized": int(initialized),
+            "initialized_unknown_rows": int(unknown_shape_rows),
+            "initialized_exact": unknown_shape_rows == 0,
             "activated": activated,
             "received_gradients": grads,
             "optimizer_updated": updated,
