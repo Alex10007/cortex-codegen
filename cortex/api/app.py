@@ -1,78 +1,132 @@
-"""API Gateway: FastAPI surface over the Cortex engines."""
+"""Authenticated API surface for the Fibonera Cortex engines.
+
+Only /health is public. Every other endpoint requires a configured bearer
+token. Filesystem operations are restricted to explicitly configured roots,
+and API code execution requires the full bubblewrap sandbox.
+"""
 from __future__ import annotations
 
-from typing import Any, Optional
+import hmac
+import os
+from pathlib import Path
+from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 
 
 class SandboxRequest(BaseModel):
-    code: str = Field(..., max_length=1_000_000)
-    timeout_s: float = 15.0
+    code: str = Field(..., max_length=200_000)
+    timeout_s: float = Field(default=15.0, ge=0.1, le=20.0)
 
 
 class QueryRequest(BaseModel):
-    query: str
-    k: int = 5
+    query: str = Field(..., min_length=1, max_length=10_000)
+    k: int = Field(default=5, ge=1, le=100)
 
 
-class PipelineRequest(BaseModel):
-    objective: str
-    repo_path: str
+class RepoRequest(BaseModel):
+    repo_path: str = Field(..., min_length=1, max_length=4096)
+
+
+class PipelineRequest(RepoRequest):
+    objective: str = Field(..., min_length=1, max_length=20_000)
     authorize_destructive: bool = False
 
 
-def create_app(agent=None) -> FastAPI:
+class EvalRequest(BaseModel):
+    candidate: str | None = Field(default=None, max_length=200_000)
+    reference: bool = False
+
+
+def _resolve_allowed_repo_path(repo_path: str) -> str:
+    configured = os.environ.get("CORTEX_ALLOWED_REPO_ROOTS", "")
+    roots = [Path(item).expanduser().resolve()
+             for item in configured.split(os.pathsep) if item.strip()]
+    if not roots:
+        raise HTTPException(
+            status_code=503,
+            detail="repository operations disabled: configure "
+                   "CORTEX_ALLOWED_REPO_ROOTS")
+    try:
+        candidate = Path(repo_path).expanduser().resolve(strict=True)
+    except (OSError, RuntimeError):
+        raise HTTPException(status_code=400, detail="repo_path does not exist")
+    if not candidate.is_dir():
+        raise HTTPException(status_code=400, detail="repo_path is not a directory")
+    if not any(candidate == root or root in candidate.parents for root in roots):
+        raise HTTPException(status_code=403, detail="repo_path is outside allowed roots")
+    return str(candidate)
+
+
+def create_app(agent=None, api_token: str | None = None) -> FastAPI:
     from cortex.core import CortexAgent
 
     agent = agent or CortexAgent()
-    app = FastAPI(title="Cortex Codegen API", version="0.1.0")
+    configured_token = api_token or os.environ.get("CORTEX_API_TOKEN")
+    app = FastAPI(title="Fibonera Cortex Codegen API", version="0.2.0")
+
+    def require_auth(authorization: str | None = Header(default=None)) -> None:
+        if not configured_token:
+            raise HTTPException(
+                status_code=503,
+                detail="API is locked: configure CORTEX_API_TOKEN")
+        expected = f"Bearer {configured_token}"
+        if authorization is None or not hmac.compare_digest(
+                authorization, expected):
+            raise HTTPException(status_code=401, detail="invalid bearer token")
 
     @app.get("/health")
     def health() -> dict[str, str]:
-        return {"status": "ok", "service": "cortex-codegen"}
+        return {"status": "ok", "service": "fibonera-cortex"}
 
-    @app.get("/system/profile")
+    @app.get("/system/profile", dependencies=[Depends(require_auth)])
     def system_profile() -> dict[str, Any]:
         return agent.hardware.__dict__
 
-    @app.get("/system/services")
+    @app.get("/system/services", dependencies=[Depends(require_auth)])
     def services() -> list[dict[str, Any]]:
         return agent.service_reports()
 
-    @app.post("/sandbox/run")
+    @app.post("/sandbox/run", dependencies=[Depends(require_auth)])
     def sandbox_run(req: SandboxRequest) -> dict[str, Any]:
-        return agent.sandbox_run(req.code, timeout_s=req.timeout_s)
+        from cortex.execution.sandbox import NetworkIsolationUnavailable
 
-    @app.post("/knowledge/query")
+        try:
+            return agent.sandbox_run(
+                req.code, timeout_s=req.timeout_s, require_full_isolation=True)
+        except NetworkIsolationUnavailable as exc:
+            raise HTTPException(status_code=503, detail=str(exc))
+
+    @app.post("/knowledge/query", dependencies=[Depends(require_auth)])
     def knowledge_query(req: QueryRequest) -> list[dict[str, Any]]:
         return agent.knowledge_query(req.query, k=req.k)
 
-    @app.get("/knowledge/capacity")
+    @app.get("/knowledge/capacity", dependencies=[Depends(require_auth)])
     def knowledge_capacity() -> dict[str, Any]:
         return agent.knowledge_capacity()
 
-    @app.post("/repo/analyze")
-    def repo_analyze(repo_path: str) -> dict[str, Any]:
-        import os
+    @app.post("/repo/analyze", dependencies=[Depends(require_auth)])
+    def repo_analyze(req: RepoRequest) -> dict[str, Any]:
+        return agent.analyze_repo(_resolve_allowed_repo_path(req.repo_path))
 
-        if not os.path.isdir(repo_path):
-            raise HTTPException(status_code=400, detail="repo_path is not a directory")
-        return agent.analyze_repo(repo_path)
+    @app.post("/security/scan", dependencies=[Depends(require_auth)])
+    def security_scan(req: RepoRequest) -> dict[str, Any]:
+        return agent.security_scan(_resolve_allowed_repo_path(req.repo_path))
 
-    @app.post("/security/scan")
-    def security_scan(repo_path: str) -> dict[str, Any]:
-        return agent.security_scan(repo_path)
-
-    @app.post("/pipeline/run")
+    @app.post("/pipeline/run", dependencies=[Depends(require_auth)])
     def pipeline_run(req: PipelineRequest) -> dict[str, Any]:
-        return agent.run_pipeline(req.objective, req.repo_path,
-                                  authorize_destructive=req.authorize_destructive)
+        return agent.run_pipeline(
+            req.objective, _resolve_allowed_repo_path(req.repo_path),
+            authorize_destructive=req.authorize_destructive)
 
-    @app.post("/eval/run")
-    def eval_run(reference: bool = False) -> dict[str, Any]:
-        return agent.eval_run(reference=reference)
+    @app.post("/eval/run", dependencies=[Depends(require_auth)])
+    def eval_run(req: EvalRequest) -> dict[str, Any]:
+        if not req.reference and req.candidate is None:
+            raise HTTPException(
+                status_code=422,
+                detail="candidate is required unless reference=true")
+        return agent.eval_run(candidate=req.candidate, reference=req.reference)
 
     return app
 
