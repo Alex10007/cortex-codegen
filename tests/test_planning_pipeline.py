@@ -97,3 +97,19 @@ def test_pipeline_rejects_patcher_path_escape(tmp_path):
             "change file", str(tmp_path),
             patcher=lambda p: {"../outside.py": "print('unsafe')"},
             test_command_top=["python3", "-m", "pytest", "-q"])
+
+
+
+def test_pipeline_requires_and_accepts_explicit_objective_verifier(tmp_path):
+    _make_repo(tmp_path)
+    report = run_engineering_pipeline(
+        "add multiply helper", str(tmp_path),
+        patcher=lambda _plan: {"pkg/calc.py":
+            "def add(a, b):\\n    return a + b\\n\\n"
+            "def multiply(a, b):\\n    return a * b\\n"},
+        test_command_top=["python3", "-m", "pytest", "-q"],
+        objective_verifier=lambda _plan, test_result: bool(test_result["ok"]))
+    assert report["implementation_performed"] is True
+    assert report["validation_passed"] is True
+    assert report["objective_verified"] is True
+    assert report["verified"] is True
