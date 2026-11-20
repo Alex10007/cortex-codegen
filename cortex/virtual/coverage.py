@@ -62,7 +62,23 @@ def measure(store: vstore.VirtualParameterStore,
     committed = manifest["initialized_rows"]
     rows_per_bank = {str(b): len(rows) for b, rows in committed.items()}
     rows_total = sum(rows_per_bank.values())
-    slot_shapes = manifest.get("initialized_slot_shapes", {})
+    slot_shapes = {
+        bank: dict(rows) for bank, rows in
+        manifest.get("initialized_slot_shapes", {}).items()
+    }
+    # Legacy committed rows can be sized exactly when a persisted optimizer
+    # state exists. Do not treat an entire 50,000-value bank row as a slot.
+    for path in store.root.glob("adam-*.npz"):
+        stem = path.stem.removeprefix("adam-")
+        bank_s, row_s = stem.split("-", 1)
+        with np.load(path) as state:
+            if int(state["step_count"]) <= 0:
+                continue
+            slot_shapes.setdefault(bank_s, {})[row_s] = {
+                "dim": int(state["A_m"].shape[0]),
+                "rank": int(state["A_m"].shape[1]),
+                "scalars": int(state["A_m"].size + state["B_m"].size),
+            }
     initialized_scalars = sum(
         int(shape.get("scalars", 2 * int(shape["dim"]) * int(shape["rank"])))
         for rows in slot_shapes.values() for shape in rows.values())
