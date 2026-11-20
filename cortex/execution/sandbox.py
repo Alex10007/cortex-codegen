@@ -275,9 +275,9 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
         out = bytes(captured["stdout"]).decode("utf-8", errors="replace")
         err = bytes(captured["stderr"]).decode("utf-8", errors="replace")
         if truncated["stdout"]:
-            out += "\\n[stdout truncated at 4 MiB]"
+            out += "\n[stdout truncated at 4 MiB]"
         if truncated["stderr"]:
-            err += "\\n[stderr truncated at 4 MiB]"
+            err += "\n[stderr truncated at 4 MiB]"
         if (require_full_isolation and bwrap and rc != 0
                 and ((err or "").lower().startswith("bwrap:")
                      or "namespace" in (err or "").lower()

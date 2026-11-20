@@ -73,9 +73,9 @@ def test_stdout_and_stderr_capture_are_bounded():
     size = 6 * 1024 * 1024
     result = run(
         code=(
-            "import sys\\n"
-            f"sys.stdout.write('O' * {size})\\n"
-            f"sys.stderr.write('E' * {size})\\n"
+            "import sys\n"
+            f"sys.stdout.write('O' * {size})\n"
+            f"sys.stderr.write('E' * {size})\n"
         ),
         timeout_s=10.0,
     )
@@ -94,9 +94,9 @@ def test_background_descendant_is_killed_when_parent_exits():
         pid_file = Path(td) / "child.pid"
         child_code = "import time; time.sleep(60)"
         parent_code = (
-            "import subprocess,sys,pathlib\\n"
-            f"p=subprocess.Popen([sys.executable,'-c',{child_code!r}])\\n"
-            f"pathlib.Path({str(pid_file)!r}).write_text(str(p.pid))\\n"
+            "import subprocess,sys,pathlib\n"
+            f"p=subprocess.Popen([sys.executable,'-c',{child_code!r}])\n"
+            f"pathlib.Path({str(pid_file)!r}).write_text(str(p.pid))\n"
         )
         result = run(code=parent_code, timeout_s=5.0)
         assert result.ok
