@@ -84,3 +84,13 @@ Existing Stage 8 coverage assertions were updated to expect exact LoRA slot scal
 10. Continue with Stage 16 autoregressive structural learning only after these correctness and safety gates are independently verified.
 
 **Decision:** Stage 16A source remediation is implemented. It is not yet test-verified and must not be treated as a promoted or production-ready build.
+
+
+## Addendum — post-review MoE route safety
+
+A follow-up source review found one additional integration defect: MoEFFN.forward included every configured virtual route in router top-k selection even when no external virtual slot had been attached. A fresh MoE model could therefore select an unbound route and raise KeyError, contradicting the documented physical-only behavior before virtual attachment.
+
+The remediation now masks unbound virtual routes before softmax/top-k, refuses a configuration when fewer active experts exist than top_k, and computes routing utilization/load-balancing over the active expert set. Regression tests cover both unbound-route masking and insufficient active-expert count.
+
+**Verification status:** these two tests are committed but have not been executed in a functioning runner. CI was enabled for fibonera/**; the push-triggered workflow run #26 (https://github.com/Alex10007/cortex-codegen/actions/runs/44806124659) failed before job startup (runner_id=0, empty steps), so it provides no evidence that tests passed or failed. The same runner-allocation failure affected earlier remediation run #19 (https://github.com/Alex10007/cortex-codegen/actions/runs/44805943051). No code test result is claimed from these runs.
+
