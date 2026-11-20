@@ -103,7 +103,7 @@ For the dense 2B configuration at batch 8 and sequence length 8,192, the revised
 - Legacy slot restoration and orphan optimizer rejection.
 - Atomic multi-slot manifest publication and row-digest checks.
 - Quadratic attention memory estimates and GPU-plan refusal.
-- MoE checkpoint loading with virtual lineage.
+- MoE checkpoint loading with virtual lineage and rejection of virtual-store state ahead of its physical checkpoint.
 - Verified project-memory retrieval.
 - Inference-mode generation and accurate context-use metadata.
 
