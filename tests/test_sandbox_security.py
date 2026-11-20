@@ -2,6 +2,7 @@
 import os
 import subprocess
 import sys
+import threading
 import tempfile
 import time
 from pathlib import Path
@@ -168,3 +169,35 @@ def test_cleanup_execution_surfaces_cgroup_kill_failure_after_reaping():
         _cleanup_execution(proc, group, [], (proc.stdout, proc.stderr))
     assert proc.returncode is not None
     assert group.closed is True
+
+
+def test_reader_start_failure_still_reaps_launched_process(monkeypatch):
+    from cortex.execution import sandbox
+
+    monkeypatch.setattr(sandbox, "_supports_bwrap", lambda: False)
+    monkeypatch.setattr(sandbox, "_supports_unshare", lambda: False)
+    real_popen = subprocess.Popen
+    launched = []
+
+    def capture_popen(*args, **kwargs):
+        process = real_popen(*args, **kwargs)
+        launched.append(process)
+        return process
+
+    monkeypatch.setattr(sandbox.subprocess, "Popen", capture_popen)
+    real_start = threading.Thread.start
+    starts = 0
+
+    def fail_second_reader(thread):
+        nonlocal starts
+        starts += 1
+        if starts == 2:
+            raise RuntimeError("injected second-reader startup failure")
+        return real_start(thread)
+
+    monkeypatch.setattr(threading.Thread, "start", fail_second_reader)
+    with pytest.raises(RuntimeError, match="injected second-reader startup failure"):
+        sandbox.run(code="import time; time.sleep(30)", timeout_s=10.0)
+
+    assert len(launched) == 1
+    assert launched[0].returncode is not None
