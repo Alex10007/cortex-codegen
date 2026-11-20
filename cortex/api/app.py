@@ -6,13 +6,17 @@ and API code execution requires the full bubblewrap sandbox.
 """
 from __future__ import annotations
 
+import hashlib
 import hmac
 import os
+import sqlite3
 from pathlib import Path
 from typing import Any
 
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel, Field
+
+from cortex.api.rate_limit import SQLiteRateLimiter
 
 
 class SandboxRequest(BaseModel):
@@ -76,14 +80,38 @@ def _require_full_sandbox() -> None:
                    "network namespace isolation is unavailable")
 
 
-def create_app(agent=None, api_token: str | None = None) -> FastAPI:
+def create_app(agent=None, api_token: str | None = None, *,
+               rate_limit_db: str | None = None,
+               authenticated_requests_per_minute: int = 120,
+               auth_failures_per_minute: int = 20,
+               expensive_requests_per_minute: int = 20) -> FastAPI:
     from cortex.core import CortexAgent
 
     agent = agent or CortexAgent()
     configured_token = api_token or os.environ.get("CORTEX_API_TOKEN")
+    database = (rate_limit_db or os.environ.get("CORTEX_RATE_LIMIT_DB")
+                or ".cortex-state/api-rate-limits.sqlite3")
+    limiter = SQLiteRateLimiter(database)
     app = FastAPI(title="Fibonera Cortex Codegen API", version="0.2.0")
 
-    def require_auth(authorization: str | None = Header(default=None)) -> None:
+    def consume_or_reject(bucket: str, limit: int) -> None:
+        try:
+            allowed, retry_after = limiter.consume(bucket, limit, 60)
+        except (sqlite3.Error, OSError) as exc:
+            # Fail closed: a broken limiter must not silently disable controls.
+            raise HTTPException(
+                status_code=503,
+                detail="API rate-limit storage is unavailable") from exc
+        if not allowed:
+            raise HTTPException(
+                status_code=429,
+                detail="rate limit exceeded; retry later",
+                headers={"Retry-After": str(retry_after)})
+
+    def require_auth(
+        request: Request,
+        authorization: str | None = Header(default=None),
+    ) -> None:
         if not configured_token:
             raise HTTPException(
                 status_code=503,
@@ -91,7 +119,22 @@ def create_app(agent=None, api_token: str | None = None) -> FastAPI:
         expected = f"Bearer {configured_token}"
         if authorization is None or not hmac.compare_digest(
                 authorization, expected):
+            peer = request.client.host if request.client else "unknown"
+            consume_or_reject("auth-failure:" + peer, auth_failures_per_minute)
             raise HTTPException(status_code=401, detail="invalid bearer token")
+
+        principal = hashlib.sha256(
+            configured_token.encode("utf-8")).hexdigest()
+        consume_or_reject("authenticated:" + principal,
+                          authenticated_requests_per_minute)
+        request.state.rate_limit_principal = principal
+
+    def rate_limit_expensive(request: Request) -> None:
+        principal = getattr(request.state, "rate_limit_principal", None)
+        if not principal:
+            raise HTTPException(status_code=401, detail="authentication required")
+        consume_or_reject("expensive:" + principal,
+                          expensive_requests_per_minute)
 
     @app.get("/health")
     def health() -> dict[str, str]:
@@ -105,7 +148,8 @@ def create_app(agent=None, api_token: str | None = None) -> FastAPI:
     def services() -> list[dict[str, Any]]:
         return agent.service_reports()
 
-    @app.post("/sandbox/run", dependencies=[Depends(require_auth)])
+    @app.post("/sandbox/run",
+              dependencies=[Depends(require_auth), Depends(rate_limit_expensive)])
     def sandbox_run(req: SandboxRequest) -> dict[str, Any]:
         from cortex.execution.sandbox import NetworkIsolationUnavailable
 
@@ -120,7 +164,8 @@ def create_app(agent=None, api_token: str | None = None) -> FastAPI:
     def knowledge_query(req: QueryRequest) -> list[dict[str, Any]]:
         return agent.knowledge_query(req.query, k=req.k)
 
-    @app.post("/generate", dependencies=[Depends(require_auth)])
+    @app.post("/generate",
+              dependencies=[Depends(require_auth), Depends(rate_limit_expensive)])
     def generate(req: GenerateRequest) -> dict[str, Any]:
         try:
             output = agent.generate_with_metadata(
@@ -136,22 +181,26 @@ def create_app(agent=None, api_token: str | None = None) -> FastAPI:
     def knowledge_capacity() -> dict[str, Any]:
         return agent.knowledge_capacity()
 
-    @app.post("/repo/analyze", dependencies=[Depends(require_auth)])
+    @app.post("/repo/analyze",
+              dependencies=[Depends(require_auth), Depends(rate_limit_expensive)])
     def repo_analyze(req: RepoRequest) -> dict[str, Any]:
         return agent.analyze_repo(_resolve_allowed_repo_path(req.repo_path))
 
-    @app.post("/security/scan", dependencies=[Depends(require_auth)])
+    @app.post("/security/scan",
+              dependencies=[Depends(require_auth), Depends(rate_limit_expensive)])
     def security_scan(req: RepoRequest) -> dict[str, Any]:
         return agent.security_scan(_resolve_allowed_repo_path(req.repo_path))
 
-    @app.post("/pipeline/run", dependencies=[Depends(require_auth)])
+    @app.post("/pipeline/run",
+              dependencies=[Depends(require_auth), Depends(rate_limit_expensive)])
     def pipeline_run(req: PipelineRequest) -> dict[str, Any]:
         _require_full_sandbox()
         return agent.run_pipeline(
             req.objective, _resolve_allowed_repo_path(req.repo_path),
             authorize_destructive=req.authorize_destructive)
 
-    @app.post("/eval/run", dependencies=[Depends(require_auth)])
+    @app.post("/eval/run",
+              dependencies=[Depends(require_auth), Depends(rate_limit_expensive)])
     def eval_run(req: EvalRequest) -> dict[str, Any]:
         if not req.reference and req.candidate is None:
             raise HTTPException(
