@@ -61,4 +61,5 @@ class LearningEngine:
         return item
 
     def is_known_pattern(self, code: str) -> bool:
-        return self._store.get(self._pid(code)) is not None
+        item = self._store.get(self._pid(code))
+        return bool(item and int(item.get("verified", 0)) == 1)
