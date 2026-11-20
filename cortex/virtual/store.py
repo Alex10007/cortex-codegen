@@ -311,6 +311,7 @@ class VirtualParameterStore:
 
         persisted_updated_keys = set()
         persisted_updated_scalars = 0
+        optimizer_steps_by_key = {}
         for path in self.root.glob("adam-*.npz"):
             bank_s, row_s = path.stem.removeprefix("adam-").split("-", 1)
             key = (int(bank_s), int(row_s))
@@ -320,6 +321,7 @@ class VirtualParameterStore:
                 n = int(state["A_m"].size + state["B_m"].size)
                 shape_by_key[key] = n
                 persisted_updated_keys.add(key)
+                optimizer_steps_by_key[key] = int(state["step_count"])
                 persisted_updated_scalars += n
 
         live_keys = set(self._slots)
@@ -333,6 +335,8 @@ class VirtualParameterStore:
                 live_grad_keys.add(key)
             if slot_adam_states(st):
                 live_updated_keys.add(key)
+                optimizer_steps_by_key[key] = max(
+                    optimizer_steps_by_key.get(key, 0), int(st.step_count))
 
         activated_keys = committed_keys | live_keys | persisted_updated_keys
         received_keys = live_grad_keys | persisted_updated_keys
@@ -359,8 +363,7 @@ class VirtualParameterStore:
             "optimizer_updated": updated,
             "optimizer_updated_unknown_slots": updated_unknown,
             "demonstrably_trained": updated,
-            "updates_applied_total": sum(
-                int(st.step_count) for st in self._slots.values()),
+            "updates_applied_total": sum(optimizer_steps_by_key.values()),
             "persisted_optimizer_updated_scalars": persisted_updated_scalars,
             "partitions_touched": len(manifest["initialized_rows"]),
             "partitions_total": N_BANKS,
