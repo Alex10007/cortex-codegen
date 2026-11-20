@@ -6,23 +6,48 @@
 
 ## Implemented
 
-- Added `cortex/execution/resources.py` with a cgroup v2 controller for an administrator-provisioned delegated subtree selected explicitly through `CORTEX_CGROUP_ROOT`.
-- Requires the `cpu`, `memory`, and `pids` controllers to be both available and enabled in the delegated subtree. Cortex does not mutate the host controller hierarchy.
-- Configures per-execution `cpu.max`, `memory.max`, `pids.max`, and disables swap through `memory.swap.max` when exposed by the kernel.
-- Requires `cgroup.kill` so process-tree cleanup is not inferred from a direct-child timeout.
-- The module reports I/O limits as `NOT_CONFIGURED`; no disk-I/O enforcement is claimed.
-- Added unit tests for missing delegation, missing/disabled controllers, applied limits, attach/kill lifecycle, missing `cgroup.kill`, and invalid limit values.
-
-## Integration boundary
-
-This increment introduces the controller and its regression tests. It does **not yet claim that sandbox processes are attached to cgroups**. The next integration step must gate process launch until the child is attached, then prove that aggregate memory/process limits and cgroup-wide termination affect descendants. API execution must remain fail-closed until that integration and a live Linux qualification pass.
+- Added `cortex/execution/resources.py`, a Linux cgroup v2 controller for an administrator-provisioned delegated subtree selected through `CORTEX_CGROUP_ROOT`.
+- Requires `cpu`, `memory`, and `pids` controllers to be available and enabled. Cortex does not alter the host controller hierarchy.
+- Each strict sandbox run creates a unique child cgroup and configures:
+  - `cpu.max`: one CPU-equivalent quota by default;
+  - `memory.max`: the requested aggregate memory ceiling;
+  - `memory.swap.max=0`: no cgroup swap allowance;
+  - `memory.oom.group=1`: group-wide OOM behavior;
+  - `pids.max`: aggregate process/task ceiling.
+- Requires `cgroup.kill` and `cgroup.events`. If those interfaces or required controllers are unavailable, strict execution refuses to start.
+- Sandbox process launch now uses a pipe-gated bootstrap. The launcher blocks before executing Bubblewrap or untrusted code; Cortex moves the launcher PID into its cgroup and only then releases the gate. EOF on the gate exits without executing the command.
+- After the direct process exits or times out, Cortex kills the POSIX process group and then issues cgroup-wide `cgroup.kill`, covering descendants that deliberately start a new session and escape ordinary process-group cleanup.
+- Cortex waits for `cgroup.events` to report `populated 0` before removing the per-run cgroup. Failure to prove an empty cgroup is a hard execution error.
+- Execution metadata reports cgroup enforcement, aggregate CPU/memory/process controls, and successful empty-cgroup cleanup separately. The isolation descriptor now includes the cgroup v2 controls.
+- API workers cache the full behavioral qualification result once per process. This avoids launching the qualification workload for every API request; each actual strict execution still creates and enforces a fresh cgroup.
+- The qualification now requires delegated cgroup v2 support, exercises a process-cap workload, starts a detached new-session descendant, and requires successful cgroup-wide cleanup.
+- Added unit tests for controller availability/delegation, applied control values, attach/kill/empty lifecycle, missing required controls, invalid limits, and strict-mode refusal when no delegated cgroup is configured. Updated behavioral qualification and API-gate tests.
 
 ## Administrator prerequisites
 
-The service administrator must create a delegated cgroup v2 subtree, enable `cpu`, `memory`, and `pids` controllers for it, grant the Cortex service account write access, and set `CORTEX_CGROUP_ROOT` to that subtree. Cortex intentionally does not write to root `cgroup.subtree_control` or attempt privileged controller delegation.
+The service administrator must:
+1. Use a unified cgroup v2 host.
+2. Provision a delegated subtree for the Cortex service account.
+3. Enable `cpu`, `memory`, and `pids` in that subtree's `cgroup.subtree_control`.
+4. Ensure `memory.swap.max`, `memory.oom.group`, `cgroup.kill`, and `cgroup.events` are available.
+5. Grant the Cortex service account permission to create and configure child cgroups.
+6. Set `CORTEX_CGROUP_ROOT` to the delegated subtree.
 
-## Verification
+Cortex intentionally does not try to elevate privileges or modify root cgroup controller delegation.
 
-**CONTROLLER IMPLEMENTED; SANDBOX INTEGRATION AND LIVE ENFORCEMENT NOT YET VERIFIED.** The existing GitHub Actions runner allocation problem remains unresolved. Unit tests are regression specifications until executed. No cgroup behavior, resource-limit enforcement, or descendant-kill pass is claimed.
+## Explicit limitations
 
-I/O bandwidth/IOPS controls, seccomp syscall policy, and deliberate namespace-escape resistance remain outstanding. No training, benchmark promotion, checkpoint or dataset change, PR merge, or `main` branch change was performed.
+- Numeric CPU throttling and memory-pressure/OOM ceilings have not yet been stress-tested against controlled workloads. The controller writes the limits; the behavioral qualification verifies delegation, aggregate process-cap behavior and detached-descendant cleanup.
+- Disk I/O bandwidth/IOPS controls are `NOT_CONFIGURED`; no I/O enforcement is claimed.
+- No seccomp syscall policy is installed or certified.
+- Cgroup membership prevents ordinary process/session detachment from escaping cleanup, but deliberate privileged cgroup migration, kernel vulnerabilities, and host-kernel escape are not certified.
+- The external network check probes one endpoint only and is not a complete network audit.
+- A live Linux deployment qualification remains necessary. Unit tests cannot substitute for a real delegated cgroup v2 environment.
+
+## Verification status
+
+**IMPLEMENTED; NOT RUNTIME-VERIFIED.** The code and regression tests are committed, but GitHub Actions has repeatedly failed before runner allocation. The latest job has no executed steps or test logs. No passing test-suite or live cgroup qualification is claimed.
+
+No model training, benchmark promotion, checkpoint/dataset change, PR merge, or `main` branch change was performed.
+
+**Next:** Stage 16A.8 should add controlled CPU and memory pressure tests, syscall filtering with an explicit allow/deny policy, and a host-side adversarial escape test plan. I/O limits should be added only with a real device mapping and measured policy rather than guessed defaults.
