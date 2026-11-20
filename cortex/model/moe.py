@@ -214,6 +214,11 @@ class CortexMoETransformer(CortexTransformer):
             "physical_total_parameters": physical_total,
             "virtual_slot_parameters": virtual,
             "total_with_virtual": physical_total + virtual,
+            # Backward-compatible field names retained for existing reports.
+            "total_actual": physical_total,
+            "physical_experts_routers": physical_experts + routers,
+            "virtual_parameters": virtual,
+            "backbone_and_dense_mlp": backbone,
         }
 
     # -- loss ----------------------------------------------------------------
