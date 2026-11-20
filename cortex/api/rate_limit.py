@@ -32,6 +32,10 @@ class SQLiteRateLimiter:
                 CREATE INDEX IF NOT EXISTS rate_limit_events_bucket_time
                 ON rate_limit_events(bucket_key, occurred_at)
             """)
+            connection.execute("""
+                CREATE INDEX IF NOT EXISTS rate_limit_events_time
+                ON rate_limit_events(occurred_at)
+            """)
         try:
             os.chmod(self.database, 0o600)
         except OSError:
