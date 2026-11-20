@@ -109,3 +109,29 @@ def test_learning_accepts_verified_code_and_dedups(tmp_path):
     again = eng.ingest_verified_outcome(code, execution_ok=True, tests_passed=True,
                                         provenance=_prov(sha="cc"))
     assert again.item_id == item.item_id
+
+
+
+def test_indexer_uses_qualified_names_for_nested_symbols(tmp_path):
+    source = tmp_path / "nested.py"
+    source.write_text(
+        "def outer():\\n"
+        "    def same():\\n"
+        "        return 1\\n"
+        "    return same()\\n"
+        "class A:\\n"
+        "    def same(self):\\n"
+        "        return 2\\n"
+        "class B:\\n"
+        "    def same(self):\\n"
+        "        return 3\\n")
+    store = VectorStore(str(tmp_path / "kv.db"))
+    graph = KnowledgeGraph(str(tmp_path / "kg.db"))
+    index_code_root(str(tmp_path), store, graph)
+    function_ids = {
+        item["id"] for item in store.iter_texts()
+        if item[1] == "function"
+    }
+    assert any(":func:outer.same" in item_id for item_id in function_ids)
+    assert any(":func:A.same" in item_id for item_id in function_ids)
+    assert any(":func:B.same" in item_id for item_id in function_ids)
