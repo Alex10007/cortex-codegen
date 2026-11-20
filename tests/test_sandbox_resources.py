@@ -16,7 +16,7 @@ def make_fake_cgroup_root(root: Path) -> Path:
 def make_fake_child(path: Path) -> None:
     path.mkdir()
     for name in ("cpu.max", "memory.max", "pids.max", "memory.swap.max",
-                 "cgroup.procs", "cgroup.kill"):
+                 "cgroup.procs", "cgroup.kill", "cgroup.events"):
         (path / name).write_text("")
 
 
@@ -56,6 +56,8 @@ def test_create_applies_cpu_memory_and_process_limits(tmp_path, monkeypatch):
     assert (group.path / "cgroup.procs").read_text() == "1234"
     group.kill()
     assert (group.path / "cgroup.kill").read_text() == "1"
+    (group.path / "cgroup.events").write_text("populated 0\\nfrozen 0\\n")
+    group.wait_empty()
     # Regular files emulate cgroup virtual files in this unit test.
     for item in group.path.iterdir():
         item.unlink()
@@ -69,7 +71,7 @@ def test_create_fails_closed_if_cgroup_kill_missing(tmp_path, monkeypatch):
     def mkdir(path, *args, **kwargs):
         result = real_mkdir(path, *args, **kwargs)
         if path.parent == root:
-            for name in ("cpu.max", "memory.max", "pids.max", "cgroup.procs"):
+            for name in ("cpu.max", "memory.max", "pids.max", "cgroup.procs", "cgroup.events"):
                 (path / name).write_text("")
         return result
     monkeypatch.setattr(Path, "mkdir", mkdir)
