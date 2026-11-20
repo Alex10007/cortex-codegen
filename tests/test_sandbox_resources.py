@@ -119,15 +119,7 @@ def test_create_rejects_invalid_cpu_quota_types_and_values(tmp_path):
 
 def test_snapshot_rejects_missing_required_kernel_counters(tmp_path):
     root = make_fake_cgroup_root(tmp_path / "delegated")
-    real_mkdir = Path.mkdir
-    def mkdir(path, *args, **kwargs):
-        result = real_mkdir(path, *args, **kwargs)
-        if path.parent == root:
-            make_fake_child(path)
-        return result
-    # The test creates a cgroup using regular files as a minimal kernel fixture.
-    from cortex.execution import resources
-    original_create = CgroupV2.create
+    # Regular files provide a minimal fixture for the kernel counter interface.
     group_path = root / "cortex-test"
     group_path.mkdir()
     for name in ("cpu.stat", "memory.events", "pids.events", "memory.current"):
