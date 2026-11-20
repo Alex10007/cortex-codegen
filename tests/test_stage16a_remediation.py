@@ -357,3 +357,16 @@ def test_project_facts_are_excluded_until_explicitly_verified(tmp_path):
     memory.put_fact("project", "accepted", "verified value", verified=True)
     assert memory.get_fact("project", "accepted") == "verified value"
     assert memory.facts("project") == {"accepted": "verified value"}
+
+
+
+def test_moe_topk_load_balance_is_normalized():
+    from cortex.model.moe import MoEFFN
+
+    moe = MoEFFN(dim=4, n_physical=4, n_virtual=0, top_k=2,
+                 expert_ffn=4)
+    moe.experts = torch.nn.ModuleList([torch.nn.Identity() for _ in range(4)])
+    with torch.no_grad():
+        moe.router.weight.zero_()
+    moe(torch.ones(2, 3, 4))
+    assert float(moe.last_aux) == pytest.approx(1.0, abs=1e-6)
