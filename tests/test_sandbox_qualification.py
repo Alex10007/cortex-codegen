@@ -60,7 +60,8 @@ def test_probe_setup_failure_leaves_behavioral_checks_not_run(monkeypatch):
 
 def test_api_gate_requires_behavioral_qualification(monkeypatch):
     from fastapi import HTTPException
-    from cortex.api import app as api_module
+    import importlib
+    api_module = importlib.import_module("cortex.api.app")
     from cortex.execution import qualification, sandbox
     monkeypatch.setattr(sandbox, "_supports_bwrap", lambda: True)
     monkeypatch.setattr(qualification, "qualify_sandbox", lambda: {
