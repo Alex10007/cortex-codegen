@@ -166,3 +166,10 @@ def test_snapshot_rejects_non_decimal_memory_current(tmp_path):
     for item in group_path.iterdir():
         item.unlink()
     group_path.rmdir()
+
+
+def test_create_rejects_cpu_quota_below_kernel_minimum(tmp_path):
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    with pytest.raises(ValueError, match="cpu_quota_us"):
+        CgroupV2.create(
+            root, mem_mb=128, nproc=4, cpu_quota_us=999)
