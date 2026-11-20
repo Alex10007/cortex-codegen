@@ -82,7 +82,9 @@ def test_pipeline_applies_patcher(tmp_path):
                            "def multiply(a, b):\n    return a * b\n"},
         test_command_top=["python3", "-m", "pytest", "-q"])
     assert "pkg/calc.py" in report["files_changed"]
-    assert report["verified"] is True
+    assert report["verified"] is False
+    assert report["status"] == "changes-tested-not-objective-verified"
+    assert report["objective_verified"] is False
 
 
 
