@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 """Actual 2B Cortex Codegen training launcher (FSDP full shard).
 
-Executes REAL distributed training of a declared Cortex config when run on
-the GPU infrastructure it requires (8 x 40 GB or 4 x 80 GB GPUs, see
-`cortex/training/scaling.py::cluster_plans`). On hardware that cannot host
-the run it refuses with a measured failure instead of simulating training.
+Executes REAL distributed training of a declared dense Cortex config only
+when the measured per-device memory, visible GPU count and validated cluster
+matrix qualify. The current explicit quadratic-attention implementation
+does not fit the 2/4/8-device matrix for the 2B/8192-token plan; the launcher
+refuses rather than relying on the previous under-estimated memory plan.
 
 Usage:
   python scripts/train_2b_fsdp.py --config cortex-2b --steps 100000 \
