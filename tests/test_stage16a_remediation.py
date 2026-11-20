@@ -285,3 +285,32 @@ def test_generation_context_uses_only_verified_project_memory(tmp_path):
     assert "verified-change" in context
     assert "unverified-change" not in context
     assert "def add" in context
+
+
+def test_moe_masks_unbound_virtual_routes_until_slots_are_attached():
+    from cortex.model.moe import MoEFFN
+
+    moe = MoEFFN(dim=4, n_physical=4, n_virtual=2, top_k=2,
+                 expert_ffn=4)
+    moe.experts = torch.nn.ModuleList([torch.nn.Identity() for _ in range(4)])
+    # Force the raw router to prefer virtual experts. They are not attached,
+    # so routing must mask them and select only the available physical experts.
+    with torch.no_grad():
+        moe.router.weight.fill_(-10.0)
+        moe.router.weight[4:].fill_(10.0)
+    x = torch.ones(2, 3, 4)
+    y = moe(x)
+    assert torch.allclose(y, x, atol=1e-6, rtol=1e-6)
+    assert int(moe.last_counts[4:].sum()) == 0
+    diag = moe.routing_diagnostics()
+    assert diag["active_experts"] == 4
+    assert diag["utilization_fraction"] <= 1.0
+
+
+def test_moe_refuses_when_active_experts_cannot_fill_topk():
+    from cortex.model.moe import MoEFFN
+
+    moe = MoEFFN(dim=4, n_physical=1, n_virtual=2, top_k=2,
+                 expert_ffn=4)
+    with pytest.raises(RuntimeError, match="active experts"):
+        moe(torch.ones(1, 2, 4))
