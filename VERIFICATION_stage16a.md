@@ -246,3 +246,17 @@ The behavioral qualification now attempts to exceed the aggregate process cap an
 - Added focused regression tests for launcher syntax and both strict/degraded process-limit policies.
 - **Tests not executed**: GitHub Actions still fails before job steps. Stage 16A remains NOT VERIFIED and live cgroup/Bubblewrap qualification remains outstanding.
 - No training, benchmark promotion, checkpoint/data mutation, PR merge, or main update occurred.
+
+
+## Stage 16A.10 — cgroup input and evidence-schema hardening
+
+**Commit increment:** source and regression-test changes on `fibonera/cortex-remediation-stage16a`.
+
+- Cgroup resource limits now require positive integers; booleans and floats are rejected rather than being accepted through Python's integer coercion rules.
+- Kernel counter snapshots now require the specific evidence fields used by qualification: `nr_throttled` and `throttled_usec` in `cpu.stat`, `oom`, `oom_kill`, and `oom_group_kill` in `memory.events`, and `max` in `pids.events`.
+- Negative `memory.current` values are rejected.
+- Added regression coverage for invalid CPU quota/period values and incomplete CPU counter evidence.
+
+**Verification:** changes are committed, but the new tests have **not been executed**. GitHub Actions still reports completed failed jobs with no step records and no logs (`steps: null`); this does not establish a test failure in the repository or a passing test suite. Live delegated-cgroup qualification remains outstanding.
+
+**Limitations unchanged:** no seccomp certification, no disk I/O enforcement, no kernel escape-resistance claim, and no live CPU/memory/pids stress qualification. No training, benchmark promotion, checkpoint/dataset mutation, merge, or `main` update.
