@@ -266,7 +266,8 @@ def test_generation_context_uses_only_verified_project_memory(tmp_path):
 
     agent = CortexAgent(state_dir=str(tmp_path / "agent"))
     project = "sample-project"
-    agent.memory.put_fact(project, "language", "Python")
+    agent.memory.put_fact(project, "language", "Python", verified=True)
+    agent.memory.put_fact(project, "untrusted-note", "do not trust", verified=False)
     agent.memory.record(
         project, "pipeline", {"status": "verified-change"},
         verified=True)
@@ -282,6 +283,7 @@ def test_generation_context_uses_only_verified_project_memory(tmp_path):
         execution_ok=True, tests_passed=True, provenance=provenance)
     context = agent.retrieval_context(project, "add function")
     assert "language: Python" in context
+    assert "untrusted-note" not in context
     assert "verified-change" in context
     assert "unverified-change" not in context
     assert "def add" in context
@@ -342,3 +344,16 @@ def test_agent_generation_uses_inference_mode(tmp_path):
     agent._tokenizer = Tokenizer()
     agent._model = Model()
     assert agent.generate("hello") == "generated"
+
+
+
+def test_project_facts_are_excluded_until_explicitly_verified(tmp_path):
+    from cortex.memory.engine import MemoryEngine
+
+    memory = MemoryEngine(str(tmp_path / "memory.db"))
+    memory.put_fact("project", "draft", "unverified value")
+    assert memory.get_fact("project", "draft") is None
+    assert memory.facts("project") == {}
+    memory.put_fact("project", "accepted", "verified value", verified=True)
+    assert memory.get_fact("project", "accepted") == "verified value"
+    assert memory.facts("project") == {"accepted": "verified value"}
