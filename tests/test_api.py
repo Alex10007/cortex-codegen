@@ -69,3 +69,20 @@ def test_repo_endpoint_requires_configured_allowlist(app, monkeypatch):
     monkeypatch.delenv("CORTEX_ALLOWED_REPO_ROOTS", raising=False)
     r = client.post("/repo/analyze", json={"repo_path": "."})
     assert r.status_code == 503
+
+
+def test_all_api_code_execution_routes_fail_closed_without_bwrap(
+        app, monkeypatch, tmp_path):
+    from cortex.execution import sandbox
+
+    monkeypatch.setattr(sandbox, "_supports_bwrap", lambda: False)
+    client = _client(app)
+    r = client.post("/eval/run", json={"candidate": "print('unsafe')"})
+    assert r.status_code == 503
+    r = client.post("/pipeline/run", json={
+        "repo_path": str(tmp_path),
+        "objective": "inspect this repository",
+    })
+    assert r.status_code == 503
+    r = client.post("/sandbox/run", json={"code": "print('unsafe')"})
+    assert r.status_code == 503
