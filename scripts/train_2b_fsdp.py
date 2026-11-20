@@ -97,8 +97,22 @@ def main() -> int:
     # Select the plan against the smallest physical device, not the largest.
     device_budget_gb = (
         min(total_memory) / 1e9 if total_devices and total_memory else 40.0)
-    wanted_world, _ = required_gpus(
-        args.config, args.batch_size, gpu_memory_gb=device_budget_gb)
+    try:
+        wanted_world, _ = required_gpus(
+            args.config, args.batch_size, gpu_memory_gb=device_budget_gb)
+    except RuntimeError as exc:
+        print(json.dumps({
+            "status": "REFUSED-HARDWARE-GATE",
+            "reason": str(exc),
+            "config": args.config,
+            "params": cfg.theoretical_param_count(),
+            "device_budget_gb": round(device_budget_gb, 2),
+            "measured_cuda_available": cuda["available"],
+            "measured_device_count": total_devices,
+        }, indent=2))
+        print("The current attention implementation does not fit the "
+              "validated cluster matrix. No training was started.")
+        return 2
     plans = cluster_plans(cfg, args.batch_size)["plans"]
     plan_by_world = {int(row["world_size"]): row for row in plans}
     world = args.world or wanted_world
