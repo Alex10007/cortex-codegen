@@ -257,3 +257,31 @@ def test_persisted_slot_shape_cannot_be_reinterpreted(small_store):
     store._slots.clear()
     with pytest.raises(ValueError, match="persisted slot"):
         store.slot_state(0, 6, dim=64, rank=4)
+
+
+
+def test_generation_context_uses_only_verified_project_memory(tmp_path):
+    from cortex.core import CortexAgent
+    from cortex.interfaces import Provenance
+
+    agent = CortexAgent(state_dir=str(tmp_path / "agent"))
+    project = "sample-project"
+    agent.memory.put_fact(project, "language", "Python")
+    agent.memory.record(
+        project, "pipeline", {"status": "verified-change"},
+        verified=True)
+    agent.memory.record(
+        project, "pipeline", {"status": "unverified-change"},
+        verified=False)
+    provenance = Provenance(
+        source_uri="file:///verified.py", license="project-local",
+        version="1", content_sha256="abc", collected_at="now",
+        collector="test")
+    agent.learning.ingest_verified_outcome(
+        "def add(a, b):\\n    return a + b\\n",
+        execution_ok=True, tests_passed=True, provenance=provenance)
+    context = agent.retrieval_context(project, "add function")
+    assert "language: Python" in context
+    assert "verified-change" in context
+    assert "unverified-change" not in context
+    assert "def add" in context
