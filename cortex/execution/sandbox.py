@@ -28,6 +28,28 @@ class NetworkIsolationUnavailable(RuntimeError):
 
 
 _UNSHARE_OK: bool | None = None
+_BWRAP_OK: bool | None = None
+
+
+def _supports_bwrap() -> bool:
+    """Probe the actual namespace setup, not merely the bwrap executable."""
+    global _BWRAP_OK
+    if _BWRAP_OK is None:
+        binary = shutil.which("bwrap")
+        if not binary:
+            _BWRAP_OK = False
+        else:
+            try:
+                probe = subprocess.run(
+                    [binary, "--die-with-parent", "--new-session",
+                     "--unshare-all", "--ro-bind-try", "/usr", "/usr",
+                     "--proc", "/proc", "--dev", "/dev", "--tmpfs", "/tmp",
+                     "--", "/usr/bin/true"],
+                    capture_output=True, timeout=8)
+                _BWRAP_OK = probe.returncode == 0
+            except (OSError, subprocess.SubprocessError):
+                _BWRAP_OK = False
+    return _BWRAP_OK
 
 
 def _supports_unshare() -> bool:
@@ -83,10 +105,10 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
         if os.path.isdir(usersite):
             env["PYTHONPATH"] = usersite
         bwrap = shutil.which("bwrap")
-        if require_full_isolation and not bwrap:
+        if require_full_isolation and not _supports_bwrap():
             raise NetworkIsolationUnavailable(
-                "full sandbox isolation requires bubblewrap; refusing "
-                "same-user host execution")
+                "full sandbox isolation requires working bubblewrap "
+                "user/pid/network namespaces; refusing same-user host execution")
 
         netns = _supports_unshare()
         filesystem_isolated = False
@@ -129,7 +151,8 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
             )
             rc, out, err = proc.returncode, proc.stdout, proc.stderr
             if (require_full_isolation and bwrap and rc != 0
-                    and ("namespace" in (err or "").lower()
+                    and ((err or "").lower().startswith("bwrap:")
+                         or "namespace" in (err or "").lower()
                          or "operation not permitted" in (err or "").lower())):
                 raise NetworkIsolationUnavailable(
                     "bubblewrap could not establish required namespaces; "
