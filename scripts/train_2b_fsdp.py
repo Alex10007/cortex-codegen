@@ -111,10 +111,12 @@ def main() -> int:
     selected = plan_by_world.get(world)
     per_gpu_gb = (selected["per_gpu_total_gb_est"] if selected else None)
     device_report = []
+    device_free_bytes = []
     if cuda["available"]:
         import torch
         for i in range(min(world, total_devices)):
             free, total = torch.cuda.mem_get_info(i)
+            device_free_bytes.append(int(free))
             device_report.append({
                 "device": i,
                 "free_gb": round(free / 1e9, 2),
@@ -124,7 +126,7 @@ def main() -> int:
             refusal = (f"requested world {world} requires {world} GPUs, "
                        f"but only {total_devices} are visible")
         elif per_gpu_gb is not None and any(
-                d["free_gb"] < per_gpu_gb for d in device_report):
+                free < per_gpu_gb * 1e9 for free in device_free_bytes):
             refusal = (
                 f"at least one GPU has less free memory than the "
                 f"{per_gpu_gb:.2f} GB per-device estimate")
