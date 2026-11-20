@@ -1,0 +1,176 @@
+{
+  "kind": "cortex-stage14-promotion-audit",
+  "owned_by": "Fibonera",
+  "workstream": "D-promotion",
+  "promotion_rule": "PROMOTE iff Gate 5 (first independently verified pass@1 > 0 on the immutable v1/v3 benchmarks) AND held-out loss <= 3.3015; pass@1 = 0 means NOT PROMOTED regardless of loss or syntax improvements",
+  "gates": {
+    "gate1_structural_improvement": {
+      "definition": "reproducible reduction in persistent syntax defects and incorrect indentation transitions vs the stage-12 champion",
+      "ok": false,
+      "measured": {
+        "champion_candidate_syntax_valid_rate": 0.0,
+        "stage13_champion_syntax_valid_rate": 0.0
+      }
+    },
+    "gate2_complete_generation": {
+      "definition": "increase in complete, syntactically valid programs under unchanged evaluation conditions",
+      "ok": false,
+      "measured": {
+        "champion_candidate_complete_program_rate": 0.0,
+        "stage13_champion_complete_program_rate": 0.0
+      }
+    },
+    "gate3_functional_correctness": {
+      "definition": "at least one generated program compiles, executes and passes independent tests",
+      "ok": false,
+      "measured": "any candidate pass@1 > 0 on v1/v3 (execution verified)"
+    },
+    "gate4_generalization": {
+      "definition": "success on previously unseen tasks and perturbed formulations",
+      "ok": false,
+      "measured": {
+        "perturbed_pass_at_1": 0.0,
+        "n_probes": 14,
+        "seed_base": 20261400
+      }
+    },
+    "gate5_capability_promotion": {
+      "definition": "at least one independently verified pass@1 on an immutable unseen benchmark",
+      "ok": false,
+      "measured": "identical evidence to gate3 by definition",
+      "requires_heldout_ok": true
+    }
+  },
+  "candidate_metrics": {
+    "stage14-feedback": {
+      "v1_pass_at_1": 0.0,
+      "v3_pass_at_1": 0.0,
+      "syntax_valid_rate": 0.0,
+      "complete_program_rate": 0.0,
+      "heldout_eval_aligned_final": 3.2174
+    },
+    "control_h6000": {
+      "v1_pass_at_1": 0.0,
+      "v3_pass_at_1": 0.0,
+      "syntax_valid_rate": 0.0,
+      "complete_program_rate": 0.0,
+      "heldout_eval_aligned_final": 2.925
+    },
+    "structural_h6000": {
+      "v1_pass_at_1": 0.0,
+      "v3_pass_at_1": 0.0,
+      "syntax_valid_rate": 0.0,
+      "complete_program_rate": 0.0,
+      "heldout_eval_aligned_final": 2.9124
+    }
+  },
+  "champion_candidate": "structural_h6000",
+  "perturbation_probe_results": [
+    {
+      "task_id": "t-palindrome-perturbed",
+      "nonempty": true,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "task_id": "t-fizzbuzz-perturbed",
+      "nonempty": true,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "task_id": "t-wordcount-perturbed",
+      "nonempty": true,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "task_id": "t3-run-length-encode-perturbed",
+      "nonempty": true,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "task_id": "t3-interval-merge-perturbed",
+      "nonempty": true,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "task_id": "t3-sql-sqlite-aggregate-perturbed",
+      "nonempty": true,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "task_id": "t3-sql-sqlite-window-free-perturbed",
+      "nonempty": true,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "task_id": "t3-debug-off-by-one-perturbed",
+      "nonempty": true,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "task_id": "t3-debug-mutation-perturbed",
+      "nonempty": true,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "task_id": "t3-refactor-fluent-perturbed",
+      "nonempty": true,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "task_id": "t3-api-handler-perturbed",
+      "nonempty": true,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "task_id": "t3-security-safe-substitute-perturbed",
+      "nonempty": true,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "task_id": "t3-performance-sort-k-perturbed",
+      "nonempty": true,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "task_id": "t3-multi-call-node-perturbed",
+      "nonempty": true,
+      "executed": true,
+      "passed": false
+    }
+  ],
+  "heldout_loss_gate": {
+    "limit": 3.3015,
+    "ok": true
+  },
+  "gates_passed": 0,
+  "promotion_decision": "NOT PROMOTED - pass@1 remains 0.0 (or held-out regression); negative result preserved; stage-12 champion retained",
+  "rollback": {
+    "baseline_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage12-chunked_control.pt",
+    "procedure": "restore the stage-12 champion; stage-14 checkpoints are additive separate files"
+  },
+  "experiment": {
+    "experiment_id": "stage14-D-promotion-audit",
+    "parent_commit": "c30ceb5",
+    "source_commit": "c30ceb5fce0d",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "the pre-registered 5-gate hierarchy (unchanged from stage 13) selects the best candidate across the feedback arm and both horizon arms; pass@1 = 0 on every candidate implies NOT PROMOTED regardless of loss or syntax improvements",
+    "acceptance_criteria": "gates evaluated from measured per-task results; perturbation probes rebuilt at seed_base 20261400 for the best candidate",
+    "started": "2026-11-20T13:58:39+0000",
+    "finished": "2026-11-20T13:59:26+0000",
+    "decision": "NOT PROMOTED"
+  }
+}

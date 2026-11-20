@@ -1,0 +1,34 @@
+{
+  "kind": "cortex-stage14-gpu-qualification",
+  "owned_by": "Fibonera",
+  "workstream": "A-gpu",
+  "hardware": {
+    "cpu_cores": 5,
+    "ram_total_gb": 5.92,
+    "ram_available_gb": 5.42,
+    "has_cuda": false,
+    "cuda_devices": 0,
+    "nccl_available": false
+  },
+  "two_b_gate_feasible_locally": {
+    "feasible": false,
+    "reason": "needs ~46.0 GB RAM (16 B/param x1.5 activations headroom), available 5.4 GB"
+  },
+  "two_b_training_decision": "BLOCKED - 0 CUDA devices; ~46 GB RAM required vs measured available; no paid procurement authorized ($0.00 spent)",
+  "authoritative_store_recount": {
+    "slots_updated": 35292,
+    "unchanged": true
+  },
+  "experiment": {
+    "experiment_id": "stage14-A-gpu-qualification",
+    "parent_commit": "c30ceb5",
+    "source_commit": "c30ceb5fce0d",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "GPU availability is re-checked each stage; the 2B gate opens only on genuine qualified CUDA infrastructure",
+    "acceptance_criteria": "no procurement; no simulated GPU claims; $0.00 spent",
+    "started": "2026-11-20T12:46:54+0000",
+    "finished": "2026-11-20T12:47:13+0000",
+    "decision": "BLOCKED"
+  }
+}

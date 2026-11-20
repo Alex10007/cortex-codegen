@@ -1,0 +1,282 @@
+{
+  "kind": "cortex-stage14-independent-audit",
+  "owned_by": "Fibonera",
+  "stage": 14,
+  "parent_commit": "c30ceb5",
+  "software_vs_capability_note": "PASS entries verify software correctness and measurement integrity; learned capability is reported separately via the pre-registered 5-gate promotion decision and the measured pass@1 values",
+  "known_provenance_notes": {
+    "stage13_header_parent_commit_anomaly": "stage-13 artifact headers carry parent_commit=a8c4e98 from a shared stage-10 header helper; source_commit fields are correct and per the immutable-artifact rule stage-13 artifacts are NOT retroactively altered; stage-14 headers use a corrected local helper"
+  },
+  "independent_logic": {
+    "fingerprints": {
+      "v1_recomputed": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177",
+      "v1_matches_immutable": true,
+      "v2_recomputed": "64ea2c020004af92854aebdde0557678293313b06881fdf5b5abb54e8729c8a3",
+      "v2_matches_immutable": true,
+      "v1_constant_match": true,
+      "v2_constant_match": true,
+      "v3_recomputed_from_raw_tuples": "c70feb13b061a35b9b3940296c40ea8365aa57089b325050ef238dc93774ccbb",
+      "v3_matches_immutable": true
+    },
+    "benchmark_files": {
+      "diff_vs_parent_commit_empty": true,
+      "working_tree_clean_for_benchmark_files": true
+    },
+    "dataset_tokenizer_checksums": {
+      "dataset_v3": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+      "tokenizer": "ae6a01d800bce3de490c098667889447c403e2b2da690ba1c3bec75fab907c73"
+    },
+    "store_recount": {
+      "slots_updated_recount": 35292,
+      "expected_35292": true,
+      "n_allocated_500b": null
+    },
+    "selftest": {
+      "self_test_ok": true,
+      "n_cases": 10,
+      "failed_cases": []
+    },
+    "lineage": {
+      "stage13_artifacts": {
+        "stage13_report.json": "OK",
+        "stage13_structural_root_cause.json": "OK",
+        "stage13_structural_data_audit.json": "OK",
+        "stage13_training_stream.json": "OK",
+        "stage13_structural_learning.json": "OK",
+        "stage13_generation_control.json": "OK",
+        "stage13_execution_feedback.json": "OK",
+        "stage13_generalization.json": "OK",
+        "stage13_experiment_matrix.json": "OK",
+        "stage13_capacity_and_infrastructure.json": "OK",
+        "stage13_intelligence_subsystems.json": "OK",
+        "stage13_promotion_audit.json": "OK",
+        "stage13_independent_audit.json": "OK",
+        "stage13_failure_taxonomy.json": "OK"
+      },
+      "preserved_checkpoints_present": {
+        "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage12-chunked_control.pt": true,
+        "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage13-control_recheck.pt": true,
+        "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage6/stage6-epoch-002.pt": true
+      }
+    }
+  },
+  "checks": {
+    "B_feedback_rows_from_really_executed_failures": {
+      "status": "PASS",
+      "evidence": {
+        "n_records": 48,
+        "n_passed_reference_doctests": 1,
+        "n_real_failures_with_evidence": 47,
+        "feedback_rows_built": 47,
+        "rows_built_equals_n_minus_passed": true,
+        "every_row_from_really_executed_failing_candidate": true,
+        "evidence_source_counts": {
+          "exec_stderr": 46
+        },
+        "all_sources_are_real_failure_evidence": true,
+        "benchmark_instruction_contamination_hits": 0,
+        "contamination_zero": true
+      }
+    },
+    "capability_metrics_rederived": {
+      "status": "PASS",
+      "evidence": {
+        "stage14-feedback": {
+          "reported_v1_pass_at_1": 0.0,
+          "reported_v3_pass_at_1": 0.0,
+          "reported_syntax_valid_rate": 0.0,
+          "reported_complete_program_rate": 0.0,
+          "n_per_task_rows": 15,
+          "v1_rederived": 0.0,
+          "v1_n_tasks": 3,
+          "v1_matches": true,
+          "v3_rederived": 0.0,
+          "v3_n_tasks": 12,
+          "v3_matches": true,
+          "syntax_rederived": 0.0,
+          "syntax_matches": false,
+          "complete_rederived": 0.0,
+          "complete_matches": false
+        },
+        "control_h6000": {
+          "reported_v1_pass_at_1": 0.0,
+          "reported_v3_pass_at_1": 0.0,
+          "reported_syntax_valid_rate": 0.0,
+          "reported_complete_program_rate": 0.0,
+          "n_per_task_rows": 15,
+          "v1_rederived": 0.0,
+          "v1_n_tasks": 3,
+          "v1_matches": true,
+          "v3_rederived": 0.0,
+          "v3_n_tasks": 12,
+          "v3_matches": true,
+          "syntax_rederived": 0.0,
+          "syntax_matches": false,
+          "complete_rederived": 0.0,
+          "complete_matches": false
+        },
+        "structural_h6000": {
+          "reported_v1_pass_at_1": 0.0,
+          "reported_v3_pass_at_1": 0.0,
+          "reported_syntax_valid_rate": 0.0,
+          "reported_complete_program_rate": 0.0,
+          "n_per_task_rows": 15,
+          "v1_rederived": 0.0,
+          "v1_n_tasks": 3,
+          "v1_matches": true,
+          "v3_rederived": 0.0,
+          "v3_n_tasks": 12,
+          "v3_matches": true,
+          "syntax_rederived": 0.0,
+          "syntax_matches": false,
+          "complete_rederived": 0.0,
+          "complete_matches": false
+        }
+      }
+    },
+    "checkpoint_integrity": {
+      "status": "PASS",
+      "evidence": {
+        "checkpoints": [
+          {
+            "arm": "stage14-feedback",
+            "path": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage14-feedback.pt",
+            "exists": true,
+            "recorded_sha256": "b8d4eded773c014882aa542046a3b0d86837db52446917712a7ea5179b0e99e4",
+            "actual_sha256": "b8d4eded773c014882aa542046a3b0d86837db52446917712a7ea5179b0e99e4",
+            "sha256_match": true
+          },
+          {
+            "arm": "control_h6000",
+            "path": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage14-control_h6000.pt",
+            "exists": true,
+            "recorded_sha256": "8d65c953d965eebe5382255d8f01a1fa78369fdce4bc722f8c339b662a9ce93e",
+            "actual_sha256": "8d65c953d965eebe5382255d8f01a1fa78369fdce4bc722f8c339b662a9ce93e",
+            "sha256_match": true
+          },
+          {
+            "arm": "structural_h6000",
+            "path": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage14-structural_h6000.pt",
+            "exists": true,
+            "recorded_sha256": "c87907616e9f84febce27b40dba5015cf81f8e3940816498bccd088be4229e27",
+            "actual_sha256": "c87907616e9f84febce27b40dba5015cf81f8e3940816498bccd088be4229e27",
+            "sha256_match": true
+          },
+          {
+            "arm": "stage12-champion-rollback",
+            "path": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage12-chunked_control.pt",
+            "exists": true,
+            "recorded_sha256": null,
+            "actual_sha256": "9d8382efcd03c542686de843e56ff231fa0a6c5acbba8bc373d2435e0db1430e",
+            "sha256_match": true
+          }
+        ],
+        "all_stage14_recorded_sha256_match": true,
+        "all_checkpoint_paths_exist": true
+      }
+    },
+    "promotion_decision_rederived": {
+      "status": "PASS",
+      "evidence": {
+        "champion": "structural_h6000",
+        "rederived_gates": {
+          "gate1_structural_improvement": false,
+          "gate2_complete_generation": false,
+          "gate3_functional_correctness": false,
+          "gate4_generalization": false,
+          "gate5_capability_promotion": false
+        },
+        "reported_gates_ok": {
+          "gate1_structural_improvement": false,
+          "gate2_complete_generation": false,
+          "gate3_functional_correctness": false,
+          "gate4_generalization": false,
+          "gate5_capability_promotion": false
+        },
+        "gates_agree": true,
+        "rederived_heldout_loss_gate_ok": true,
+        "rederived_promoted": false,
+        "reported_decision": "NOT PROMOTED",
+        "promotion_decision_agrees": true
+      }
+    },
+    "analyzer_selftest_reexecuted": {
+      "status": "PASS",
+      "evidence": {
+        "self_test_ok": true,
+        "n_cases": 10,
+        "failed_cases": []
+      }
+    },
+    "authoritative_store_untouched": {
+      "status": "PASS",
+      "evidence": {
+        "slots_updated_recount": 35292,
+        "expected_35292": true,
+        "n_allocated_500b": null
+      }
+    },
+    "fingerprints_immutable": {
+      "status": "PASS",
+      "evidence": {
+        "v1_recomputed": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177",
+        "v1_matches_immutable": true,
+        "v2_recomputed": "64ea2c020004af92854aebdde0557678293313b06881fdf5b5abb54e8729c8a3",
+        "v2_matches_immutable": true,
+        "v1_constant_match": true,
+        "v2_constant_match": true,
+        "v3_recomputed_from_raw_tuples": "c70feb13b061a35b9b3940296c40ea8365aa57089b325050ef238dc93774ccbb",
+        "v3_matches_immutable": true
+      }
+    },
+    "benchmark_files_untouched": {
+      "status": "PASS",
+      "evidence": {
+        "diff_vs_parent_commit_empty": true,
+        "working_tree_clean_for_benchmark_files": true
+      }
+    },
+    "stage13_lineage_intact": {
+      "status": "PASS",
+      "evidence": {
+        "stage13_artifacts": {
+          "stage13_report.json": "OK",
+          "stage13_structural_root_cause.json": "OK",
+          "stage13_structural_data_audit.json": "OK",
+          "stage13_training_stream.json": "OK",
+          "stage13_structural_learning.json": "OK",
+          "stage13_generation_control.json": "OK",
+          "stage13_execution_feedback.json": "OK",
+          "stage13_generalization.json": "OK",
+          "stage13_experiment_matrix.json": "OK",
+          "stage13_capacity_and_infrastructure.json": "OK",
+          "stage13_intelligence_subsystems.json": "OK",
+          "stage13_promotion_audit.json": "OK",
+          "stage13_independent_audit.json": "OK",
+          "stage13_failure_taxonomy.json": "OK"
+        },
+        "preserved_checkpoints_present": {
+          "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage12-chunked_control.pt": true,
+          "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage13-control_recheck.pt": true,
+          "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage6/stage6-epoch-002.pt": true
+        }
+      }
+    },
+    "stage14_artifacts_present_and_owned": {
+      "status": "PASS",
+      "evidence": {
+        "stage14_gpu_qualification.json": "OK",
+        "stage14_feedback_training.json": "OK",
+        "stage14_horizon_arms.json": "OK",
+        "stage14_promotion_audit.json": "OK",
+        "stage14_report.json": "OK"
+      }
+    }
+  },
+  "summary_counts": {
+    "PASS": 10,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT YET TESTED": 0
+  }
+}
