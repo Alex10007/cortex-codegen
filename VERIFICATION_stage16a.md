@@ -92,7 +92,7 @@ For the dense 2B configuration at batch 8 and sequence length 8,192, the revised
 
 ## Regression tests added
 
-`tests/test_stage16a_remediation.py` contains 26 new tests covering:
+`tests/test_stage16a_remediation.py` contains 29 new tests covering:
 
 - Normalized MoE routing and load balancing.
 - Masking of unattached virtual routes.
@@ -113,7 +113,7 @@ Existing Stage 8 accounting assertions were updated to use exact slot scalars ra
 
 - Source changes: **implemented on remediation branch**.
 - Regression tests: **written; not yet executed in this session**.
-- GitHub Actions: [latest run](https://github.com/Alex10007/cortex-codegen/actions/runs/44807781708) concluded failure before a runner started. The test job has `runner_id=0`, no steps and no logs. This is not evidence of either a passing or failing test suite.
+- GitHub Actions: [latest run](https://github.com/Alex10007/cortex-codegen/actions/runs/44809069232) concluded failure before a runner started. The test job has `runner_id=0`, no steps and no logs. This is not evidence of either a passing or failing test suite.
 - 2B physical training: **BLOCKED** pending efficient attention and real hardware qualification.
 - 500B virtual training: infrastructure is corrected in source, but the corrected optimizer/store path has not yet been re-executed at scale.
 - MoE physical model: parameter count is now reported honestly; the default 2B MoE model is larger than the 2.056B dense reference.
@@ -124,11 +124,10 @@ Existing Stage 8 accounting assertions were updated to use exact slot scalars ra
 
 ## Remaining gaps
 
-1. Execute all 26 new tests and the full existing suite on a functioning runner; fix any failures.
+1. Execute all 29 dedicated Stage 16A tests, the four new patch-set regressions, and the full existing suite on a functioning runner; fix any failures.
 2. Add efficient attention (e.g. verified SDPA/FlashAttention path with correct causal and padding-mask semantics) and benchmark peak GPU memory.
 3. Add explicit device placement for virtual slot parameters and optimizer state; the current `JointTrainer` remains CPU-oriented and is not yet a qualified GPU joint-training path.
 4. Build a qualified distributed MoE + virtual training path; the existing 2B FSDP script trains the dense transformer and does not establish full 502B joint distributed training.
-4. Add explicit device placement for virtual slot parameters and optimizer state before claiming GPU joint training; the current coordinator path has primarily been exercised on CPU.
 5. Integrate a model-backed patcher into the engineering pipeline; current pipeline still accepts an injected patcher and does not autonomously implement changes through the API.
 6. Add API rate limiting and complete production security controls.
 7. Improve semantic retrieval beyond hashed n-gram vectors and evaluate retrieval quality.
@@ -137,3 +136,20 @@ Existing Stage 8 accounting assertions were updated to use exact slot scalars ra
 10. Resume Stage 16 autoregressive structural learning only after Stage 16A tests and correctness gates pass.
 
 **Decision:** Stage 16A remediation is implemented in source but remains **NOT VERIFIED**. It must not be treated as a production-ready or promoted Cortex build.
+
+
+## Stage 16A.2 — patch-set publication safety
+
+A focused pipeline correctness increment was added after the initial Stage 16A remediation:
+
+- Patcher output is now fully preflighted before any repository file is written. Invalid later entries therefore cannot leave earlier files partially modified.
+- Absolute paths, parent traversal, protected metadata paths, symlink traversal, duplicate normalized targets, non-regular targets, and oversized/non-text content are rejected before publication.
+- Every replacement is staged in its target directory, flushed and fsynced, then published with per-file atomic replacement.
+- If a later replacement fails, already-published files are restored from their original bytes (or removed if newly created). Existing file permissions are preserved; newly created files receive mode 0644.
+- Four regression tests cover all-entry preflight, symlink rejection, multi-file replacement/mode preservation, and rollback after an injected publication failure.
+
+This is rollback-capable multi-file publication, **not** a filesystem-wide atomic transaction. It does not close a same-user concurrent filesystem race between preflight and publication; stronger dirfd/openat-style path handling remains a hardening opportunity.
+
+The branch head at this report update is expected to include the Stage 16A.2 commits; verify the live ref before treating this report as current. GitHub Actions run [44809069232](https://github.com/Alex10007/cortex-codegen/actions/runs/44809069232) again failed before runner startup (`runner_id=0`, empty steps). None of the new tests have an execution result from that run.
+
+**Stage 16A.2 status: implemented, tests written, NOT VERIFIED.** No model training, benchmark promotion, PR merge, or main-branch change was performed.
