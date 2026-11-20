@@ -283,7 +283,24 @@ class VirtualParameterStore:
 
         allocated = exact_virtual_count()
         manifest = _read_json(self.manifest_path)
-        shape_map = manifest.get("initialized_slot_shapes", {})
+        shape_map = {
+            bank: dict(rows) for bank, rows in
+            manifest.get("initialized_slot_shapes", {}).items()
+        }
+        # Backfill exact shapes for legacy committed rows when their Adam
+        # state exists. Rows without shape metadata or optimizer state remain
+        # explicitly unknown; never infer a full 50,000 scalars per row.
+        for path in self.root.glob("adam-*.npz"):
+            stem = path.stem.removeprefix("adam-")
+            bank_s, row_s = stem.split("-", 1)
+            with np.load(path) as state:
+                if int(state["step_count"]) <= 0:
+                    continue
+                shape_map.setdefault(bank_s, {})[row_s] = {
+                    "dim": int(state["A_m"].shape[0]),
+                    "rank": int(state["A_m"].shape[1]),
+                    "scalars": int(state["A_m"].size + state["B_m"].size),
+                }
         initialized = sum(
             int(shape.get("scalars", 2 * int(shape["dim"]) * int(shape["rank"])))
             for rows in shape_map.values() for shape in rows.values())
