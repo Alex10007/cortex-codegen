@@ -75,6 +75,20 @@ class MoEFFN(nn.Module):
         B, T, D = x.shape
         h = x.reshape(-1, D)
         logits = self.router(h)
+        # Virtual routes are optional until their external SlotState objects
+        # have been attached. Never allow an unbound route to win top-k and
+        # fail later with a KeyError in _virtual_apply.
+        active = torch.ones(self.n_experts, dtype=torch.bool, device=h.device)
+        for route in range(self.n_virtual):
+            if route not in self.virtual_slots:
+                active[self.n_physical + route] = False
+        n_active = int(active.sum())
+        if n_active < self.top_k:
+            raise RuntimeError(
+                f"MoE has {n_active} active experts but top_k={self.top_k}; "
+                "attach the required virtual slots or reduce top_k")
+        logits = logits.masked_fill(~active.unsqueeze(0),
+                                    torch.finfo(logits.dtype).min)
         probs = F.softmax(logits, dim=-1)
         top_vals, top_idx = torch.topk(probs, self.top_k, dim=-1)
         gate = top_vals / top_vals.sum(-1, keepdim=True).clamp_min(1e-9)
@@ -100,7 +114,8 @@ class MoEFFN(nn.Module):
         p_mean = probs.mean(0)
         self.last_counts = counts.detach()
         self.last_probs = p_mean.detach()
-        self.last_aux = self.n_experts * torch.sum(f * p_mean)
+        self.last_active_mask = active.detach()
+        self.last_aux = n_active * torch.sum(f * p_mean)
         self.last_z = torch.mean(
             torch.logsumexp(logits, dim=-1) ** 2).clamp_min(0.0)
         return y.view(B, T, D)
@@ -114,7 +129,10 @@ class MoEFFN(nn.Module):
             "counts": counts,
             "tokens_routed": total,
             "utilization_fraction": (
-                sum(1 for c in counts if c > 0) / self.n_experts),
+                sum(1 for i, c in enumerate(counts)
+                    if c > 0 and bool(self.last_active_mask[i]))
+                / max(1, int(self.last_active_mask.sum()))),
+            "active_experts": int(self.last_active_mask.sum()),
             "max_expert_fraction": round(max_frac, 4),
             "collapsed": max_frac > collapse_threshold,
             "physical": counts[:self.n_physical],
