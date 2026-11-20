@@ -56,6 +56,9 @@ def test_create_applies_cpu_memory_and_process_limits(tmp_path, monkeypatch):
     assert (group.path / "cgroup.procs").read_text() == "1234"
     group.kill()
     assert (group.path / "cgroup.kill").read_text() == "1"
+    # Regular files emulate cgroup virtual files in this unit test.
+    for item in group.path.iterdir():
+        item.unlink()
     group.close()
     assert not group.path.exists()
 
