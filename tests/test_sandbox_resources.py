@@ -134,3 +134,35 @@ def test_snapshot_rejects_missing_required_kernel_counters(tmp_path):
     for item in group_path.iterdir():
         item.unlink()
     group_path.rmdir()
+
+
+def test_create_rejects_cpu_period_outside_kernel_range(tmp_path):
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    for period in (999, 1_000_001):
+        with pytest.raises(ValueError, match="cpu_period_us"):
+            CgroupV2.create(
+                root, mem_mb=128, nproc=4, cpu_period_us=period)
+
+
+def test_counter_parser_rejects_duplicate_keys(tmp_path):
+    path = tmp_path / "cpu.stat"
+    path.write_text("nr_throttled 1\\nthrottled_usec 2\\nnr_throttled 3\\n")
+    with pytest.raises(CgroupUnavailable, match="duplicate counter"):
+        CgroupV2._read_counters(path)
+
+
+def test_snapshot_rejects_non_decimal_memory_current(tmp_path):
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    group_path = root / "cortex-test"
+    group_path.mkdir()
+    (group_path / "cpu.stat").write_text(
+        "nr_throttled 0\\nthrottled_usec 0\\n")
+    (group_path / "memory.events").write_text(
+        "oom 0\\noom_kill 0\\noom_group_kill 0\\n")
+    (group_path / "pids.events").write_text("max 0\\n")
+    (group_path / "memory.current").write_text("+1")
+    with pytest.raises(CgroupUnavailable, match="non-negative decimal integer"):
+        CgroupV2(group_path).snapshot()
+    for item in group_path.iterdir():
+        item.unlink()
+    group_path.rmdir()
