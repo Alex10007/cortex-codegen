@@ -430,9 +430,8 @@ class VirtualParameterStore:
                 optimizer_steps_by_key[key] = max(
                     optimizer_steps_by_key.get(key, 0), int(st.step_count))
                 live_changed_by_key[key] = sum(
-                    int(torch.count_nonzero(st.changed_mask.get(
-                        name, torch.zeros_like(p, dtype=torch.bool))))
-                    for name, p in st.params.items())
+                    int((st.changed_mask[name] != 0).sum().item())
+                    for name in st.params if name in st.changed_mask)
                 if not st.changed_evidence_known:
                     changed_unknown_keys.add(key)
 
