@@ -70,15 +70,35 @@ def _supports_unshare() -> bool:
     return _UNSHARE_OK
 
 
-def _limits(cpu_s: int, mem_mb: int, nproc: int):
+def _limits(cpu_s: int, mem_mb: int, nproc: int, *,
+           aggregate_process_limit: bool = False):
     def apply():
         resource.setrlimit(resource.RLIMIT_CPU, (cpu_s, cpu_s))
         b = mem_mb * 1024 * 1024
         resource.setrlimit(resource.RLIMIT_AS, (b, b))
-        resource.setrlimit(resource.RLIMIT_NPROC, (nproc, nproc))
+        if aggregate_process_limit:
+            # In strict mode the cgroup pids.max is the authoritative aggregate
+            # limit. Raise the inherited soft RLIMIT_NPROC to its existing hard
+            # ceiling so it cannot mask a cgroup pids.events:max observation.
+            _, hard_limit = resource.getrlimit(resource.RLIMIT_NPROC)
+            resource.setrlimit(
+                resource.RLIMIT_NPROC, (hard_limit, hard_limit))
+        else:
+            resource.setrlimit(resource.RLIMIT_NPROC, (nproc, nproc))
         resource.setrlimit(resource.RLIMIT_FSIZE, (256 * 1024 * 1024,) * 2)
         resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
     return apply
+
+
+def _cgroup_bootstrap_source() -> str:
+    """Return a syntactically valid launcher that waits for cgroup attachment."""
+    return "\n".join((
+        "import os,sys",
+        "fd=int(sys.argv[1])",
+        "if not os.read(fd,1): os._exit(126)",
+        "os.close(fd)",
+        "os.execvp(sys.argv[2],sys.argv[2:])",
+    ))
 
 
 def _copy_workspace_no_symlinks(source: str, destination: str) -> None:
@@ -256,20 +276,16 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
             # Hold the interpreter before exec so no untrusted instruction runs
             # until the launcher PID has entered the delegated cgroup.
             gate_read, gate_write = os.pipe()
-            bootstrap = (
-                "import os,sys\\n"
-                "fd=int(sys.argv[1])\\n"
-                "if not os.read(fd,1): os._exit(126)\\n"
-                "os.close(fd)\\n"
-                "os.execvp(sys.argv[2],sys.argv[2:])"
-            )
+            bootstrap = _cgroup_bootstrap_source()
             launch_cmd = [sys.executable, "-c", bootstrap, str(gate_read), *full_cmd]
             try:
                 try:
                     proc = subprocess.Popen(
                         launch_cmd, cwd=(td if not bwrap else "/"), env=env,
                         stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                        preexec_fn=_limits(cpu_s, mem_mb, nproc),
+                        preexec_fn=_limits(
+                            cpu_s, mem_mb, nproc,
+                            aggregate_process_limit=True),
                         start_new_session=(os.name == "posix"),
                         pass_fds=(gate_read,),
                     )
