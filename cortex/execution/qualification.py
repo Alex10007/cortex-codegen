@@ -20,6 +20,7 @@ def qualify_sandbox() -> dict[str, Any]:
         "bwrap_available": "PASS" if _supports_bwrap() else "FAIL",
         "cgroup_v2_delegation": "PASS" if probe_cgroup_v2().get("available") else "FAIL",
         "isolated_execution": "NOT_RUN",
+        "aggregate_limits_enforced": "NOT_RUN",
         "workspace_writable": "NOT_RUN",
         "host_path_inaccessible": "NOT_RUN",
         "runtime_readonly": "NOT_RUN",
@@ -88,6 +89,14 @@ print(json.dumps(result, sort_keys=True))
                     "error": f"{type(exc).__name__}: {exc}"}
 
         checks["isolated_execution"] = "PASS" if execution.ok else "FAIL"
+        limits = execution.limits or {}
+        checks["aggregate_limits_enforced"] = (
+            "PASS"
+            if all(limits.get(name) is True for name in (
+                "cgroup_v2_enforced", "aggregate_cpu_limit",
+                "aggregate_memory_limit", "aggregate_process_limit"))
+            else "FAIL"
+        )
         try:
             observed = json.loads(execution.stdout.strip().splitlines()[-1])
         except (ValueError, IndexError):
