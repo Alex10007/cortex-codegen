@@ -56,10 +56,12 @@ def test_pipeline_blocks_destructive_without_authorization(tmp_path):
 def test_pipeline_verifies_passing_repo(tmp_path):
     _make_repo(tmp_path)
     report = run_engineering_pipeline("add multiply helper", str(tmp_path))
-    assert report["status"] == "verified"
+    assert report["status"] == "baseline-validated-no-implementation"
     assert report["tests"]["ok"] is True
     assert report["tests"]["summary"]["passed"] >= 1
-    assert report["verified"] is True
+    assert report["verified"] is False
+    assert report["implementation_performed"] is False
+    assert report["validation_passed"] is True
 
 
 def test_pipeline_reports_failure(tmp_path):
@@ -81,3 +83,15 @@ def test_pipeline_applies_patcher(tmp_path):
         test_command_top=["python3", "-m", "pytest", "-q"])
     assert "pkg/calc.py" in report["files_changed"]
     assert report["verified"] is True
+
+
+
+def test_pipeline_rejects_patcher_path_escape(tmp_path):
+    _make_repo(tmp_path)
+    import pytest
+
+    with pytest.raises(ValueError, match="protected path|escapes repository"):
+        run_engineering_pipeline(
+            "change file", str(tmp_path),
+            patcher=lambda p: {"../outside.py": "print('unsafe')"},
+            test_command_top=["python3", "-m", "pytest", "-q"])
