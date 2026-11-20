@@ -14,6 +14,7 @@ def test_qualification_reports_each_behavioral_boundary(monkeypatch):
         "runtime_readonly": True,
         "proc_dev_available": True,
         "network_unreachable": True,
+        "process_cap_observed": True,
     }
     monkeypatch.setattr(qualification, "_supports_bwrap", lambda: True)
     monkeypatch.setattr(qualification, "probe_cgroup_v2", lambda: {"available": True})
