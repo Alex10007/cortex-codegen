@@ -9,7 +9,7 @@ from cortex.core import CortexAgent
 @pytest.fixture(scope="module")
 def app():
     agent = CortexAgent(state_dir=None)  # default .cortex-state in repo dir
-    return create_app(agent)
+    return create_app(agent, api_token="test-token")
 
 
 def test_health(app):
@@ -42,4 +42,26 @@ def test_sandbox_and_knowledge_endpoints(app):
 def _client(app):
     from fastapi.testclient import TestClient
 
-    return TestClient(app)
+    return TestClient(app, headers={"Authorization": "Bearer test-token"})
+
+
+
+def test_protected_endpoint_rejects_missing_token(app):
+    from fastapi.testclient import TestClient
+
+    client = TestClient(app)
+    r = client.get("/system/profile")
+    assert r.status_code == 401
+
+
+def test_eval_requires_candidate_unless_reference(app):
+    client = _client(app)
+    r = client.post("/eval/run", json={"reference": False})
+    assert r.status_code == 422
+
+
+def test_repo_endpoint_requires_configured_allowlist(app, monkeypatch):
+    client = _client(app)
+    monkeypatch.delenv("CORTEX_ALLOWED_REPO_ROOTS", raising=False)
+    r = client.post("/repo/analyze", json={"repo_path": "."})
+    assert r.status_code == 503
