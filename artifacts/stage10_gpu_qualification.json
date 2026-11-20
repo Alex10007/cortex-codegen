@@ -1,0 +1,62 @@
+{
+  "kind": "cortex-stage10-gpu-qualification",
+  "owned_by": "Fibonera",
+  "workstream": "A-infra",
+  "hardware": {
+    "cpu_cores": 5,
+    "ram_total_gb": 5.92,
+    "ram_available_gb": 5.46,
+    "disk_free_gb": 5459.33,
+    "has_cuda": false,
+    "gpu_name": "none",
+    "platform": "Linux x86_64",
+    "python_version": "3.12.14",
+    "torch_version": "2.15.0+cpu",
+    "cuda_available_torch": false,
+    "gpu_count": 0,
+    "nccl_available": false,
+    "can_train_2b_locally": {
+      "feasible": false,
+      "reason": "needs ~46.0 GB RAM (16 B/param x1.5 activations headroom), available 5.5 GB"
+    },
+    "memory_budget_2b": {
+      "optimizer_tier_gb_16B_per_param": 32.9,
+      "estimated_training_ram_gb": 46.0
+    },
+    "procurement_recommendation": {
+      "status": "ESTIMATE ONLY - no provider contacted, no authorization granted, nothing provisioned",
+      "options": [
+        {
+          "config": "4 x 80 GB, ZeRO-3 full shard",
+          "per_gpu_optimizer_state_gb": 16.45,
+          "verdict": "recommended minimum"
+        },
+        {
+          "config": "8 x 40 GB, ZeRO-3 full shard",
+          "per_gpu_optimizer_state_gb": 8.22,
+          "verdict": "marginal; stage-6 activation estimates apply"
+        },
+        {
+          "config": "2 x 80 GB, ZeRO-3 full shard",
+          "per_gpu_optimizer_state_gb": 32.9,
+          "verdict": "insufficient vs stage-6 measured activation totals"
+        }
+      ]
+    }
+  },
+  "gpu_qualification_executed": false,
+  "two_b_training_gate": "BLOCKED",
+  "decision": "BLOCKED",
+  "experiment": {
+    "experiment_id": "stage10-A-infra",
+    "parent_commit": "a8c4e98",
+    "source_commit": "a8c4e98377bd",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "host remains GPU-less; qualification re-verifies the BLOCKED decision with runtime measurements, never assumptions",
+    "acceptance_criteria": "PASS only with real CUDA devices and multi-GPU qualification",
+    "started": "2026-11-20T01:52:33+0000",
+    "finished": "2026-11-20T01:52:33+0000",
+    "decision": "BLOCKED"
+  }
+}

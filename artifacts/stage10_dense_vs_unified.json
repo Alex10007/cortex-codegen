@@ -1,0 +1,70 @@
+{
+  "kind": "cortex-stage10-dense-vs-unified",
+  "owned_by": "Fibonera",
+  "workstream": "G-comparison",
+  "steps_per_arm": 200,
+  "identical_batches_optimizer": true,
+  "arms": {
+    "dense_control": {
+      "loss_first": 2.6055,
+      "loss_last": 2.0726,
+      "heldout_before": 3.3015,
+      "heldout_after": 3.0845,
+      "seconds": 26.3,
+      "tokens_per_s": 7786.2
+    },
+    "joint_warm_trained_slots": {
+      "loss_first": 7.2312,
+      "loss_last": 2.947,
+      "heldout_after": 3.5792,
+      "slots": [
+        "0:1",
+        "1:1",
+        "2:1",
+        "3:1",
+        "4:1",
+        "5:1",
+        "6:1",
+        "7:1"
+      ],
+      "seconds": 35.1,
+      "tokens_per_s": 5836.9
+    },
+    "joint_fresh_slots": {
+      "loss_first": 7.2977,
+      "loss_last": 2.5265,
+      "heldout_after": 3.4826,
+      "slots": [
+        "0:9",
+        "1:9",
+        "2:9",
+        "3:9",
+        "4:9",
+        "5:9",
+        "6:9",
+        "7:9"
+      ],
+      "seconds": 34.0,
+      "tokens_per_s": 6030.6
+    }
+  },
+  "joint_warm_minus_dense_heldout": 0.4947,
+  "joint_fresh_minus_dense_heldout": 0.3981,
+  "joint_warm_beats_dense": false,
+  "authoritative_store_untouched": true,
+  "scan_slots_updated_before": 35292,
+  "scan_slots_updated_after": 35292,
+  "conclusion": "warm-slot joint arm does not beat dense on heldout (3.5792 vs 3.0845); fresh-slot transient measured again (3.4826)",
+  "experiment": {
+    "experiment_id": "stage10-G-dense-vs-unified",
+    "parent_commit": "a8c4e98",
+    "source_commit": "a8c4e98377bd",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "stage-9's joint-vs-dense gap was a fresh-slot transient; warm virtual slots narrow or close it at a longer horizon",
+    "acceptance_criteria": "identical batches/optimizer/seed; joint must beat dense on heldout to claim an advantage; negative results preserved",
+    "started": "2026-11-20T02:01:59+0000",
+    "finished": "2026-11-20T02:04:13+0000",
+    "decision": "EXECUTED"
+  }
+}

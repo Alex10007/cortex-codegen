@@ -1,0 +1,871 @@
+{
+  "kind": "cortex-stage10-pass1-root-cause",
+  "owned_by": "Fibonera",
+  "workstream": "C-pass1",
+  "harness_sanity": {
+    "v1_reference_pass_rate": 1.0,
+    "v3_reference_pass_rate": 1.0,
+    "fingerprint_v1_ok": true,
+    "fingerprint_v2_ok": true,
+    "fingerprint_v3": "c70feb13b061a35b9b3940296c40ea8365aa57089b325050ef238dc93774ccbb"
+  },
+  "c2_dataset_audit": {
+    "n_records": 332,
+    "splits": {
+      "train": 241,
+      "val": 26,
+      "heldout": 65
+    },
+    "seq_len_audited": 256,
+    "fit_rate_at_training_seq_len": 0.2892,
+    "records_dropped_by_fit_filter": 236,
+    "instruction_tokens": {
+      "min": 57,
+      "mean": 185.6,
+      "p50": 150,
+      "max": 773
+    },
+    "completion_tokens": {
+      "min": 43,
+      "mean": 270.6,
+      "p50": 201,
+      "max": 1851
+    },
+    "exact_full_duplicates": 0,
+    "exact_code_duplicates": 0,
+    "near_dup_jaccard_threshold": 0.9,
+    "near_dup_pairs_in_sample": 2,
+    "near_dup_pairs_compared": 7140,
+    "kinds": {
+      "function": 223,
+      "method": 105,
+      "multi-file": 4
+    },
+    "provenance_missing": 0,
+    "max_contamination_overlap": 0.2472,
+    "contamination_above_half": 0,
+    "split_deterministic": true
+  },
+  "c1_generation_diagnosis": {
+    "dense-control/v1": {
+      "n": 3,
+      "passed": 0,
+      "diagnoses": [
+        {
+          "task_id": "t-palindrome",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "truncation",
+          "evidence": "output ran to the token limit without closure",
+          "candidate_head": "\n\n    \"\"\"\n    return _is_name(name)\n    return self._name()\n    return _is_name(self)\n    return self._is_name(self)\n    return self._is_name(self)\n    return self._is_name(self)\n "
+        },
+        {
+          "task_id": "t-fizzbuzz",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "truncation",
+          "evidence": "syntax EOF with unbalanced delimiters: invalid syntax (<unknown>, line 1)",
+          "candidate_head": "\n\n    >>> list(iterable(iterable)\n    >>> list(0)\n    >>> list(iterable)\n    >>> list(iterable)\n    >>> list(0)\n    \"\"\"\n    return _args\n    >>> list(iterable)\n    >>> list(iterabl"
+        },
+        {
+          "task_id": "t-wordcount",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated string literal (detected at line 2) (<unknown>, line 2)",
+          "candidate_head": "\n\n    >>> list(io.read(b)\n    >>> list(b('1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0."
+        }
+      ]
+    },
+    "dense-control/v3": {
+      "n": 12,
+      "passed": 0,
+      "diagnoses": [
+        {
+          "task_id": "t3-run-length-encode",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "invalid syntax (<unknown>, line 1)",
+          "candidate_head": "\n\n<|endoftext|>"
+        },
+        {
+          "task_id": "t3-interval-merge",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "truncation",
+          "evidence": "syntax EOF with unbalanced delimiters: invalid syntax (<unknown>, line 1)",
+          "candidate_head": "\n\n    >>> list(iterable, 3, 3, 3, 2, 3, 3, 2, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1,"
+        },
+        {
+          "task_id": "t3-sql-sqlite-aggregate",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "invalid syntax (<unknown>, line 1)",
+          "candidate_head": "\n<|endoftext|>"
+        },
+        {
+          "task_id": "t3-sql-sqlite-window-free",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 12) (<unknown>, line 3)",
+          "candidate_head": "\n\ndef __init__(self, *args, **kwargs):\ndef _is_name(self, _is_name=None, **kwargs):\n        \"\"\"Return the list of the function to the value.\n\n        >>> list(self.is_name(self.nam"
+        },
+        {
+          "task_id": "t3-debug-off-by-one",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 9) (<unknown>, line 1)",
+          "candidate_head": "\n    \"\"\"\n    return _get_name(iterable)\n    return _is_name(value)\n    return _is_name(value)\n    return _is_name(args, _get_name=None)\n    return _get_name(args, _get_name=True)\n "
+        },
+        {
+          "task_id": "t3-debug-mutation",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 3) (<unknown>, line 1)",
+          "candidate_head": "\n    \"\"\"\n    return self.is_name(data)\n<|endoftext|>"
+        },
+        {
+          "task_id": "t3-testgen-cases",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 8) (<unknown>, line 6)",
+          "candidate_head": "\n\n    >>> list(b('1.0')\n    >>> list(b('1.3')\n    >>> list(b('1.0.0')\n    >>> list(1)\n    '1.0.0'\n    \"\"\"\n    return _is_name(iterable)\n<|endoftext|>"
+        },
+        {
+          "task_id": "t3-refactor-fluent",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated string literal (detected at line 1) (<unknown>, line 1)",
+          "candidate_head": "\n\n        >>> list(read(args, '0.0.0.0.0.\n        >>> list(0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0"
+        },
+        {
+          "task_id": "t3-api-handler",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated string literal (detected at line 1) (<unknown>, line 1)",
+          "candidate_head": "\n\n    >>> _get_text('foo', 'foo', 'foo', 'foo', 'foo', 'http_text', 'http_text', 'text', 'http_text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text', 'text'"
+        },
+        {
+          "task_id": "t3-security-safe-substitute",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated string literal (detected at line 1) (<unknown>, line 1)",
+          "candidate_head": "\n\n    >>> read_name(\"1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0"
+        },
+        {
+          "task_id": "t3-performance-sort-k",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated string literal (detected at line 5) (<unknown>, line 5)",
+          "candidate_head": "\n\n    >>> list(iterable(1, 1)\n    >>> list(iterable)\n    >>> list(b(b)\n    >>> list(2)\n    >>> list(b('1)\n    '1.0\n    >>> list(b('1.0')\n    >>> list(b('1.0')\n    >>> list(2.0)\n   "
+        },
+        {
+          "task_id": "t3-multi-call-node",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "'(' was never closed (<unknown>, line 1)",
+          "candidate_head": "\n\n        return self.is_name(other(self.name, _get_name=True)\n    return self._get_name(self)\n<|endoftext|>"
+        }
+      ]
+    },
+    "joint-stage9/v1": {
+      "n": 3,
+      "passed": 0,
+      "diagnoses": [
+        {
+          "task_id": "t-palindrome",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 6) (<unknown>, line 4)",
+          "candidate_head": "\n\n    >>> o = object()\n    >>> identity(o)\n    3\n    \"\"\"\n    return x\n<|endoftext|>"
+        },
+        {
+          "task_id": "t-fizzbuzz",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "invalid syntax (<unknown>, line 2)",
+          "candidate_head": "\n\n return _TestClass(s)\n<|endoftext|>"
+        },
+        {
+          "task_id": "t-wordcount",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 11) (<unknown>, line 4)",
+          "candidate_head": "\n\n    >>> flatten(io.BytesIO(io.BytesIO(translate( None\n    >>> identity(1)\n    2\n    \"\"\"\n\n    @functools.wraps(func)\n    def wrapper(first: _T, *args, **kwargs) -> _T, *args, **kw"
+        }
+      ]
+    },
+    "joint-stage9/v3": {
+      "n": 12,
+      "passed": 0,
+      "diagnoses": [
+        {
+          "task_id": "t3-run-length-encode",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "invalid syntax (<unknown>, line 1)",
+          "candidate_head": "\n\n\n return return self.post in self.val:\n<|endoftext|>"
+        },
+        {
+          "task_id": "t3-interval-merge",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 5) (<unknown>, line 2)",
+          "candidate_head": "\n\n    >>> square(Version() for m in JsonPointer)\n    \"\"\"\n\n    return self.:\n<|endoftext|>"
+        },
+        {
+          "task_id": "t3-sql-sqlite-aggregate",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 4) (<unknown>, line 2)",
+          "candidate_head": "\n\n    Like get(), or override the exit status\n    \"\"\"\n    return sum((map(tuple(), n))\n<|endoftext|>"
+        },
+        {
+          "task_id": "t3-sql-sqlite-window-free",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated string literal (detected at line 1) (<unknown>, line 1)",
+          "candidate_head": "\n\n    >>> subprocess.from_parts(Decimal('NaN)\n    '/')\n    ['a\", \"infinite()\n    if not stack or not None.\n\n    data = f.readline()\n    if len(data) == 2:\n        return a.is_long("
+        },
+        {
+          "task_id": "t3-debug-off-by-one",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "invalid syntax (<unknown>, line 1)",
+          "candidate_head": "\n<|endoftext|>"
+        },
+        {
+          "task_id": "t3-debug-mutation",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated string literal (detected at line 1) (<unknown>, line 1)",
+          "candidate_head": "\n\n    >>> enabled = object(Version(Decimal('NaN)\n    None\n    >>> list(range(len())\n    ['a', 'abc'\n    \"\"\"\n    return a.\n\n    if len(self.val) == None\n\n    return a.path.post()\n<|"
+        },
+        {
+          "task_id": "t3-testgen-cases",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 11) (<unknown>, line 5)",
+          "candidate_head": "\n\n    >>> list(transpose([(1, 2, 3), (11, 22, 33)]\n\n    >>> list(range(None)\n    ['0' * len(1)\n    \"\"\"\n\n    data = f.0'\n    if len(data) == 2:\n        return iter(param, *args, **k"
+        },
+        {
+          "task_id": "t3-refactor-fluent",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 8) (<unknown>, line 5)",
+          "candidate_head": "\n\n    >>> nth(1)\n    True\n    >>> nth(((l, \"zebra\")\n    'raw-unicode-escape'\n    \"\"\"\n\n    return _unpack(\"<-unicode-escape(cmd, * cols))\n<|endoftext|>"
+        },
+        {
+          "task_id": "t3-api-handler",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unmatched ')' (<unknown>, line 1)",
+          "candidate_head": "\n\n    >>> IS_pair(Version)))\n    1\n    >>> IS_pair(io.BytesIO()\n   )\n    ['raw-unicode-escape')\n    \"\"\"\n\n    return ch in ws\n<|endoftext|>"
+        },
+        {
+          "task_id": "t3-security-safe-substitute",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated string literal (detected at line 1) (<unknown>, line 1)",
+          "candidate_head": "\n\n    >>> square(' ')\")\n    ['raw-ls')\n    \"\"\"\n\n    return self.val = self.val **)\n<|endoftext|>"
+        },
+        {
+          "task_id": "t3-performance-sort-k",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 7) (<unknown>, line 5)",
+          "candidate_head": "\n        >>> pi[elem[:-1] = object()\n        None\n        >>> JsonPointer.is_JUNK(io.50)\n        None\n        \"\"\"\n        return self.release\n<|endoftext|>"
+        },
+        {
+          "task_id": "t3-multi-call-node",
+          "passed": false,
+          "failure_category": null,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 5) (<unknown>, line 3)",
+          "candidate_head": "\n        >>> Counter('ls') in all_classes(f)\n        None\n        \"\"\"\n        return self.release[2] if len(self.release) >= 1 else 0\n<|endoftext|>"
+        }
+      ]
+    }
+  },
+  "c1_diagnosis_breakdown": {
+    "truncation": 3,
+    "syntax_error": 27
+  },
+  "c1_ranked_diagnoses": [
+    [
+      "syntax_error",
+      27
+    ],
+    [
+      "truncation",
+      3
+    ]
+  ],
+  "c3_teacher_forced_token_accuracy": {
+    "dense-control": {
+      "train": 0.4059,
+      "heldout": 0.4698
+    },
+    "joint-stage9": {
+      "train": 0.9979,
+      "heldout": 0.6285
+    }
+  },
+  "c3_memorization_probe": {
+    "n_records": 8,
+    "steps": 240,
+    "lr": 5e-05,
+    "probe_train_loss_before": 2.6055,
+    "probe_train_loss_after": 1.1926,
+    "generation": {
+      "per_record": [
+        {
+          "record": "once",
+          "nonempty": true,
+          "parses": false,
+          "reference_token_overlap": 0.0658,
+          "candidate_head": "\ndef all_(c: type[0]\ndef all_(c:\n    \"\"\"\n    return a list of the\n    >>> list in all_classes(list)\n    True\n    \"\"\"\n   "
+        },
+        {
+          "record": "SequenceMatcher.set_seq2",
+          "nonempty": true,
+          "parses": false,
+          "reference_token_overlap": 0.087,
+          "candidate_head": "\ndef all_(2.1, 1)\n    \"\"\"\n    return a list of the\n    >>> list in all_classes(list)\n    True\n    \"\"\"\n    return c.appen"
+        },
+        {
+          "record": "bypass_when",
+          "nonempty": true,
+          "parses": false,
+          "reference_token_overlap": 0.1429,
+          "candidate_head": "\ndef all_(c:\n    \"\"\"\n    return a list of the c of the c in the\n    >>> list in all_classes(list)\n    True\n    \"\"\"\n    r"
+        },
+        {
+          "record": "Context.max",
+          "nonempty": true,
+          "parses": false,
+          "reference_token_overlap": 0.1029,
+          "candidate_head": "\ndef a___(self, a):\n        \"\"\"\n    return a list of the list of the\n    >>> list in a list of the list in the\n    >>> l"
+        },
+        {
+          "record": "_parse_request_range",
+          "nonempty": true,
+          "parses": false,
+          "reference_token_overlap": 0.0721,
+          "candidate_head": "\ndef a_value(\n    \"\"\"\n    return a list of the c.\n    >>> list in the_value is_args,\n    \"\"\"\n    return c.append(list)\n<"
+        },
+        {
+          "record": "JsonPointer.contains",
+          "nonempty": true,
+          "parses": false,
+          "reference_token_overlap": 0.125,
+          "candidate_head": "\ndef all_(self)\n    >>> list in the c in the c in the\n    >>> list in all_self)\n    True\n    \"\"\"\n    return c.append(\n  "
+        },
+        {
+          "record": "all_classes",
+          "nonempty": true,
+          "parses": false,
+          "reference_token_overlap": 0.4545,
+          "candidate_head": "\ndef all_None(c:\n    \"\"\"\n    return a list of all a list of the\n    >>> list in all_list(list)\n    True\n    \"\"\"\n    retu"
+        },
+        {
+          "record": "shebang_matches",
+          "nonempty": true,
+          "parses": false,
+          "reference_token_overlap": 0.0851,
+          "candidate_head": "\ndef the___(\ndef_):\n    \"\"\"\n    return a list of the\n    >>> list in the_classes(b)\n    True\n    \"\"\"\n    return c.append"
+        }
+      ],
+      "mean_reference_token_overlap": 0.1419,
+      "parseable_rate": 0.0
+    }
+  },
+  "c4_prompt_format_ab": {
+    "dense-control": {
+      "eval_style": {
+        "n": 3,
+        "parseable_rate": 0.0,
+        "nonempty_rate": 1.0
+      },
+      "train_style": {
+        "n": 3,
+        "parseable_rate": 0.0,
+        "nonempty_rate": 1.0
+      }
+    },
+    "joint-stage9": {
+      "eval_style": {
+        "n": 3,
+        "parseable_rate": 0.0,
+        "nonempty_rate": 1.0
+      },
+      "train_style": {
+        "n": 3,
+        "parseable_rate": 0.0,
+        "nonempty_rate": 1.0
+      }
+    }
+  },
+  "c4_decode_ablation": {
+    "baseline_t0.2_topk50_180": {
+      "n": 3,
+      "distinct_outputs": 3,
+      "nonempty": 1.0,
+      "parseable": 0.0,
+      "passed": 0.0
+    },
+    "greedy_topk1_180": {
+      "n": 3,
+      "distinct_outputs": 3,
+      "nonempty": 1.0,
+      "parseable": 0.0,
+      "passed": 0.0
+    },
+    "longer_320_t0.2_topk50": {
+      "n": 3,
+      "distinct_outputs": 3,
+      "nonempty": 1.0,
+      "parseable": 0.0,
+      "passed": 0.0
+    }
+  },
+  "c4_remediation_extended_sft": {
+    "protocol": "two controlled arms at identical steps/lr/seeds: legacy make_batch (the stage-6 starved path, drops records unfit at seq len) vs the stage-6 validated chunked path; promotion strictly vs the C1 baseline",
+    "steps": 400,
+    "lr": 5e-05,
+    "parent_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage6/stage6-epoch-002.pt",
+    "arms": {
+      "legacy_batching": {
+        "heldout_curve": [
+          {
+            "step": 0,
+            "heldout": 3.3015
+          },
+          {
+            "step": 100,
+            "heldout": 3.2393,
+            "steps_with_targets_in_chunk": 74
+          },
+          {
+            "step": 200,
+            "heldout": 3.1996,
+            "steps_with_targets_in_chunk": 82
+          },
+          {
+            "step": 300,
+            "heldout": 3.1584,
+            "steps_with_targets_in_chunk": 74
+          },
+          {
+            "step": 400,
+            "heldout": 3.1081,
+            "steps_with_targets_in_chunk": 80
+          }
+        ],
+        "benchmarks_after": {
+          "v1_pass_at_1": 0.0,
+          "v3_pass_at_1": 0.0
+        },
+        "per_task_v3_after": [
+          {
+            "task_id": "t3-run-length-encode",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-interval-merge",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-sql-sqlite-aggregate",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-sql-sqlite-window-free",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-debug-off-by-one",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-debug-mutation",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-testgen-cases",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-refactor-fluent",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-api-handler",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-security-safe-substitute",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-performance-sort-k",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-multi-call-node",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          }
+        ],
+        "per_task_v1_after": [
+          {
+            "task_id": "t-palindrome",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t-fizzbuzz",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t-wordcount",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          }
+        ]
+      },
+      "chunked_batching": {
+        "heldout_curve": [
+          {
+            "step": 0,
+            "heldout": 3.3015
+          },
+          {
+            "step": 100,
+            "heldout": 3.2234,
+            "steps_with_targets_in_chunk": 100
+          },
+          {
+            "step": 200,
+            "heldout": 3.1681,
+            "steps_with_targets_in_chunk": 100
+          },
+          {
+            "step": 300,
+            "heldout": 3.1261,
+            "steps_with_targets_in_chunk": 100
+          },
+          {
+            "step": 400,
+            "heldout": 3.0881,
+            "steps_with_targets_in_chunk": 100
+          }
+        ],
+        "benchmarks_after": {
+          "v1_pass_at_1": 0.0,
+          "v3_pass_at_1": 0.0
+        },
+        "per_task_v3_after": [
+          {
+            "task_id": "t3-run-length-encode",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-interval-merge",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-sql-sqlite-aggregate",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-sql-sqlite-window-free",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-debug-off-by-one",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-debug-mutation",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-testgen-cases",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-refactor-fluent",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-api-handler",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-security-safe-substitute",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-performance-sort-k",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t3-multi-call-node",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          }
+        ],
+        "per_task_v1_after": [
+          {
+            "task_id": "t-palindrome",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t-fizzbuzz",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          },
+          {
+            "task_id": "t-wordcount",
+            "passed": false,
+            "exit_code": 2,
+            "candidate_nonempty": true,
+            "failure_category": "runtime",
+            "seconds": 0.0,
+            "tokens": 180,
+            "family": "v1"
+          }
+        ]
+      }
+    },
+    "arm_improves_baseline": {
+      "legacy_batching": false,
+      "chunked_batching": false
+    },
+    "baseline_v1_pass_at_1": 0.0,
+    "baseline_v3_pass_at_1": 0.0,
+    "checkpoints": [
+      {
+        "path": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage10-extended-legacy_batching.pt",
+        "sha256": "57f0048a9ba8175ef8309b7d254aa43bb7315ac55568b9402cba206683e036c4",
+        "steps": 400,
+        "batching": "legacy_batching"
+      },
+      {
+        "path": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage10-extended-chunked_batching.pt",
+        "sha256": "ff6ea14895271358dc8dd3dc51954f387632a0a01a104ce336d6655e8b34a2e8",
+        "steps": 400,
+        "batching": "chunked_batching"
+      }
+    ],
+    "promotion_decision": "NOT PROMOTED - no immutable-benchmark improvement over the executed baseline; negative result recorded"
+  },
+  "conclusion": "dataset: n=332, fit_rate@seq256=0.2892, dropped=236, splits_deterministic=True; graders verified on reference solutions (v1 1.0, v3 1.0); teacher-forced heldout token accuracy dense=0.4698; memorization probe train loss 2.6055 -> 1.1926 with free-run overlap 0.1419; dominant diagnoses [('syntax_error', 27), ('truncation', 3)]; extended SFT 400 steps x2 arms: legacy_batching: heldout 3.3015 -> 3.1081, pass@1 v1 0.0 -> 0.0, v3 0.0 -> 0.0; chunked_batching: heldout 3.3015 -> 3.0881, pass@1 v1 0.0 -> 0.0, v3 0.0 -> 0.0; NOT PROMOTED - no immutable-benchmark improvement over the executed baseline; negative result recorded",
+  "experiment": {
+    "experiment_id": "stage10-C-pass1-root-cause",
+    "parent_commit": "a8c4e98",
+    "source_commit": "a8c4e98377bd",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "pass@1=0.0 stems from training-scale limits (starved SFT) plus instruction/format distance, not from a broken grader or decoding",
+    "acceptance_criteria": "each cause needs a measured instrument; remediation counts only if immutable-benchmark results move",
+    "started": "2026-11-20T01:52:52+0000",
+    "finished": "2026-11-20T01:58:10+0000",
+    "decision": "EXECUTED"
+  }
+}
