@@ -296,61 +296,79 @@ class VirtualParameterStore:
     # ---------- accounting ----------
 
     def accounting(self) -> dict[str, Any]:
-        from cortex.model.virtual_slot import slot_adam_states
-
-        allocated = exact_virtual_count()
+        """Exact identity-based accounting across manifest, live slots and
+        persisted optimizer state. Unknown legacy shapes are never guessed."""
         manifest = _read_json(self.manifest_path)
-        shape_map = {
-            bank: dict(rows) for bank, rows in
-            manifest.get("initialized_slot_shapes", {}).items()
-        }
-        # Backfill exact shapes for legacy committed rows when their Adam
-        # state exists. Rows without shape metadata or optimizer state remain
-        # explicitly unknown; never infer a full 50,000 scalars per row.
+        shape_by_key = {}
+        committed_keys = set()
+        for bank_s, rows in manifest["initialized_rows"].items():
+            for row_s in rows:
+                committed_keys.add((int(bank_s), int(row_s)))
+        for bank_s, rows in manifest.get("initialized_slot_shapes", {}).items():
+            for row_s, shape in rows.items():
+                shape_by_key[(int(bank_s), int(row_s))] = int(
+                    shape.get("scalars", 2 * int(shape["dim"]) * int(shape["rank"])))
+
+        persisted_updated_keys = set()
+        persisted_updated_scalars = 0
         for path in self.root.glob("adam-*.npz"):
-            stem = path.stem.removeprefix("adam-")
-            bank_s, row_s = stem.split("-", 1)
+            bank_s, row_s = path.stem.removeprefix("adam-").split("-", 1)
+            key = (int(bank_s), int(row_s))
             with np.load(path) as state:
                 if int(state["step_count"]) <= 0:
                     continue
-                shape_map.setdefault(bank_s, {})[row_s] = {
-                    "dim": int(state["A_m"].shape[0]),
-                    "rank": int(state["A_m"].shape[1]),
-                    "scalars": int(state["A_m"].size + state["B_m"].size),
-                }
-        initialized = sum(
-            int(shape.get("scalars", 2 * int(shape["dim"]) * int(shape["rank"])))
-            for rows in shape_map.values() for shape in rows.values())
-        committed_rows = sum(len(rows) for rows in
-                             manifest["initialized_rows"].values())
-        known_shape_rows = sum(len(rows) for rows in shape_map.values())
-        unknown_shape_rows = max(0, committed_rows - known_shape_rows)
-        activated = grads = updated = 0
-        for st in self._slots.values():
-            activated += st.A.numel() + st.B.numel()
-            if st.A.grad is not None or st.B.grad is not None:
-                nz = (st.A.grad is not None
-                      and float(st.A.grad.abs().sum()) > 0) or (
-                    st.B.grad is not None
-                    and float(st.B.grad.abs().sum()) > 0)
-                if nz:
-                    grads += st.A.numel() + st.B.numel()
+                n = int(state["A_m"].size + state["B_m"].size)
+                shape_by_key[key] = n
+                persisted_updated_keys.add(key)
+                persisted_updated_scalars += n
+
+        live_keys = set(self._slots)
+        live_grad_keys = set()
+        live_updated_keys = set()
+        for key, st in self._slots.items():
+            n = st.A.numel() + st.B.numel()
+            shape_by_key.setdefault(key, n)
+            if ((st.A.grad is not None and bool((st.A.grad != 0).any()))
+                    or (st.B.grad is not None and bool((st.B.grad != 0).any()))):
+                live_grad_keys.add(key)
             if slot_adam_states(st):
-                updated += st.A.numel() + st.B.numel()
-        trained = updated
+                live_updated_keys.add(key)
+
+        activated_keys = committed_keys | live_keys | persisted_updated_keys
+        received_keys = live_grad_keys | persisted_updated_keys
+        updated_keys = persisted_updated_keys | live_updated_keys
+
+        def scalar_count(keys):
+            known = sum(shape_by_key[k] for k in keys if k in shape_by_key)
+            unknown = sum(1 for k in keys if k not in shape_by_key)
+            return int(known), int(unknown)
+
+        initialized, initialized_unknown = scalar_count(committed_keys)
+        activated, activated_unknown = scalar_count(activated_keys)
+        received, received_unknown = scalar_count(received_keys)
+        updated, updated_unknown = scalar_count(updated_keys)
         return {
-            "allocated": allocated,
-            "initialized": int(initialized),
-            "initialized_unknown_rows": int(unknown_shape_rows),
-            "initialized_exact": unknown_shape_rows == 0,
+            "allocated": exact_virtual_count(),
+            "initialized": initialized,
+            "initialized_unknown_rows": initialized_unknown,
+            "initialized_exact": initialized_unknown == 0,
             "activated": activated,
-            "received_gradients": grads,
+            "activated_unknown_slots": activated_unknown,
+            "received_gradients": received,
+            "received_gradients_unknown_slots": received_unknown,
             "optimizer_updated": updated,
+            "optimizer_updated_unknown_slots": updated_unknown,
             "demonstrably_trained": updated,
-            "updates_applied_total": self._trained_updates(),
-            "partitions_touched": len(
-                _read_json(self.manifest_path)["initialized_rows"]),
+            "updates_applied_total": sum(
+                int(st.step_count) for st in self._slots.values()),
+            "persisted_optimizer_updated_scalars": persisted_updated_scalars,
+            "partitions_touched": len(manifest["initialized_rows"]),
             "partitions_total": N_BANKS,
+            "invariants_hold": (
+                exact_virtual_count() >= initialized >= received
+                >= updated and updated < exact_virtual_count()
+                and initialized_unknown == 0 and activated_unknown == 0
+                and received_unknown == 0 and updated_unknown == 0),
         }
 
     def _trained_updates(self) -> int:
