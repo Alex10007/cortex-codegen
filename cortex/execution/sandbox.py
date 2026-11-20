@@ -364,7 +364,7 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
         dur = time.time() - start
 
     if filesystem_isolated:
-        isolation = "bwrap+user-pid-net-ipc-uts+rlimits+readonly-runtime+workspace"
+        isolation = "bwrap+user-pid-net-ipc-uts+rlimits+cgroup-v2-cpu-memory-pids+readonly-runtime+workspace"
     else:
         isolation = ("netns+rlimits+temporary-workspace" if netns
                      else "rlimits+temporary-workspace")
