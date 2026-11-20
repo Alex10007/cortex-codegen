@@ -188,9 +188,10 @@ class CortexAgent:
                 f"prompt uses {len(encoded)} tokens but model context permits "
                 f"{max_input} input tokens with {max_new_tokens} output tokens")
         ids = torch.tensor([encoded], dtype=torch.long)
-        out = self.model.generate(ids, max_new_tokens=max_new_tokens,
-                                  temperature=temperature,
-                                  eot_id=self.tokenizer.eot_id)
+        with torch.inference_mode():
+            out = self.model.generate(ids, max_new_tokens=max_new_tokens,
+                                      temperature=temperature,
+                                      eot_id=self.tokenizer.eot_id)
         text = self.tokenizer.decode(out[0].tolist())
         return text
 
