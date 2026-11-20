@@ -123,9 +123,11 @@ def training_plan(cfg: ModelConfig, batch_size: int = 8,
     elif fits_single_gpu:
         strategy = "single-GPU bf16, gradient accumulation via micro-batching"
     else:
-        n_gpu_shards = max(2, math.ceil(
-            (mem["param_bytes"] + mem["grad_bytes"] + mem["optimizer_bytes"])
-            / 40e9))
+        # FSDP shards parameter/gradient/optimizer state and data-parallel
+        # microbatches distribute activation memory. Include both terms;
+        # sizing from optimizer state alone materially undercounts the
+        # current explicit quadratic-attention implementation.
+        n_gpu_shards = max(2, math.ceil(mem["total_bytes_est"] / 40e9))
         strategy = (f"multi-GPU: ZeRO-3 / FSDP full sharding across "
                     f"~{n_gpu_shards} x 40GB devices (DDP world); CPU-offload "
                     f"optimizer optional")
