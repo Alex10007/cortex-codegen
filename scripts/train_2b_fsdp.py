@@ -93,7 +93,6 @@ def main() -> int:
     cuda = profile["cuda"]
     total_devices = int(cuda.get("device_count", 0))
     total_memory = cuda.get("total_memory_bytes", [])
-    free_memory = cuda.get("free_memory_bytes", [])
     # Select the plan against the smallest physical device, not the largest.
     device_budget_gb = (
         min(total_memory) / 1e9 if total_devices and total_memory else 40.0)
