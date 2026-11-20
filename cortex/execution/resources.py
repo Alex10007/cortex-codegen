@@ -83,11 +83,12 @@ class CgroupV2:
             if not (path / "cgroup.events").exists():
                 raise CgroupUnavailable("cgroup.events is unavailable; process-tree exit cannot be verified")
             return cls(path)
-        except Exception:
+        except Exception as setup_error:
             try:
                 path.rmdir()
-            except OSError:
-                pass
+            except OSError as cleanup_error:
+                setup_error.add_note(
+                    f"failed to remove partially configured cgroup {path}: {cleanup_error}")
             raise
 
     @staticmethod
