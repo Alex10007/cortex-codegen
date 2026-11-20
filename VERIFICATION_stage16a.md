@@ -126,7 +126,8 @@ Existing Stage 8 accounting assertions were updated to use exact slot scalars ra
 
 1. Execute all 26 new tests and the full existing suite on a functioning runner; fix any failures.
 2. Add efficient attention (e.g. verified SDPA/FlashAttention path with correct causal and padding-mask semantics) and benchmark peak GPU memory.
-3. Build a qualified distributed MoE + virtual training path; the existing 2B FSDP script trains the dense transformer and does not establish full 502B joint distributed training.
+3. Add explicit device placement for virtual slot parameters and optimizer state; the current `JointTrainer` remains CPU-oriented and is not yet a qualified GPU joint-training path.
+4. Build a qualified distributed MoE + virtual training path; the existing 2B FSDP script trains the dense transformer and does not establish full 502B joint distributed training.
 4. Add explicit device placement for virtual slot parameters and optimizer state before claiming GPU joint training; the current coordinator path has primarily been exercised on CPU.
 5. Integrate a model-backed patcher into the engineering pipeline; current pipeline still accepts an injected patcher and does not autonomously implement changes through the API.
 6. Add API rate limiting and complete production security controls.
