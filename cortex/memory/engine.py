@@ -83,6 +83,13 @@ class MemoryEngine:
                         "payload": json.loads(r[2]), "created_at": r[3]})
         return out
 
+    def facts(self, project: str) -> dict[str, str]:
+        rows = self._conn.execute(
+            "SELECT key, value FROM facts WHERE project=? ORDER BY key",
+            (project,),
+        ).fetchall()
+        return {str(key): str(value) for key, value in rows}
+
     def verified_outcomes(self, project: str) -> list[dict[str, Any]]:
         return [e for e in self.events(project, limit=500)
                 if e["verified"] and e["kind"] == "outcome"]
