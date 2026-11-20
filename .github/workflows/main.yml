@@ -4,12 +4,23 @@ on:
   push:
     branches: [main, "fibonera/**"]
   pull_request:
-    branches: [main]
+    # PR #2 targets the Stage-15 remediation base, not main.
+    branches: [main, "vibe/cortex-core-b71b2c"]
   workflow_dispatch:
+
+# Avoid queuing one hosted runner per rapid commit. A newer push/PR update
+# supersedes an older run for the same source branch.
+concurrency:
+  group: cortex-ci-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,6 +43,7 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

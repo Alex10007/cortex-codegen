@@ -227,3 +227,13 @@ The behavioral qualification now attempts to exceed the aggregate process cap an
 - Strict sandbox CPU quota is configurable for controlled qualification. CPU, memory and process-limit qualification now requires kernel event counters, not merely configuration or failed child-spawn attempts.
 - Added controlled CPU-bound and concurrent aggregate-memory workloads to behavioral qualification. These require live delegated Linux cgroup v2 + Bubblewrap and remain **NOT RUNTIME-VERIFIED** until run on that host.
 - Seccomp remains **NOT ENABLED / NOT CERTIFIED**; no unverified default-deny policy or speculative dependency was introduced. Disk I/O remains `NOT_CONFIGURED`.
+
+
+## Stage 16A.9 — CI trigger and queue hygiene
+
+- Corrected the `pull_request.branches` filter to include `vibe/cortex-core-b71b2c`, the actual base branch of PR #2. Previously the workflow only listened for pull requests targeting `main`; PR #2 therefore depended on branch-push events and did not receive the intended pull-request validation trigger.
+- Added per-source-branch workflow concurrency with stale-run cancellation so rapid commit bursts do not queue one hosted runner per commit.
+- Added explicit read-only repository-token permissions for CI and bounded test/deploy job timeouts.
+- Rechecked Actions run history: the latest run and its retry both failed within seconds, the test job had no steps and no retrievable logs. The available evidence places the failure before workflow steps/runner execution; it does **not** establish a Python/test failure and does not identify a definitive GitHub-side cause.
+- A runner retry was issued; it again failed before steps. This is an external execution-capacity/service/configuration blocker, not something repository source can conclusively repair. A functioning GitHub-hosted or owner-managed self-hosted runner is still required to execute the test suite.
+- No test is marked passed by this increment. Stage 16A remains **NOT VERIFIED** until CI executes. No training, benchmark promotion, checkpoint/data mutation, merge, or `main` update was performed.
