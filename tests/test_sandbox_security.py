@@ -201,3 +201,28 @@ def test_reader_start_failure_still_reaps_launched_process(monkeypatch):
 
     assert len(launched) == 1
     assert launched[0].returncode is not None
+
+
+
+def test_unlaunched_cgroup_cleanup_attempts_all_steps_after_failure():
+    from cortex.execution.sandbox import _cleanup_unlaunched_cgroup
+
+    class PartiallyFailingCgroup:
+        def __init__(self):
+            self.events = []
+
+        def kill(self):
+            self.events.append("kill")
+            raise OSError("injected kill failure")
+
+        def wait_empty(self):
+            self.events.append("wait_empty")
+
+        def close(self):
+            self.events.append("close")
+
+    group = PartiallyFailingCgroup()
+    failures = _cleanup_unlaunched_cgroup(group)
+    assert group.events == ["kill", "wait_empty", "close"]
+    assert len(failures) == 1
+    assert "injected kill failure" in failures[0]
