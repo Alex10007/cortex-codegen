@@ -139,3 +139,12 @@ def test_legacy_slot_without_shape_or_optimizer_is_reported_unknown(small_store)
     assert accounting["initialized"] == 0
     assert accounting["initialized_unknown_rows"] == 1
     assert accounting["initialized_exact"] is False
+
+def test_fsdp_planner_refuses_2b_until_attention_fits_cluster_matrix():
+    from scripts.train_2b_fsdp import required_gpus
+
+    # The current explicit attention implementation materializes quadratic
+    # sequence matrices; even the largest validated 80-GB device plan must
+    # refuse rather than claim the old under-estimated 2B memory requirement.
+    with pytest.raises(RuntimeError, match="no cluster size"):
+        required_gpus("cortex-2b", batch_size=8, gpu_memory_gb=80.0)
