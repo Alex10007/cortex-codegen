@@ -33,6 +33,33 @@ AUX_COEF = 0.01
 Z_COEF = 0.001
 
 
+def estimate_moe_physical_parameters(
+        cfg: ModelConfig, n_physical: int = PHYS_EXPERTS,
+        n_virtual: int = VIRTUAL_ROUTES, expert_ffn: int | None = None,
+        expert_every: int = 1) -> dict[str, int]:
+    """Compute MoE physical parameter count without allocating the model."""
+    if n_physical < 1 or n_virtual < 0 or expert_every < 1:
+        raise ValueError("invalid MoE expert configuration")
+    ff = expert_ffn or cfg.d_ff
+    dense_mlp = 2 * cfg.dim * cfg.d_ff + cfg.d_ff + cfg.dim
+    expert_mlp = 2 * cfg.dim * ff + ff + cfg.dim
+    router = cfg.dim * (n_physical + n_virtual)
+    moe_layers = len(range(0, cfg.n_layers, expert_every))
+    dense_reference = cfg.theoretical_param_count()
+    physical_total = (
+        dense_reference
+        + moe_layers * (n_physical * expert_mlp + router - dense_mlp))
+    return {
+        "dense_reference_parameters": int(dense_reference),
+        "moe_layers": int(moe_layers),
+        "backbone_parameters": int(physical_total
+                                   - moe_layers * (n_physical * expert_mlp + router)),
+        "physical_expert_parameters": int(moe_layers * n_physical * expert_mlp),
+        "router_parameters": int(moe_layers * router),
+        "physical_total_parameters": int(physical_total),
+    }
+
+
 class MoEFFN(nn.Module):
     """Physical experts + virtual routes behind one shared top-k router."""
 
@@ -170,6 +197,8 @@ class CortexMoETransformer(CortexTransformer):
                  n_virtual: int = VIRTUAL_ROUTES, top_k: int = TOP_K,
                  aux_coef: float = AUX_COEF, z_coef: float = Z_COEF,
                  expert_ffn: int | None = None, expert_every: int = 1):
+        if expert_every < 1:
+            raise ValueError("expert_every must be at least one")
         super().__init__(cfg)
         expert_ffn = expert_ffn or cfg.d_ff
         self.aux_coef = aux_coef
