@@ -71,7 +71,7 @@ No training run was launched. No historical benchmark, dataset, Stage 12 champio
 - API code-execution routes fail closed unless a working bubblewrap user/pid/network namespace capability probe succeeds.
 - The sandbox uses a read-only runtime and disposable writable workspace when bubblewrap is available.
 - The sandbox reports degraded isolation separately; API execution does not accept that fallback.
-- The pipeline distinguishes baseline test validation from actual implementation: without applied edits it cannot claim the requested objective was implemented.
+- The pipeline distinguishes baseline test validation from actual implementation: without applied edits it cannot claim the requested objective was implemented. Even after edits and passing repository tests, it requires an explicit task-specific `objective_verifier` callback before setting `verified=true`; the API does not currently supply a model-backed patcher or objective verifier.
 
 This improves isolation, but it is not a certification of production security. Rate limiting, seccomp policy, cgroup-level resource isolation, deployment threat modeling and external penetration testing remain outstanding.
 
@@ -109,7 +109,7 @@ Existing Stage 8 accounting assertions were updated to use exact slot scalars ra
 
 - Source changes: **implemented on remediation branch**.
 - Regression tests: **written; not yet executed in this session**.
-- GitHub Actions: [latest run](https://github.com/Alex10007/cortex-codegen/actions/runs/44807171879) concluded failure before a runner started. The test job has `runner_id=0`, no steps and no logs. This is not evidence of either a passing or failing test suite.
+- GitHub Actions: [latest run](https://github.com/Alex10007/cortex-codegen/actions/runs/44807781708) concluded failure before a runner started. The test job has `runner_id=0`, no steps and no logs. This is not evidence of either a passing or failing test suite.
 - 2B physical training: **BLOCKED** pending efficient attention and real hardware qualification.
 - 500B virtual training: infrastructure is corrected in source, but the corrected optimizer/store path has not yet been re-executed at scale.
 - MoE physical model: parameter count is now reported honestly; the default 2B MoE model is larger than the 2.056B dense reference.
