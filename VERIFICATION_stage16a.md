@@ -237,3 +237,12 @@ The behavioral qualification now attempts to exceed the aggregate process cap an
 - Rechecked Actions run history: the latest run and its retry both failed within seconds, the test job had no steps and no retrievable logs. The available evidence places the failure before workflow steps/runner execution; it does **not** establish a Python/test failure and does not identify a definitive GitHub-side cause.
 - A runner retry was issued; it again failed before steps. This is an external execution-capacity/service/configuration blocker, not something repository source can conclusively repair. A functioning GitHub-hosted or owner-managed self-hosted runner is still required to execute the test suite.
 - No test is marked passed by this increment. Stage 16A remains **NOT VERIFIED** until CI executes. No training, benchmark promotion, checkpoint/data mutation, merge, or `main` update was performed.
+
+
+## Stage 16A.10 — Strict sandbox launch and evidence correctness
+
+- Static review found that the cgroup-gated bootstrap source encoded literal backslash-n text instead of line breaks. The launcher source is now generated from explicit source lines and has a compile-based regression test.
+- Strict sandbox mode previously applied RLIMIT_NPROC at the same threshold as cgroup pids.max. That could make an unprivileged process fail at RLIMIT_NPROC before the kernel cgroup counter recorded pids.events:max. Strict mode now leaves process-count enforcement to the delegated cgroup by raising the soft RLIMIT_NPROC to its existing hard ceiling; degraded mode retains its per-process limit.
+- Added focused regression tests for launcher syntax and both strict/degraded process-limit policies.
+- **Tests not executed**: GitHub Actions still fails before job steps. Stage 16A remains NOT VERIFIED and live cgroup/Bubblewrap qualification remains outstanding.
+- No training, benchmark promotion, checkpoint/data mutation, PR merge, or main update occurred.
