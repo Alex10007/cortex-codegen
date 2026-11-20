@@ -51,7 +51,10 @@ class CgroupV2:
         if any(type(value) is not int or value < 1
                for value in limits.values()):
             raise ValueError("cgroup resource limits must be positive integers")
-        # cgroup v2 cpu.max accepts periods from 1ms through 1s.
+        # The CFS bandwidth controller requires a quota and period of at
+        # least 1ms; cgroup v2 documents a 1ms–1s period range.
+        if cpu_quota_us < 1_000:
+            raise ValueError("cpu_quota_us must be at least 1000 microseconds")
         if not 1_000 <= cpu_period_us <= 1_000_000:
             raise ValueError("cpu_period_us must be between 1000 and 1000000 microseconds")
 
