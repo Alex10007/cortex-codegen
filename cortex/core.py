@@ -120,9 +120,10 @@ class CortexAgent:
                         raise RuntimeError(
                             "virtual store integrity failure: "
                             f"{integrity['bad_rows'][:5]}")
-                    if int(store.manifest.get("committed_step", 0)) < int(ck["step"]):
+                    if int(store.manifest.get("committed_step", 0)) != int(ck["step"]):
                         raise RuntimeError(
-                            "virtual store is behind the physical checkpoint")
+                            "virtual store committed step does not match the "
+                            "physical checkpoint")
                     rank = int(lineage.get("virtual_rank", 0))
                     seed = int(lineage.get("virtual_seed", 4242))
                     slots = {}
