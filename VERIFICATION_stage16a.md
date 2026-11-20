@@ -319,3 +319,22 @@ Runner investigation:
 **Status:** pre-launch cleanup edge addressed in source; executable verification remains BLOCKED. Strict sandbox remains NOT RUNTIME-VERIFIED. The next useful action requires a functioning GitHub-hosted runner or an administrator-provisioned, registered self-hosted Linux runner. Do not change the workflow to self-hosted until such a runner is online and authorized.
 
 No model training, checkpoint/data changes, benchmark promotion, PR merge, or main-branch update occurred.
+
+
+
+## Stage 16A.15 — independent cgroup cleanup attempts
+
+Static lifecycle review found that two pre-launch failure handlers used a single sequential `try` block for `cgroup.kill`, `wait_empty`, and `close`. If the first operation failed, later cleanup operations were skipped. This could leave an otherwise-empty cgroup allocated even when removal was still possible.
+
+Changes:
+- Added one shared unlaunched-cgroup cleanup routine that attempts kill, empty-state verification, and removal independently, retaining each failure for the original exception note.
+- Reused it for both launch-gate preparation failures and `Popen` launch failures.
+- Cgroup creation rollback no longer silently discards a failed `rmdir`; the cleanup failure is attached to the original configuration exception.
+- Added failure-injection coverage proving that wait and removal are still attempted after an injected cgroup-kill failure.
+
+Verification:
+- Source-level edits and regression test are committed; **the test has not been executed**.
+- The latest Actions job still has no step records or logs, so no CI pass/fail conclusion about Python tests is available.
+- Strict sandbox remains **NOT RUNTIME-VERIFIED**. Live delegated cgroup v2 + Bubblewrap qualification remains required.
+
+No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or `main` update occurred.
