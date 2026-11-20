@@ -175,9 +175,28 @@ class VirtualParameterStore:
                     f"persisted slot {key} has dim/rank {expected}; "
                     f"requested {(dim, rank)}")
         elif committed:
-            raise RuntimeError(
-                f"persisted slot {key} has no shape metadata; refusing "
-                "ambiguous legacy row reinterpretation")
+            # Legacy Stage 7-15 rows predate shape metadata. Their optimizer
+            # tensors provide an exact shape witness; accept only an exact
+            # match. A committed row without either source remains ambiguous.
+            opt_path = self.root / f"adam-{bank:05d}-{row:06d}.npz"
+            if not opt_path.exists():
+                raise RuntimeError(
+                    f"persisted slot {key} has no shape metadata or optimizer "
+                    "shape witness; refusing ambiguous legacy row reinterpretation")
+            with np.load(opt_path) as state:
+                if int(state["step_count"]) <= 0:
+                    raise RuntimeError(
+                        f"persisted slot {key} has no trained optimizer shape "
+                        "witness; refusing ambiguous legacy row reinterpretation")
+                a_shape = tuple(state["A_m"].shape)
+                b_shape = tuple(state["B_m"].shape)
+            if a_shape != (dim, rank) or b_shape != (rank, dim):
+                raise ValueError(
+                    f"legacy optimizer slot {key} has shapes "
+                    f"A{a_shape} / B{b_shape}; requested "
+                    f"A{(dim, rank)} / B{(rank, dim)}")
+            persisted_shape = {"dim": dim, "rank": rank,
+                               "scalars": 2 * dim * rank}
 
         page = self.page(bank)
         raw = np.asarray(page[row])
@@ -311,6 +330,8 @@ class VirtualParameterStore:
     def accounting(self) -> dict[str, Any]:
         """Exact identity-based accounting across manifest, live slots and
         persisted optimizer state. Unknown legacy shapes are never guessed."""
+        from cortex.model.virtual_slot import slot_adam_states
+
         manifest = _read_json(self.manifest_path)
         shape_by_key = {}
         committed_keys = set()
