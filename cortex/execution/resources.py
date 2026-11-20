@@ -51,6 +51,9 @@ class CgroupV2:
         if any(type(value) is not int or value < 1
                for value in limits.values()):
             raise ValueError("cgroup resource limits must be positive integers")
+        # cgroup v2 cpu.max accepts periods from 1ms through 1s.
+        if not 1_000 <= cpu_period_us <= 1_000_000:
+            raise ValueError("cpu_period_us must be between 1000 and 1000000 microseconds")
 
         path = base / ("cortex-" + uuid.uuid4().hex)
         try:
@@ -131,6 +134,9 @@ class CgroupV2:
             fields = line.split()
             if len(fields) != 2 or not fields[1].isdigit():
                 raise CgroupUnavailable(f"malformed counter in {path.name}: {line!r}")
+            if fields[0] in counters:
+                raise CgroupUnavailable(
+                    f"duplicate counter in {path.name}: {fields[0]!r}")
             counters[fields[0]] = int(fields[1])
         if not counters:
             raise CgroupUnavailable(f"no counters available in {path.name}")
@@ -151,9 +157,11 @@ class CgroupV2:
         memory_events = self._read_counters(self.path / "memory.events")
         pids_events = self._read_counters(self.path / "pids.events")
         try:
-            memory_current = int((self.path / "memory.current").read_text(encoding="ascii").strip())
-            if memory_current < 0:
-                raise ValueError("memory.current cannot be negative")
+            memory_text = (self.path / "memory.current").read_text(
+                encoding="ascii").strip()
+            if not memory_text.isascii() or not memory_text.isdecimal():
+                raise ValueError("memory.current must be a non-negative decimal integer")
+            memory_current = int(memory_text)
         except (OSError, ValueError) as exc:
             raise CgroupUnavailable(f"cannot read memory.current: {exc}") from exc
         return {
