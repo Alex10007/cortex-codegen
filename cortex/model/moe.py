@@ -83,7 +83,7 @@ class MoEFFN(nn.Module):
         counts = torch.zeros(self.n_experts, dtype=torch.long, device=x.device)
         for e in range(self.n_experts):
             sel = top_idx == e                                  # [N, k]
-            w = (top_vals * sel).sum(-1)                        # [N]
+            w = (gate * sel).sum(-1)                            # [N]
             rows = w > 0
             if not bool(rows.any()):
                 continue
@@ -183,12 +183,18 @@ class CortexMoETransformer(CortexTransformer):
             layer.clear_virtual_routes()
 
     def virtual_param_count(self) -> int:
-        n = set()
+        """Count unique attached virtual scalars, including both LoRA factors."""
+        slots: dict[tuple[int, int], object] = {}
         for layer in self.moe_layers:
             for slot in layer.virtual_slots.values():
-                key = (slot.bank, slot.row, slot.A.numel())
-                n.add(key)
-        return sum(k[2] for k in n)
+                key = (int(slot.bank), int(slot.row))
+                prior = slots.get(key)
+                if prior is not None and prior is not slot:
+                    raise RuntimeError(
+                        f"multiple SlotState objects own virtual slot {key}")
+                slots[key] = slot
+        return sum(slot.A.numel() + slot.B.numel()
+                   for slot in slots.values())
 
     def moe_param_count(self) -> dict[str, int]:
         phys = sum(
@@ -197,7 +203,10 @@ class CortexMoETransformer(CortexTransformer):
         return {
             "backbone_and_dense_mlp": self.actual_param_count() - phys,
             "physical_experts_routers": phys,
+            "virtual_parameters": self.virtual_param_count(),
             "total_actual": self.actual_param_count(),
+            "total_with_virtual": (
+                self.actual_param_count() + self.virtual_param_count()),
         }
 
     # -- loss ----------------------------------------------------------------
