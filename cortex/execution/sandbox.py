@@ -339,8 +339,10 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                 cgroup.close()
             raise RuntimeError("sandbox output pipes did not close after process cleanup")
 
+        cgroup_empty_after_cleanup = False
         if cgroup is not None:
             cgroup.close()
+            cgroup_empty_after_cleanup = True
 
         rc = proc.returncode
         out = bytes(captured["stdout"]).decode("utf-8", errors="replace")
@@ -381,6 +383,7 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                 "stdout_truncated": truncated["stdout"],
                 "stderr_truncated": truncated["stderr"],
                 "cgroup_v2_enforced": cgroup is not None,
+                "cgroup_empty_after_cleanup": cgroup_empty_after_cleanup,
                 "aggregate_cpu_limit": cgroup is not None,
                 "aggregate_memory_limit": cgroup is not None,
                 "aggregate_process_limit": cgroup is not None,
