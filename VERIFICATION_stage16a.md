@@ -402,3 +402,22 @@ Verification:
 - Strict sandbox remains **NOT RUNTIME-VERIFIED** pending a functioning Linux runner with delegated cgroup v2 and Bubblewrap.
 
 No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or main update occurred.
+
+
+## Stage 16A.19 — consistent delegated-root validation
+
+Static review found that CgroupV2.create() rejected delegated roots reached through symlink aliases in any path component, while probe_cgroup_v2() only rejected a symlink at the final component. This allowed qualification and execution setup to disagree about the same configured root.
+
+Changes:
+- Centralized absolute-path, strict resolution, directory, and full-path symlink-alias validation in CgroupV2._resolve_delegated_root().
+- Both create() and probe_cgroup_v2() now use the same validator and canonical root.
+- The probe now fails closed for unresolved roots and path aliases before reading controller files.
+- Added regression coverage for an intermediate-component symlink and a missing root, checking probe/create consistency.
+
+Verification:
+- Source and regression tests are committed; **no Python tests have been executed** in this increment.
+- This closes a source-level policy inconsistency only. It does not eliminate privileged concurrent mount/path replacement races or qualify live kernel cgroup behavior.
+- GitHub Actions has previously failed before emitting usable job steps/logs; no CI pass is claimed.
+- Strict sandbox remains **NOT RUNTIME-VERIFIED** pending a functioning Linux runner with delegated cgroup v2 and Bubblewrap.
+
+No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or main update occurred.
