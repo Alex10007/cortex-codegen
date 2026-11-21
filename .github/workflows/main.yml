@@ -3,9 +3,9 @@ name: Cortex CI (isolated self-hosted)
 on:
   push:
     branches: [main, "vibe/**", "fibonera/**"]
+  workflow_dispatch:
 
-# This workflow intentionally does not run for pull_request events.
-# The self-hosted laptop runner must never execute code from arbitrary forks.
+# No pull_request trigger: this laptop runner must not execute untrusted PR code.
 permissions:
   contents: read
 
@@ -15,12 +15,14 @@ concurrency:
 
 jobs:
   test:
-    # Register the ephemeral WSL runner with the exact cortex-wsl label.
+    if: github.actor == 'Alex10007'
     runs-on: [self-hosted, linux, x64, cortex-wsl]
     timeout-minutes: 90
     steps:
       - name: Checkout trusted repository push
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -30,6 +32,7 @@ jobs:
       - name: Runner preflight
         run: |
           set -euxo pipefail
+          id
           uname -a
           python --version
           python -m pip --version
@@ -40,14 +43,45 @@ jobs:
           with open("/proc/meminfo", encoding="utf-8") as f:
               print("\n".join(line.rstrip() for line in f if line.startswith(("MemTotal:", "MemAvailable:"))))
           PY
+          if mountpoint -q /mnt/c; then
+            echo "Refusing CI: Windows C: is mounted inside this WSL environment."
+            exit 1
+          fi
 
-      - name: Install CPU PyTorch
+      - name: Record immutable evidence baseline
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          set -euxo pipefail
+          git ls-files -z -- artifacts 'VERIFICATION*.md' |
+            xargs -0 -r sha256sum > "$RUNNER_TEMP/cortex-evidence.before"
+          test -s "$RUNNER_TEMP/cortex-evidence.before"
 
-      - name: Install project dependencies
-        run: python -m pip install -r requirements.txt
+      - name: Install dependencies, collect tests and execute suite
+        run: |
+          set -euxo pipefail
+          if [ -d tests ]; then
+            test_count="$(find tests -type f \( -name 'test_*.py' -o -name '*_test.py' \) | wc -l)"
+            if [ "$test_count" -eq 0 ]; then
+              echo "tests/ exists but contains no discoverable test modules."
+              exit 1
+            fi
+            python -m pip install --upgrade pip
+            python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+            python -m pip install -r requirements.txt
+            python -m pip check
+            python -m pip freeze
+            python -m pytest --collect-only -q tests/
+            python -m pytest -q tests/
+          else
+            echo "No tests/ directory on this legacy branch; running syntax validation only."
+            python -m py_compile app.py
+          fi
 
-      - name: Run complete test suite
-        run: python -m pytest -q tests/
+      - name: Verify evidence and repository were not modified
+        if: always()
+        run: |
+          set -euxo pipefail
+          if [ -f "$RUNNER_TEMP/cortex-evidence.before" ]; then
+            sha256sum --check "$RUNNER_TEMP/cortex-evidence.before"
+          fi
+          git diff --exit-code
+          git diff --cached --exit-code
