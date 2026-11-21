@@ -307,8 +307,9 @@ resolver, and resolves simple module-alias calls such as module_alias.run().
 Relative imports use the importing file package context. A from-package
 submodule form is resolved when the child module is indexed locally.
 
-Resolution is limited to uniquely indexed local modules and uniquely
-declared top-level symbols. Third-party modules, star imports, missing files,
+Resolution is limited to module-level import statements, uniquely indexed
+local modules, and uniquely declared top-level symbols. Function-local and
+class-local import statements are not currently mapped. Third-party modules, star imports, missing files,
 duplicate exports, and ambiguous module aliases are reported as unresolved or
 ambiguous; they are not guessed. Import aliases are treated as bindings, so
 a nearer local assignment or parameter shadows an imported name.
