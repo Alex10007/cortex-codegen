@@ -406,7 +406,7 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
         if tree is None:
             continue
         source_id = module_ids[module_key(relative)]
-        for node in ast.walk(tree):
+        for node in tree.body:
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     target_key = alias.name
