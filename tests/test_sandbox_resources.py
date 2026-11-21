@@ -247,6 +247,47 @@ def test_create_rejects_delegated_root_reached_through_symlink(tmp_path):
         CgroupV2.create(alias, mem_mb=128, nproc=4)
 
 
+def test_cgroup_refuses_operations_after_path_replacement(tmp_path):
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    group_path = root / "cortex-owned"
+    group_path.mkdir()
+    group = CgroupV2(group_path)
+
+    moved = root / "cortex-original"
+    group_path.rename(moved)
+    group_path.mkdir()
+    (group_path / "cgroup.events").write_text("populated 0\\n")
+
+    with pytest.raises(CgroupUnavailable, match="identity changed"):
+        group.kill()
+    with pytest.raises(CgroupUnavailable, match="identity changed"):
+        group.wait_empty()
+    with pytest.raises(CgroupUnavailable, match="identity changed"):
+        group.close()
+
+    assert group_path.is_dir()
+    assert moved.is_dir()
+
+
+def test_cgroup_rejects_symlink_replacement_without_touching_target(tmp_path):
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    original = root / "cortex-owned"
+    original.mkdir()
+    group = CgroupV2(original)
+    replacement = root / "replacement"
+    replacement.mkdir()
+    sentinel = replacement / "owner-sentinel"
+    sentinel.write_text("untouched")
+    original.rmdir()
+    original.symlink_to(replacement, target_is_directory=True)
+
+    with pytest.raises(CgroupUnavailable, match="identity changed|not the original directory"):
+        group.close()
+
+    assert sentinel.read_text() == "untouched"
+    assert replacement.is_dir()
+
+
 def test_uuid_collision_does_not_reuse_or_remove_existing_cgroup(tmp_path, monkeypatch):
     from cortex.execution import resources
 
