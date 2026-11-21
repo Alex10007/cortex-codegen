@@ -187,11 +187,16 @@ class CgroupV2:
 
             # mkdirat semantics: collision fails without following or reusing an existing entry.
             os.mkdir(child_name, mode=0o700, dir_fd=parent_fd)
+            entry_info = os.stat(child_name, dir_fd=parent_fd, follow_symlinks=False)
+            if not stat.S_ISDIR(entry_info.st_mode):
+                raise CgroupUnavailable("new execution cgroup entry is not a directory")
+            child_identity = (entry_info.st_dev, entry_info.st_ino)
             child_fd = os.open(child_name, directory_flags | nofollow, dir_fd=parent_fd)
             child_info = os.fstat(child_fd)
-            if not __import__("stat").S_ISDIR(child_info.st_mode):
-                raise CgroupUnavailable("new execution cgroup is not a directory")
-            child_identity = (child_info.st_dev, child_info.st_ino)
+            if (not stat.S_ISDIR(child_info.st_mode)
+                    or (child_info.st_dev, child_info.st_ino) != child_identity):
+                raise CgroupUnavailable(
+                    "new execution cgroup changed identity while opening")
 
             cls._write_to_fd(child_fd, "cpu.max", f"{cpu_quota_us} {cpu_period_us}")
             cls._write_to_fd(child_fd, "memory.max", str(mem_mb * 1024 * 1024))
