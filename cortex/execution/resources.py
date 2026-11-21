@@ -40,18 +40,42 @@ class CgroupV2:
             if (info.st_dev, info.st_ino) != self._identity:
                 raise CgroupUnavailable(
                     "execution cgroup changed while opening its directory")
-        except Exception:
-            self._close_directory_fds()
+        except Exception as setup_error:
+            failures = self._close_directory_fds()
+            for failure in failures:
+                setup_error.add_note(f"descriptor cleanup failed: {failure}")
             raise
 
-    def _close_directory_fds(self) -> None:
+    def _close_directory_fds(self) -> list[str]:
+        """Attempt every owned descriptor close; safe to call repeatedly."""
+        failures: list[str] = []
         for attribute in ("_dir_fd", "_parent_fd"):
             descriptor = getattr(self, attribute, -1)
-            if descriptor >= 0:
-                try:
-                    os.close(descriptor)
-                finally:
-                    setattr(self, attribute, -1)
+            if descriptor < 0:
+                continue
+            # Invalidate ownership before close: retrying close after EINTR can
+            # close an unrelated descriptor if the kernel already released it.
+            setattr(self, attribute, -1)
+            try:
+                os.close(descriptor)
+            except OSError as exc:
+                failures.append(f"{attribute} fd {descriptor}: {exc}")
+        return failures
+
+    @staticmethod
+    def _close_fd(descriptor: int, label: str) -> str | None:
+        if descriptor < 0:
+            return None
+        try:
+            os.close(descriptor)
+        except OSError as exc:
+            return f"{label} fd {descriptor}: {exc}"
+        return None
+
+    @staticmethod
+    def _raise_cleanup_failures(message: str, failures: list[str]) -> None:
+        if failures:
+            raise CgroupUnavailable(message + "; ".join(failures))
 
     def _read_at(self, name: str) -> str:
         self._assert_owned_path()
@@ -137,14 +161,25 @@ class CgroupV2:
                 except OSError as exc:
                     raise CgroupUnavailable(
                         f"cannot open delegated-root component {component} without following links: {exc}") from exc
-                opened = os.fstat(next_fd)
-                if (not stat.S_ISDIR(opened.st_mode)
-                        or (opened.st_dev, opened.st_ino) != (entry.st_dev, entry.st_ino)):
-                    os.close(next_fd)
-                    raise CgroupUnavailable(
-                        f"delegated-root component {component} changed identity while opening")
-                os.close(current_fd)
+                try:
+                    opened = os.fstat(next_fd)
+                    if (not stat.S_ISDIR(opened.st_mode)
+                            or (opened.st_dev, opened.st_ino) != (entry.st_dev, entry.st_ino)):
+                        raise CgroupUnavailable(
+                            f"delegated-root component {component} changed identity while opening")
+                except Exception:
+                    close_error = CgroupV2._close_fd(
+                        next_fd, f"new delegated-root component {component}")
+                    if close_error:
+                        raise CgroupUnavailable(close_error)
+                    raise
+                previous_fd = current_fd
                 current_fd = next_fd
+                close_error = CgroupV2._close_fd(
+                    previous_fd, f"previous delegated-root component before {component}")
+                if close_error:
+                    raise CgroupUnavailable(
+                        f"cannot release previous delegated-root descriptor: {close_error}")
             final_info = os.fstat(current_fd)
             if not stat.S_ISDIR(final_info.st_mode):
                 raise CgroupUnavailable("delegated cgroup root is not a directory")
@@ -152,8 +187,18 @@ class CgroupV2:
             current_fd = -1
             return base, result_fd
         finally:
-            if current_fd >= 0:
-                os.close(current_fd)
+            close_error = CgroupV2._close_fd(
+                current_fd, "delegated-root traversal")
+            if close_error:
+                # A cleanup failure must not replace an exception already in flight.
+                # When returning successfully, however, the descriptor is transferred.
+                import sys
+                active_error = sys.exception()
+                if active_error is not None:
+                    active_error.add_note(f"descriptor cleanup failed: {close_error}")
+                else:
+                    raise CgroupUnavailable(
+                        f"cannot close delegated-root traversal descriptor: {close_error}")
 
     @staticmethod
     def _read_from_fd(directory_fd: int, name: str) -> str:
@@ -259,12 +304,10 @@ class CgroupV2:
             transferred = True
             return manager
         except Exception as setup_error:
-            if child_fd >= 0:
-                try:
-                    os.close(child_fd)
-                except OSError as cleanup_error:
-                    setup_error.add_note(f"failed to close partially created cgroup descriptor: {cleanup_error}")
-                child_fd = -1
+            close_error = cls._close_fd(child_fd, "partially created cgroup")
+            child_fd = -1
+            if close_error:
+                setup_error.add_note(f"descriptor cleanup failed: {close_error}")
             if parent_fd >= 0 and child_identity is not None:
                 try:
                     current = os.stat(child_name, dir_fd=parent_fd, follow_symlinks=False)
@@ -278,10 +321,24 @@ class CgroupV2:
             raise
         finally:
             if not transferred:
-                if child_fd >= 0:
-                    os.close(child_fd)
-                if parent_fd >= 0:
-                    os.close(parent_fd)
+                failures = []
+                close_error = cls._close_fd(child_fd, "untransferred child cgroup")
+                if close_error:
+                    failures.append(close_error)
+                child_fd = -1
+                close_error = cls._close_fd(parent_fd, "untransferred delegated-root")
+                if close_error:
+                    failures.append(close_error)
+                parent_fd = -1
+                if failures:
+                    import sys
+                    active_error = sys.exception()
+                    if active_error is not None:
+                        for failure in failures:
+                            active_error.add_note(f"descriptor cleanup failed: {failure}")
+                    else:
+                        cls._raise_cleanup_failures(
+                            "failed to release cgroup setup descriptors: ", failures)
 
     @staticmethod
     def _write(path: Path, value: str) -> None:
@@ -427,7 +484,9 @@ class CgroupV2:
             raise CgroupUnavailable(
                 f"execution cgroup is not empty or could not be removed: {exc}") from exc
         self._closed = True
-        self._close_directory_fds()
+        failures = self._close_directory_fds()
+        self._raise_cleanup_failures(
+            "cgroup was removed but descriptor closure reported errors: ", failures)
 
 
 def configured_cgroup_root() -> str | None:
@@ -453,7 +512,10 @@ def probe_cgroup_v2() -> dict[str, object]:
             enabled = set(CgroupV2._read_from_fd(
                 root_fd, "cgroup.subtree_control").split())
         finally:
-            os.close(root_fd)
+            close_error = CgroupV2._close_fd(root_fd, "delegated-root probe")
+            if close_error:
+                raise CgroupUnavailable(
+                    f"cannot release delegated-root probe descriptor: {close_error}")
     except (OSError, RuntimeError, CgroupUnavailable) as exc:
         return {
             "available": False,
