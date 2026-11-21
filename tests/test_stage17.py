@@ -5,6 +5,10 @@ import pytest
 
 from cortex.memory.engine import MemoryEngine
 from cortex.planning.engine import assess_objective, plan
+from cortex.knowledge.graph import KnowledgeGraph
+from cortex.knowledge.indexer import index_code_root
+from cortex.knowledge.vector_store import VectorStore
+from cortex.interfaces import Provenance
 
 
 def _repo_map():
@@ -260,3 +264,42 @@ def test_verified_pipeline_learning_requires_strict_execution_evidence(tmp_path)
     item = learner.ingest_verified_pipeline_outcome(code, report, provenance)
     assert learner.is_known_pattern(code)
     assert store.get(item.item_id)["verified"] == 1
+
+
+
+def test_change_impact_traverses_call_import_and_inheritance_dependents(tmp_path):
+    import hashlib
+    from pathlib import Path
+
+    root = tmp_path / "repo"
+    pkg = root / "pkg"
+    pkg.mkdir(parents=True)
+    (pkg / "__init__.py").write_text("")
+    (pkg / "base.py").write_text(
+        "class Base:\n    pass\n\ndef helper():\n    return 1\n")
+    (pkg / "child.py").write_text(
+        "from .base import helper\n\n"
+        "class Child(Base):\n    pass\n\n"
+        "def run():\n    return helper()\n")
+    vector = VectorStore(str(tmp_path / "impact-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "impact-graph.db"))
+    index_code_root(str(root), vector, graph, version="impact-test")
+
+    report = graph.impact_analysis(["pkg/base.py"], str(root))
+    impacted = report["impacted_nodes"]
+    impacted_paths = {row["path"] for row in impacted}
+    assert report["unresolved_paths"] == []
+    assert "pkg/child.py" in impacted_paths
+    assert any(row["relationship"] == "calls" for row in impacted)
+    assert any(row["relationship"] == "inherits" for row in impacted)
+    assert report["impacted_path_count"] >= 1
+
+
+def test_change_impact_rejects_path_escape_and_bounds(tmp_path):
+    graph = KnowledgeGraph(str(tmp_path / "impact-graph.db"))
+    root = tmp_path / "repo"
+    root.mkdir()
+    with pytest.raises(ValueError, match="escapes"):
+        graph.impact_analysis(["../outside.py"], str(root))
+    with pytest.raises(ValueError, match="bounds"):
+        graph.impact_analysis(["inside.py"], str(root), max_depth=0)

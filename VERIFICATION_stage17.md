@@ -143,3 +143,20 @@ This is verified knowledge ingestion, **not** online gradient updates,
 continual model-weight learning, or a claim that the model learned from these
 examples. The path is opt-in through the authenticated API pipeline; it has not
 been runtime-qualified on the current branch.
+
+
+## Stage 17F — Graph-backed change-impact analysis
+
+The existing `KnowledgeGraph` now exposes bounded reverse-dependency impact
+analysis for changed repository paths. It resolves source paths through
+existing node provenance, expands changed modules to their defined symbols,
+and traverses incoming local-import, call, and inheritance edges. Results
+include impacted node IDs, paths, relationship types, depth, unresolved paths,
+and truncation state. Path traversal is constrained to the supplied repository
+root and the traversal has explicit depth/node ceilings.
+
+`CortexAgent.analyze_change_impact` exposes this capability through the
+existing facade. This is not yet automatic selective-test execution: the
+engineering pipeline still runs its existing test command, and multi-language
+symbol resolution remains incomplete. Regression tests cover call/import/
+inheritance impact and path/bounds rejection; execution remains pending.
