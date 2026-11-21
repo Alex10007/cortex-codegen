@@ -1,4 +1,5 @@
 import json
+import sysconfig
 from pathlib import Path
 
 import pytest
@@ -15,7 +16,7 @@ from cortex.training.sft import (
     make_batch,
 )
 
-STD_SUBSET = "/usr/local/lib/python3.12/json"
+STD_SUBSET = str(Path(sysconfig.get_paths()["stdlib"]) / "json"
 
 
 def _pair(code, name="fn", license_="Python-2.0 / PSF", instruction="Implement something"):
