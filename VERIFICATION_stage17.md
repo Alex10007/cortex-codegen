@@ -542,3 +542,30 @@ annotated parameters, and conflicting reassignment. Also corrected the Stage
 source. Tests are committed but have not been executed; no runtime or CI pass
 is claimed. No model training, checkpoint changes, benchmark promotion, or
 Stage 12 champion change occurred.
+
+
+## Stage 17U — Conservative interprocedural factory-return resolution
+
+Extended the existing Python AST call resolver to follow a narrowly supported
+factory expression such as `create_service().execute()`. A factory is eligible
+only when its callable resolves uniquely through the existing lexical/import
+resolver and its return evidence resolves to one locally indexed class. Evidence
+may come from one or more simple return annotations or direct `return
+Service()` expressions, provided all recorded evidence is unconditional and
+agrees on the same class. The final method is resolved through the existing
+direct/inherited method lookup and represented by the canonical `calls` edge.
+
+Any conditional return, unsupported explicit return expression, conflicting
+return classes, ambiguous factory declaration, unresolved class, or ambiguous
+method prevents dispatch attribution. This is deliberately not general
+interprocedural dataflow or full type inference. It does not infer factory
+behavior from arbitrary expressions, variables, constructors passed through
+containers, dynamic dispatch, async execution semantics, or external runtime
+behavior. Return annotations are static declarations, not proof that runtime
+values conform.
+
+Added regression tests for direct constructor returns, a unique return
+annotation, and rejection of conflicting/conditional return evidence. Tests
+are committed but have **not been executed**; no current-head runtime or CI
+pass is claimed. No model training, checkpoint changes, benchmark promotion,
+or Stage 12 champion change occurred.
