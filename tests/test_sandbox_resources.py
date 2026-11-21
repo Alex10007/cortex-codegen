@@ -397,9 +397,20 @@ def test_create_refuses_symlinked_initial_control_file_and_rolls_back(
             (child / "memory.max").symlink_to(external)
         return result
 
+    real_rmdir = os.rmdir
+    def rmdir(name, *, dir_fd=None):
+        child = root / name
+        if child in created and child.exists():
+            # Temporary regular files emulate cgroupfs pseudo-files in this unit fixture.
+            for item in child.iterdir():
+                item.unlink()
+        return real_rmdir(name, dir_fd=dir_fd)
+
     monkeypatch.setattr(os, "mkdir", mkdir)
+    monkeypatch.setattr(os, "rmdir", rmdir)
     with pytest.raises(CgroupUnavailable, match="cannot configure memory.max"):
         CgroupV2.create(root, mem_mb=128, nproc=4)
 
     assert external.read_text() == "untouched"
     assert len(created) == 1
+    assert not created[0].exists()
