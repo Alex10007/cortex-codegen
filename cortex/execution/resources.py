@@ -24,10 +24,9 @@ class CgroupV2:
         self.path = path
         self._closed = False
 
-    @classmethod
-    def create(cls, root: str | os.PathLike[str], *, mem_mb: int,
-               nproc: int, cpu_quota_us: int = 100_000,
-               cpu_period_us: int = 100_000) -> "CgroupV2":
+    @staticmethod
+    def _resolve_delegated_root(root: str | os.PathLike[str]) -> Path:
+        """Apply identical canonical-path and symlink policy to probe and create."""
         base = Path(root)
         if not base.is_absolute():
             raise CgroupUnavailable(
@@ -37,12 +36,17 @@ class CgroupV2:
         except (OSError, RuntimeError) as exc:
             raise CgroupUnavailable(
                 f"CORTEX_CGROUP_ROOT cannot be resolved safely: {exc}") from exc
-        # Reject symlinks in every path component, not only at the final root
-        # component. All subsequent child paths use this canonical directory.
+        # Reject aliases in every component, not only a symlink at the leaf.
         if base != resolved_base or not resolved_base.is_dir():
             raise CgroupUnavailable(
                 "CORTEX_CGROUP_ROOT must not traverse symlink aliases and must be a directory")
-        base = resolved_base
+        return resolved_base
+
+    @classmethod
+    def create(cls, root: str | os.PathLike[str], *, mem_mb: int,
+               nproc: int, cpu_quota_us: int = 100_000,
+               cpu_period_us: int = 100_000) -> "CgroupV2":
+        base = cls._resolve_delegated_root(root)
         controllers_file = base / "cgroup.controllers"
         subtree_file = base / "cgroup.subtree_control"
         if not controllers_file.is_file() or not subtree_file.is_file():
@@ -246,11 +250,11 @@ def probe_cgroup_v2() -> dict[str, object]:
             "controllers_required": sorted(CgroupV2.REQUIRED_CONTROLLERS),
             "io_limit": "NOT_CONFIGURED",
         }
-    base = Path(root)
     try:
+        base = CgroupV2._resolve_delegated_root(root)
         available = set((base / "cgroup.controllers").read_text(encoding="ascii").split())
         enabled = set((base / "cgroup.subtree_control").read_text(encoding="ascii").split())
-    except OSError as exc:
+    except (OSError, RuntimeError, CgroupUnavailable) as exc:
         return {
             "available": False,
             "status": "FAIL",
@@ -260,8 +264,7 @@ def probe_cgroup_v2() -> dict[str, object]:
         }
     missing = CgroupV2.REQUIRED_CONTROLLERS - available
     disabled = CgroupV2.REQUIRED_CONTROLLERS - enabled
-    ok = (base.is_absolute() and base.is_dir() and not base.is_symlink()
-          and not missing and not disabled)
+    ok = not missing and not disabled
     return {
         "available": ok,
         "status": "PASS" if ok else "FAIL",
