@@ -10,8 +10,10 @@ from cortex.execution.sandbox import run
 
 def run_test_command(argv: list[str], workspace: str,
                      timeout_s: float = 120.0,
-                     audit: Callable[[str, dict], None] | None = None) -> dict[str, Any]:
-    result = run(argv=argv, workspace=workspace, timeout_s=timeout_s, audit=audit)
+                     audit: Callable[[str, dict], None] | None = None,
+                     require_full_isolation: bool = False) -> dict[str, Any]:
+    result = run(argv=argv, workspace=workspace, timeout_s=timeout_s, audit=audit,
+                 require_full_isolation=require_full_isolation)
     tail = (result.stdout or "")[-4000:]
     return {
         "command": argv,
@@ -22,16 +24,19 @@ def run_test_command(argv: list[str], workspace: str,
         "duration_s": result.duration_s,
         "stdout_tail": tail,
         "stderr_tail": (result.stderr or "")[-4000:],
+        "limits": result.limits,
     }
 
 
 def run_pytest(workspace: str, targets: list[str] | None = None,
                timeout_s: float = 120.0,
-               audit: Callable[[str, dict], None] | None = None) -> dict[str, Any]:
+               audit: Callable[[str, dict], None] | None = None,
+               require_full_isolation: bool = False) -> dict[str, Any]:
     argv = [sys.executable, "-m", "pytest", "-q"]
     if targets:
         argv += targets
-    report = run_test_command(argv, workspace, timeout_s=timeout_s, audit=audit)
+    report = run_test_command(argv, workspace, timeout_s=timeout_s, audit=audit,
+                               require_full_isolation=require_full_isolation)
     report["summary"] = _parse_pytest_summary(report["stdout_tail"])
     return report
 

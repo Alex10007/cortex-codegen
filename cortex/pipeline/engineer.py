@@ -124,7 +124,8 @@ def run_engineering_pipeline(objective: str, repo_path: str,
                              authorize_destructive: bool = False,
                              audit: AuditLog | None = None,
                              test_command_top: list[str] | None = None,
-                             objective_verifier: ObjectiveVerifier | None = None
+                             objective_verifier: ObjectiveVerifier | None = None,
+                             require_full_isolation: bool = False
                              ) -> dict[str, Any]:
     audit = audit or AuditLog.default()
 
@@ -155,9 +156,13 @@ def run_engineering_pipeline(objective: str, repo_path: str,
 
     if test_command_top:
         from cortex.testing.engine import run_test_command
-        test_report = run_test_command(test_command_top, repo_path, audit=audit.record)
+        test_report = run_test_command(
+            test_command_top, repo_path, audit=audit.record,
+            require_full_isolation=require_full_isolation)
     else:
-        test_report = run_pytest(repo_path, timeout_s=180.0, audit=audit.record)
+        test_report = run_pytest(
+            repo_path, timeout_s=180.0, audit=audit.record,
+            require_full_isolation=require_full_isolation)
 
     findings = analyze_tree(repo_path)
     sec_summary = summarize(findings)

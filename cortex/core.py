@@ -268,17 +268,53 @@ class CortexAgent:
 
     def run_pipeline(self, objective: str, repo_path: str,
                      patcher=None, authorize_destructive: bool = False,
-                     objective_verifier=None) -> dict[str, Any]:
+                     objective_verifier=None,
+                     require_full_isolation: bool = False) -> dict[str, Any]:
         from cortex.pipeline.engineer import run_engineering_pipeline
 
         report = run_engineering_pipeline(
             objective, repo_path, patcher=patcher,
             authorize_destructive=authorize_destructive, audit=self.audit,
-            objective_verifier=objective_verifier)
+            objective_verifier=objective_verifier,
+            require_full_isolation=require_full_isolation)
         self.memory.record(record_project(repo_path), "pipeline", {
             "objective": objective, "status": report["status"],
             "verified": report.get("verified", False),
         }, verified=bool(report.get("verified")))
+        learned = []
+        if report.get("verified") and require_full_isolation:
+            import hashlib
+            from datetime import datetime, timezone
+            from cortex.interfaces import Provenance
+            root = Path(repo_path).resolve()
+            for relative in report.get("files_changed", []):
+                target = (root / relative).resolve()
+                if root not in target.parents or not target.is_file():
+                    continue
+                if target.suffix != ".py" or target.stat().st_size > 300_000:
+                    continue
+                code = target.read_text(encoding="utf-8", errors="replace")
+                digest = hashlib.sha256(code.encode("utf-8")).hexdigest()
+                provenance = Provenance(
+                    source_uri=target.as_uri(), license="project-local",
+                    version="verified-working-tree", content_sha256=digest,
+                    collected_at=datetime.now(timezone.utc).isoformat(),
+                    collector="cortex.core.CortexAgent.run_pipeline")
+                try:
+                    item = self.learning.ingest_verified_pipeline_outcome(
+                        code, report, provenance,
+                        tags={"project": record_project(repo_path),
+                              "relative_path": relative,
+                              "objective": objective})
+                    learned.append(item.item_id)
+                except Exception as exc:
+                    self.audit.record("learning.ingest_rejected", {
+                        "path": relative, "reason": str(exc)[:300]})
+        report["learning"] = {
+            "verified_patterns_ingested": len(learned),
+            "item_ids": learned,
+            "strict_isolation_requested": require_full_isolation,
+        }
         return report
 
     def security_scan(self, root: str) -> dict[str, Any]:

@@ -127,3 +127,19 @@ assessment policy to cap output tokens at 50%, 75%, or 100% of the caller's
 requested maximum, while never exceeding the requested cap. The API exposes
 the same opt-in field. This is bounded output-token allocation, not dynamic
 GPU scheduling, adaptive attention depth, or learned compute control.
+
+
+## Stage 17E — Strict execution-evidence learning path
+
+The existing testing, pipeline, core, and learning components are now connected
+through a strict path: API-triggered engineering pipelines request full
+Bubblewrap plus delegated cgroup isolation; test reports retain kernel/resource
+evidence; the existing LearningEngine accepts pipeline outcomes only when
+implementation, objective verification, tests, security, and required cgroup
+controls all pass. Verified Python changes can then enter the existing
+provenance-aware knowledge store. Unverified outcomes are rejected.
+
+This is verified knowledge ingestion, **not** online gradient updates,
+continual model-weight learning, or a claim that the model learned from these
+examples. The path is opt-in through the authenticated API pipeline; it has not
+been runtime-qualified on the current branch.

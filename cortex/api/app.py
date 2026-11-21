@@ -218,7 +218,8 @@ def create_app(agent=None, api_token: str | None = None, *,
         _require_full_sandbox()
         return agent.run_pipeline(
             req.objective, _resolve_allowed_repo_path(req.repo_path),
-            authorize_destructive=req.authorize_destructive)
+            authorize_destructive=req.authorize_destructive,
+            require_full_isolation=True)
 
     @app.post("/eval/run",
               dependencies=[Depends(require_auth), Depends(rate_limit_expensive)])

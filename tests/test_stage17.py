@@ -220,3 +220,43 @@ def test_verified_fact_records_expose_source_and_revision(tmp_path):
         "source": "dependency-manifest", "revision": 1,
         "updated_at": rows[0]["updated_at"],
     }]
+
+
+
+def test_verified_pipeline_learning_requires_strict_execution_evidence(tmp_path):
+    from cortex.interfaces import Provenance
+    from cortex.knowledge.learning import LearningEngine, UnverifiedOutcomeError
+    from cortex.knowledge.vector_store import VectorStore
+    import hashlib
+
+    store = VectorStore(str(tmp_path / "knowledge.sqlite"))
+    learner = LearningEngine(store)
+    code = "def verified_add(a, b):\\n    return a + b\\n"
+    provenance = Provenance(
+        source_uri="file:///verified_add.py", license="project-local",
+        version="test", content_sha256=hashlib.sha256(code.encode()).hexdigest(),
+        collected_at="2026-11-21T00:00:00+00:00", collector="stage17-test")
+    with pytest.raises(UnverifiedOutcomeError, match="strict sandbox"):
+        learner.ingest_verified_pipeline_outcome(
+            code, {"status": "verified", "verified": True}, provenance)
+
+    report = {
+        "status": "verified", "verified": True,
+        "implementation_performed": True, "validation_passed": True,
+        "objective_verified": True,
+        "tests": {
+            "ok": True, "exit_code": 0, "timed_out": False,
+            "isolation": "bwrap+user-pid-net-ipc-uts+rlimits+cgroup-v2-cpu-memory-pids+readonly-runtime+workspace",
+            "limits": {
+                "cgroup_v2_enforced": True,
+                "cgroup_empty_after_cleanup": True,
+                "aggregate_cpu_limit": True,
+                "aggregate_memory_limit": True,
+                "aggregate_process_limit": True,
+            },
+        },
+        "security": {"summary": {"critical": 0}},
+    }
+    item = learner.ingest_verified_pipeline_outcome(code, report, provenance)
+    assert learner.is_known_pattern(code)
+    assert store.get(item.item_id)["verified"] == 1
