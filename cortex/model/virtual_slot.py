@@ -28,6 +28,8 @@ class SlotState:
     m: dict[str, torch.Tensor] = field(default_factory=dict)
     v: dict[str, torch.Tensor] = field(default_factory=dict)
     grad_norm_last: float | None = None
+    changed_mask: dict[str, torch.Tensor] = field(default_factory=dict)
+    changed_evidence_known: bool = True
 
     @property
     def params(self) -> dict[str, torch.nn.Parameter]:
@@ -44,9 +46,14 @@ def slot_adam_states(st: SlotState) -> dict[str, Any]:
     if st.step_count == 0:
         return out
     for name, p in st.params.items():
-        out[f"{name}_m"] = st.m[name].detach().numpy()
-        out[f"{name}_v"] = st.v[name].detach().numpy()
+        out[f"{name}_m"] = st.m[name].detach().cpu().numpy()
+        out[f"{name}_v"] = st.v[name].detach().cpu().numpy()
+        mask = st.changed_mask.get(name)
+        if mask is not None:
+            out[f"{name}_changed_mask"] = mask.detach().cpu().numpy().astype(
+                np.uint8, copy=False)
     out["step_count"] = st.step_count
+    out["changed_evidence_known"] = int(st.changed_evidence_known)
     return out
 
 
@@ -99,16 +106,23 @@ class VirtualAdamW:
         t = st.step_count
         b1, b2 = self.betas
         total_norm = 0.0
+        if not st.changed_mask:
+            st.changed_mask = {
+                name: torch.zeros_like(p, dtype=torch.bool)
+                for name, p in st.params.items()
+            }
         for name, p in st.params.items():
             g = p.grad
             if g is None:
                 continue
+            before = p.detach().clone()
             st.m[name].mul_(b1).add_(g, alpha=1 - b1)
             st.v[name].mul_(b2).addcmul_(g, g, value=1 - b2)
             mhat = st.m[name] / (1 - b1 ** t)
             vhat = st.v[name] / (1 - b2 ** t)
             p.addcdiv_(mhat, vhat.sqrt().add_(self.eps), value=-self.lr)
             p.mul_(1 - self.lr * self.wd)
+            st.changed_mask[name] |= p.detach().ne(before)
             total_norm += float(g.float().pow(2).sum())
         self.updates[(st.bank, st.row)] = t
         st.grad_norm_last = math.sqrt(total_norm)

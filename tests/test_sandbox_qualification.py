@@ -1,0 +1,127 @@
+"""Tests for behavioral sandbox qualification and fail-closed API gating."""
+import json
+from types import SimpleNamespace
+
+import pytest
+
+from cortex.execution import qualification
+
+
+def test_qualification_reports_each_behavioral_boundary(monkeypatch):
+    observed = {
+        "workspace_writable": True,
+        "host_path_inaccessible": True,
+        "runtime_readonly": True,
+        "proc_dev_available": True,
+        "network_unreachable": True,
+        "cgroup_filesystem_inaccessible": True,
+        "process_cap_observed": True,
+        "detached_child_pid": 12345,
+    }
+    monkeypatch.setattr(qualification, "_supports_bwrap", lambda: True)
+    monkeypatch.setattr(qualification, "probe_cgroup_v2", lambda: {"available": True})
+    def fake_run(**kwargs):
+        limits = {"cgroup_v2_enforced": True, "cgroup_empty_after_cleanup": True,
+                  "aggregate_cpu_limit": True, "aggregate_memory_limit": True,
+                  "aggregate_process_limit": True}
+        if kwargs.get("cpu_quota_us") == 20_000:
+            limits["cgroup_metrics"] = {"cpu_stat": {"nr_throttled": 3, "throttled_usec": 2000}}
+        elif kwargs.get("mem_mb") == 128:
+            limits["cgroup_metrics"] = {"memory_events": {"oom": 1, "oom_kill": 1}}
+        else:
+            limits["cgroup_metrics"] = {"pids_events": {"max": 1}}
+        return SimpleNamespace(ok=True, stdout=json.dumps(observed), limits=limits)
+    monkeypatch.setattr(qualification, "run", fake_run)
+    report = qualification.qualify_sandbox()
+    assert report["passed"] is True
+    assert set(report["checks"].values()) == {"PASS"}
+    assert any("cgroup" in item for item in report["limitations"])
+
+
+def test_qualification_fails_when_host_path_is_visible(monkeypatch):
+    observed = {
+        "workspace_writable": True, "host_path_inaccessible": False,
+        "runtime_readonly": True, "proc_dev_available": True,
+        "network_unreachable": True,
+        "cgroup_filesystem_inaccessible": True,
+    }
+    monkeypatch.setattr(qualification, "_supports_bwrap", lambda: True)
+    monkeypatch.setattr(qualification, "probe_cgroup_v2", lambda: {"available": True})
+    monkeypatch.setattr(qualification, "run", lambda **kwargs: SimpleNamespace(
+        ok=True, stdout=json.dumps(observed), limits={
+            "cgroup_v2_enforced": True, "cgroup_empty_after_cleanup": True,
+            "aggregate_cpu_limit": True, "aggregate_memory_limit": True,
+            "aggregate_process_limit": True,
+            "cgroup_metrics": {"pids_events": {"max": 0}}}))
+    report = qualification.qualify_sandbox()
+    assert report["passed"] is False
+    assert report["checks"]["host_path_inaccessible"] == "FAIL"
+
+
+def test_bwrap_presence_alone_is_not_qualification(monkeypatch):
+    monkeypatch.setattr(qualification, "_supports_bwrap", lambda: False)
+    report = qualification.qualify_sandbox()
+    assert report["passed"] is False
+    assert report["checks"]["bwrap_available"] == "FAIL"
+    assert report["checks"]["isolated_execution"] == "NOT_RUN"
+
+
+def test_probe_setup_failure_leaves_behavioral_checks_not_run(monkeypatch):
+    from cortex.execution.sandbox import NetworkIsolationUnavailable
+    monkeypatch.setattr(qualification, "_supports_bwrap", lambda: True)
+    monkeypatch.setattr(qualification, "probe_cgroup_v2", lambda: {"available": True})
+    def fail(**kwargs):
+        raise NetworkIsolationUnavailable("namespace setup denied")
+    monkeypatch.setattr(qualification, "run", fail)
+    report = qualification.qualify_sandbox()
+    assert report["passed"] is False
+    assert report["checks"]["isolated_execution"] == "FAIL"
+    assert report["checks"]["workspace_writable"] == "NOT_RUN"
+
+
+def test_api_gate_requires_behavioral_qualification(monkeypatch):
+    from fastapi import HTTPException
+    import importlib
+    api_module = importlib.import_module("cortex.api.app")
+    from cortex.execution import qualification, sandbox
+    monkeypatch.setattr(sandbox, "_supports_bwrap", lambda: True)
+    monkeypatch.setattr(qualification, "qualify_sandbox", lambda: {
+        "passed": False, "checks": {"host_path_inaccessible": "FAIL"}})
+    api_module._cached_sandbox_qualification.cache_clear()
+    with pytest.raises(HTTPException) as exc:
+        api_module._require_full_sandbox()
+    assert exc.value.status_code == 503
+    assert "qualification" in exc.value.detail.lower()
+
+
+def test_qualification_fails_when_cgroup_filesystem_is_visible(monkeypatch):
+    observed = {
+        "workspace_writable": True,
+        "host_path_inaccessible": True,
+        "runtime_readonly": True,
+        "proc_dev_available": True,
+        "network_unreachable": True,
+        "cgroup_filesystem_inaccessible": False,
+    }
+    monkeypatch.setattr(qualification, "_supports_bwrap", lambda: True)
+    monkeypatch.setattr(qualification, "probe_cgroup_v2", lambda: {"available": True})
+    def fake_run(**kwargs):
+        limits = {
+            "cgroup_v2_enforced": True,
+            "cgroup_empty_after_cleanup": True,
+            "aggregate_cpu_limit": True,
+            "aggregate_memory_limit": True,
+            "aggregate_process_limit": True,
+            "cgroup_metrics": {"pids_events": {"max": 1}},
+        }
+        if kwargs.get("cpu_quota_us") == 20_000:
+            limits["cgroup_metrics"] = {"cpu_stat": {"nr_throttled": 1, "throttled_usec": 10}}
+        elif kwargs.get("mem_mb") == 128:
+            limits["cgroup_metrics"] = {"memory_events": {"oom": 1, "oom_kill": 1}}
+        return SimpleNamespace(ok=True, stdout=json.dumps(observed), limits=limits)
+    monkeypatch.setattr(qualification, "run", fake_run)
+
+    report = qualification.qualify_sandbox()
+
+    assert report["passed"] is False
+    assert report["checks"]["cgroup_filesystem_inaccessible"] == "FAIL"

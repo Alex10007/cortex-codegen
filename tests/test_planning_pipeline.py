@@ -56,10 +56,12 @@ def test_pipeline_blocks_destructive_without_authorization(tmp_path):
 def test_pipeline_verifies_passing_repo(tmp_path):
     _make_repo(tmp_path)
     report = run_engineering_pipeline("add multiply helper", str(tmp_path))
-    assert report["status"] == "verified"
+    assert report["status"] == "baseline-validated-no-implementation"
     assert report["tests"]["ok"] is True
     assert report["tests"]["summary"]["passed"] >= 1
-    assert report["verified"] is True
+    assert report["verified"] is False
+    assert report["implementation_performed"] is False
+    assert report["validation_passed"] is True
 
 
 def test_pipeline_reports_failure(tmp_path):
@@ -80,4 +82,106 @@ def test_pipeline_applies_patcher(tmp_path):
                            "def multiply(a, b):\n    return a * b\n"},
         test_command_top=["python3", "-m", "pytest", "-q"])
     assert "pkg/calc.py" in report["files_changed"]
+    assert report["verified"] is False
+    assert report["status"] == "changes-tested-not-objective-verified"
+    assert report["objective_verified"] is False
+
+
+
+def test_pipeline_rejects_patcher_path_escape(tmp_path):
+    _make_repo(tmp_path)
+    import pytest
+
+    with pytest.raises(ValueError, match="protected path|escapes repository"):
+        run_engineering_pipeline(
+            "change file", str(tmp_path),
+            patcher=lambda p: {"../outside.py": "print('unsafe')"},
+            test_command_top=["python3", "-m", "pytest", "-q"])
+
+
+
+def test_pipeline_requires_and_accepts_explicit_objective_verifier(tmp_path):
+    _make_repo(tmp_path)
+    report = run_engineering_pipeline(
+        "add multiply helper", str(tmp_path),
+        patcher=lambda _plan: {"pkg/calc.py":
+            "def add(a, b):\\n    return a + b\\n\\n"
+            "def multiply(a, b):\\n    return a * b\\n"},
+        test_command_top=["python3", "-m", "pytest", "-q"],
+        objective_verifier=lambda _plan, test_result: bool(test_result["ok"]))
+    assert report["implementation_performed"] is True
+    assert report["validation_passed"] is True
+    assert report["objective_verified"] is True
     assert report["verified"] is True
+
+
+def test_patch_set_preflights_all_edits_before_writing(tmp_path):
+    import pytest
+    from cortex.pipeline.engineer import _apply_patch_set
+
+    _make_repo(tmp_path)
+    original = (tmp_path / "pkg" / "calc.py").read_text()
+    with pytest.raises(ValueError, match="protected path"):
+        _apply_patch_set(str(tmp_path), {
+            "pkg/calc.py": "def add(a, b): return 0\n",
+            "../escape.py": "print('outside')\n",
+        })
+    assert (tmp_path / "pkg" / "calc.py").read_text() == original
+    assert not (tmp_path.parent / "escape.py").exists()
+
+
+def test_patch_set_rejects_symlink_traversal(tmp_path):
+    import pytest
+    from cortex.pipeline.engineer import _apply_patch_set
+
+    _make_repo(tmp_path)
+    outside = tmp_path.parent / "outside-cortex"
+    outside.mkdir()
+    (outside / "secret.py").write_text("original")
+    (tmp_path / "linked").symlink_to(outside, target_is_directory=True)
+    with pytest.raises(ValueError, match="symlink"):
+        _apply_patch_set(str(tmp_path), {"linked/secret.py": "modified"})
+    assert (outside / "secret.py").read_text() == "original"
+
+
+def test_patch_set_replaces_multiple_files_and_preserves_modes(tmp_path):
+    from cortex.pipeline.engineer import _apply_patch_set
+
+    _make_repo(tmp_path)
+    target = tmp_path / "pkg" / "calc.py"
+    target.chmod(0o640)
+    changed = _apply_patch_set(str(tmp_path), {
+        "pkg/calc.py": "def add(a, b): return a + b\n",
+        "new_module.py": "VALUE = 7\n",
+    })
+    assert changed == ["pkg/calc.py", "new_module.py"]
+    assert target.read_text() == "def add(a, b): return a + b\n"
+    assert target.stat().st_mode & 0o777 == 0o640
+    assert (tmp_path / "new_module.py").read_text() == "VALUE = 7\n"
+
+
+def test_patch_set_rolls_back_prior_replacements_on_publish_failure(tmp_path, monkeypatch):
+    import os
+    import pytest
+    from cortex.pipeline.engineer import _apply_patch_set
+
+    _make_repo(tmp_path)
+    original = (tmp_path / "pkg" / "calc.py").read_bytes()
+    real_replace = os.replace
+    calls = 0
+
+    def fail_second_replace(source, target):
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise OSError("injected publish failure")
+        return real_replace(source, target)
+
+    monkeypatch.setattr(os, "replace", fail_second_replace)
+    with pytest.raises(OSError, match="injected publish failure"):
+        _apply_patch_set(str(tmp_path), {
+            "pkg/calc.py": "def add(a, b): return 99\n",
+            "new_module.py": "VALUE = 7\n",
+        })
+    assert (tmp_path / "pkg" / "calc.py").read_bytes() == original
+    assert not (tmp_path / "new_module.py").exists()

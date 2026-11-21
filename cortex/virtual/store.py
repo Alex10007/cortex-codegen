@@ -160,15 +160,65 @@ class VirtualParameterStore:
                     f"B{tuple(st.B.shape)}, requested A{(dim, rank)} / "
                     f"B{(rank, dim)}")
             return st
+        # A committed row has an established tensor interpretation. Refuse
+        # to reinterpret it under a different shape: doing so would silently
+        # corrupt learned values and optimizer lineage.
+        manifest = _read_json(self.manifest_path)
+        committed = str(row) in manifest.get(
+            "initialized_rows", {}).get(str(bank), {})
+        persisted_shape = manifest.get("initialized_slot_shapes", {}).get(
+            str(bank), {}).get(str(row))
+        if persisted_shape is not None:
+            expected = (int(persisted_shape["dim"]), int(persisted_shape["rank"]))
+            if expected != (dim, rank):
+                raise ValueError(
+                    f"persisted slot {key} has dim/rank {expected}; "
+                    f"requested {(dim, rank)}")
+        elif committed:
+            # Legacy Stage 7-15 rows predate shape metadata. Their optimizer
+            # tensors provide an exact shape witness; accept only an exact
+            # match. A committed row without either source remains ambiguous.
+            opt_path = self.root / f"adam-{bank:05d}-{row:06d}.npz"
+            if not opt_path.exists():
+                raise RuntimeError(
+                    f"persisted slot {key} has no shape metadata or optimizer "
+                    "shape witness; refusing ambiguous legacy row reinterpretation")
+            with np.load(opt_path) as state:
+                if int(state["step_count"]) <= 0:
+                    raise RuntimeError(
+                        f"persisted slot {key} has no trained optimizer shape "
+                        "witness; refusing ambiguous legacy row reinterpretation")
+                a_shape = tuple(state["A_m"].shape)
+                b_shape = tuple(state["B_m"].shape)
+            if a_shape != (dim, rank) or b_shape != (rank, dim):
+                raise ValueError(
+                    f"legacy optimizer slot {key} has shapes "
+                    f"A{a_shape} / B{b_shape}; requested "
+                    f"A{(dim, rank)} / B{(rank, dim)}")
+            persisted_shape = {"dim": dim, "rank": rank,
+                               "scalars": 2 * dim * rank}
+
         page = self.page(bank)
         raw = np.asarray(page[row])
+        if committed:
+            expected_digest = manifest["initialized_rows"][str(bank)][str(row)]
+            actual_digest = hashlib.sha256(raw.tobytes()).hexdigest()
+            if actual_digest != expected_digest:
+                raise RuntimeError(
+                    f"committed virtual row digest mismatch for {key}; "
+                    "refusing to load corrupted or partially committed values")
         n = 2 * dim * rank
         if n > BANK_COLS:
             raise ValueError(
                 f"slot needs {n} values > bank row {BANK_COLS}")
-        flat = torch_from(raw[:n])
-        if bool((flat == 0).all()):
-            # sparse hole: this row was never initialized
+        if committed:
+            # A committed all-zero slot is valid data, not an empty sparse
+            # hole. Only manifest membership authorizes loading persisted
+            # numerical values.
+            flat = torch_from(raw[:n])
+        else:
+            # Ignore uncommitted bytes left by an interrupted transaction.
+            # They are not part of the accepted lineage.
             if init_values is not None:
                 if len(init_values) != n:
                     raise ValueError(
@@ -181,7 +231,13 @@ class VirtualParameterStore:
         A = torch.nn.Parameter(flat[:dim * rank].view(dim, rank).clone())
         B = torch.nn.Parameter(flat[dim * rank:].view(rank, dim).clone())
         st = SlotState(bank=bank, row=row, A=A, B=B)
-        self._restore_opt_state(st, dim, rank)
+        opt_path = self.root / f"adam-{bank:05d}-{row:06d}.npz"
+        if committed:
+            self._restore_opt_state(st, dim, rank)
+        elif opt_path.exists():
+            raise RuntimeError(
+                f"orphan optimizer state for uncommitted virtual slot {key}; "
+                "refusing to adopt an incomplete transaction")
         self._slots[key] = st
         self.dirty.add(key)
         return st
@@ -199,28 +255,53 @@ class VirtualParameterStore:
             return
         st.step_count = int(data["step_count"])
         for name, p in (("A", st.A), ("B", st.B)):
-            if data[f"{name}_m"].shape != tuple(p.shape):
-                st.step_count = 0
-                st.m.clear()
-                st.v.clear()
-                return
+            if (data[f"{name}_m"].shape != tuple(p.shape)
+                    or data[f"{name}_v"].shape != tuple(p.shape)):
+                raise RuntimeError(
+                    f"persisted optimizer state shape mismatch for "
+                    f"{st.bank}/{st.row}/{name}; refusing to discard state")
             st.m[name] = torch.from_numpy(
                 _np.ascontiguousarray(data[f"{name}_m"], dtype=_np.float32))
             st.v[name] = torch.from_numpy(
                 _np.ascontiguousarray(data[f"{name}_v"], dtype=_np.float32))
+        if "changed_evidence_known" in data:
+            st.changed_evidence_known = bool(int(data["changed_evidence_known"]))
+            st.changed_mask = {}
+            for name, p in (("A", st.A), ("B", st.B)):
+                mask_key = f"{name}_changed_mask"
+                if mask_key in data:
+                    mask = _np.ascontiguousarray(data[mask_key], dtype=_np.bool_)
+                    if mask.shape != tuple(p.shape):
+                        raise RuntimeError(
+                            f"persisted changed-mask shape mismatch for "
+                            f"{st.bank}/{st.row}/{name}")
+                    st.changed_mask[name] = torch.from_numpy(mask).to(p.device)
+                else:
+                    st.changed_evidence_known = False
+                    st.changed_mask[name] = torch.zeros_like(p, dtype=torch.bool)
+        else:
+            # Historical optimizer files prove optimizer steps, not which
+            # individual scalars actually changed.
+            st.changed_evidence_known = False
+            st.changed_mask = {
+                name: torch.zeros_like(p, dtype=torch.bool)
+                for name, p in st.params.items()
+            }
 
     # ---------- commit / recovery ----------
 
     def commit(self, step: int, txid: str) -> list[dict[str, Any]]:
-        """Transactional commit of every dirty slot: write values + optimizer
-        state to disk, flush, digest, then atomically update the manifest.
-        No partial state survives a crash between flush and manifest."""
-        import torch
+        """Publish all dirty slot values with one manifest commit point.
 
+        Bank rows and optimizer files are flushed before the manifest is
+        atomically replaced. Until that replacement, newly written state is
+        uncommitted and cannot be adopted by a fresh process.
+        """
         from cortex.model.virtual_slot import slot_adam_states
 
+        manifest = _read_json(self.manifest_path)
         commits: list[dict[str, Any]] = []
-        for (bank, row) in sorted(self.dirty):
+        for bank, row in sorted(self.dirty):
             st = self._slots[(bank, row)]
             page = self.page(bank)
             n = st.A.numel() + st.B.numel()
@@ -231,31 +312,39 @@ class VirtualParameterStore:
             page.flush()
             digest = hashlib.sha256(
                 np.asarray(page[row]).tobytes()).hexdigest()
+
             opt_states = slot_adam_states(st)
             if opt_states:
-                np.savez(self.root / f"adam-{bank:05d}-{row:06d}.npz",
-                         **opt_states)
+                opt_path = self.root / f"adam-{bank:05d}-{row:06d}.npz"
+                tmp_opt = opt_path.with_suffix(
+                    opt_path.suffix + f".tmp{os.getpid()}")
+                with open(tmp_opt, "wb") as fh:
+                    np.savez(fh, **opt_states)
+                    fh.flush()
+                    os.fsync(fh.fileno())
+                os.replace(tmp_opt, opt_path)
+
             commits.append({"bank": bank, "row": row, "step": step,
                             "txid": txid, "digest": digest,
                             "params_in_slot": int(n)})
-            m = _read_json(self.manifest_path)
-            rows_map = m["initialized_rows"]
+            rows_map = manifest["initialized_rows"]
             rows_map.setdefault(str(bank), {})[str(row)] = digest
-            shapes = m.setdefault("initialized_slot_shapes", {})
+            shapes = manifest.setdefault("initialized_slot_shapes", {})
             shapes.setdefault(str(bank), {})[str(row)] = {
                 "dim": int(st.A.shape[0]),
                 "rank": int(st.A.shape[1]),
                 "scalars": int(st.A.numel() + st.B.numel()),
             }
-            m["coverage_rows_per_bank"][bank] = len(rows_map[str(bank)])
-            # lineage watermark is monotonic: a later commit at a lower step
-            # (e.g. a fresh trainer resuming against the same store) must
-            # never rewind the recorded training frontier
-            m["committed_step"] = max(int(m.get("committed_step", 0)),
-                                      int(step))
-            m["transaction_id"] = txid
-            _atomic_json(self.manifest_path, m)
-            self.manifest = m
+            manifest["coverage_rows_per_bank"][bank] = len(
+                rows_map[str(bank)])
+
+        # Monotonic training watermark and transaction id are part of the
+        # same atomic manifest publication as every row digest above.
+        manifest["committed_step"] = max(
+            int(manifest.get("committed_step", 0)), int(step))
+        manifest["transaction_id"] = txid
+        _atomic_json(self.manifest_path, manifest)
+        self.manifest = manifest
         self.dirty.clear()
         return commits
 
@@ -279,61 +368,117 @@ class VirtualParameterStore:
     # ---------- accounting ----------
 
     def accounting(self) -> dict[str, Any]:
+        """Exact identity-based accounting across manifest, live slots and
+        persisted optimizer state. Unknown legacy shapes are never guessed."""
         from cortex.model.virtual_slot import slot_adam_states
 
-        allocated = exact_virtual_count()
         manifest = _read_json(self.manifest_path)
-        shape_map = {
-            bank: dict(rows) for bank, rows in
-            manifest.get("initialized_slot_shapes", {}).items()
-        }
-        # Backfill exact shapes for legacy committed rows when their Adam
-        # state exists. Rows without shape metadata or optimizer state remain
-        # explicitly unknown; never infer a full 50,000 scalars per row.
+        shape_by_key = {}
+        committed_keys = set()
+        for bank_s, rows in manifest["initialized_rows"].items():
+            for row_s in rows:
+                committed_keys.add((int(bank_s), int(row_s)))
+        for bank_s, rows in manifest.get("initialized_slot_shapes", {}).items():
+            for row_s, shape in rows.items():
+                shape_by_key[(int(bank_s), int(row_s))] = int(
+                    shape.get("scalars", 2 * int(shape["dim"]) * int(shape["rank"])))
+
+        persisted_updated_keys = set()
+        orphan_optimizer_keys = set()
+        persisted_updated_scalars = 0
+        persisted_changed_by_key = {}
+        changed_unknown_keys = set()
+        optimizer_steps_by_key = {}
         for path in self.root.glob("adam-*.npz"):
-            stem = path.stem.removeprefix("adam-")
-            bank_s, row_s = stem.split("-", 1)
+            bank_s, row_s = path.stem.removeprefix("adam-").split("-", 1)
+            key = (int(bank_s), int(row_s))
             with np.load(path) as state:
+                if key not in committed_keys:
+                    orphan_optimizer_keys.add(key)
+                    continue
                 if int(state["step_count"]) <= 0:
                     continue
-                shape_map.setdefault(bank_s, {})[row_s] = {
-                    "dim": int(state["A_m"].shape[0]),
-                    "rank": int(state["A_m"].shape[1]),
-                    "scalars": int(state["A_m"].size + state["B_m"].size),
-                }
-        initialized = sum(
-            int(shape.get("scalars", 2 * int(shape["dim"]) * int(shape["rank"])))
-            for rows in shape_map.values() for shape in rows.values())
-        committed_rows = sum(len(rows) for rows in
-                             manifest["initialized_rows"].values())
-        known_shape_rows = sum(len(rows) for rows in shape_map.values())
-        unknown_shape_rows = max(0, committed_rows - known_shape_rows)
-        activated = grads = updated = 0
-        for st in self._slots.values():
-            activated += st.A.numel() + st.B.numel()
-            if st.A.grad is not None or st.B.grad is not None:
-                nz = (st.A.grad is not None
-                      and float(st.A.grad.abs().sum()) > 0) or (
-                    st.B.grad is not None
-                    and float(st.B.grad.abs().sum()) > 0)
-                if nz:
-                    grads += st.A.numel() + st.B.numel()
+                n = int(state["A_m"].size + state["B_m"].size)
+                shape_by_key[key] = n
+                persisted_updated_keys.add(key)
+                optimizer_steps_by_key[key] = int(state["step_count"])
+                persisted_updated_scalars += n
+                if ("changed_evidence_known" in state
+                        and "A_changed_mask" in state
+                        and "B_changed_mask" in state):
+                    persisted_changed_by_key[key] = int(
+                        np.count_nonzero(state["A_changed_mask"])
+                        + np.count_nonzero(state["B_changed_mask"]))
+                    if int(state["changed_evidence_known"]) != 1:
+                        changed_unknown_keys.add(key)
+                else:
+                    persisted_changed_by_key[key] = 0
+                    changed_unknown_keys.add(key)
+
+        live_keys = set(self._slots)
+        live_grad_keys = set()
+        live_updated_keys = set()
+        live_changed_by_key = {}
+        for key, st in self._slots.items():
+            n = st.A.numel() + st.B.numel()
+            shape_by_key.setdefault(key, n)
+            if ((st.A.grad is not None and bool((st.A.grad != 0).any()))
+                    or (st.B.grad is not None and bool((st.B.grad != 0).any()))):
+                live_grad_keys.add(key)
             if slot_adam_states(st):
-                updated += st.A.numel() + st.B.numel()
-        trained = updated
+                live_updated_keys.add(key)
+                optimizer_steps_by_key[key] = max(
+                    optimizer_steps_by_key.get(key, 0), int(st.step_count))
+                live_changed_by_key[key] = sum(
+                    int((st.changed_mask[name] != 0).sum().item())
+                    for name in st.params if name in st.changed_mask)
+                if not st.changed_evidence_known:
+                    changed_unknown_keys.add(key)
+
+        activated_keys = committed_keys | live_keys | persisted_updated_keys
+        received_keys = live_grad_keys | persisted_updated_keys
+        updated_keys = persisted_updated_keys | live_updated_keys
+
+        def scalar_count(keys):
+            known = sum(shape_by_key[k] for k in keys if k in shape_by_key)
+            unknown = sum(1 for k in keys if k not in shape_by_key)
+            return int(known), int(unknown)
+
+        initialized, initialized_unknown = scalar_count(committed_keys)
+        activated, activated_unknown = scalar_count(activated_keys)
+        received, received_unknown = scalar_count(received_keys)
+        updated, updated_unknown = scalar_count(updated_keys)
+        changed_by_key = dict(persisted_changed_by_key)
+        changed_by_key.update(live_changed_by_key)
+        demonstrably_trained = int(sum(
+            changed_by_key.get(key, 0) for key in updated_keys))
+        changed_unknown = len(changed_unknown_keys & updated_keys)
         return {
-            "allocated": allocated,
-            "initialized": int(initialized),
-            "initialized_unknown_rows": int(unknown_shape_rows),
-            "initialized_exact": unknown_shape_rows == 0,
+            "allocated": exact_virtual_count(),
+            "initialized": initialized,
+            "initialized_unknown_rows": initialized_unknown,
+            "initialized_exact": initialized_unknown == 0,
             "activated": activated,
-            "received_gradients": grads,
+            "activated_unknown_slots": activated_unknown,
+            "received_gradients": received,
+            "received_gradients_unknown_slots": received_unknown,
             "optimizer_updated": updated,
-            "demonstrably_trained": updated,
-            "updates_applied_total": self._trained_updates(),
-            "partitions_touched": len(
-                _read_json(self.manifest_path)["initialized_rows"]),
+            "optimizer_updated_unknown_slots": updated_unknown,
+            "demonstrably_trained": demonstrably_trained,
+            "demonstrably_trained_unknown_slots": changed_unknown,
+            "demonstrably_trained_exact": changed_unknown == 0,
+            "updates_applied_total": sum(optimizer_steps_by_key.values()),
+            "persisted_optimizer_updated_scalars": persisted_updated_scalars,
+            "orphan_optimizer_state_slots": len(orphan_optimizer_keys),
+            "partitions_touched": len(manifest["initialized_rows"]),
             "partitions_total": N_BANKS,
+            "invariants_hold": (
+                exact_virtual_count() >= initialized >= received
+                >= updated >= demonstrably_trained
+                and updated < exact_virtual_count()
+                and initialized_unknown == 0 and activated_unknown == 0
+                and received_unknown == 0 and updated_unknown == 0
+                and changed_unknown == 0 and not orphan_optimizer_keys),
         }
 
     def _trained_updates(self) -> int:

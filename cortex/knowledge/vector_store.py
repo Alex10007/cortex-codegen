@@ -90,7 +90,7 @@ class VectorStore:
                  kind=excluded.kind, language=excluded.language,
                  version=excluded.version, text=excluded.text,
                  provenance=excluded.provenance, tags=excluded.tags,
-                 embedding=excluded.embedding""",
+                 embedding=excluded.embedding, verified=0, verified_by=NULL""",
             (
                 item.item_id,
                 item.kind,
@@ -100,7 +100,7 @@ class VectorStore:
                 json.dumps(item.provenance.__dict__),
                 json.dumps(item.tags),
                 emb.tobytes() if emb is not None else None,
-                int(item.tags.get("verified", False)),
+                0,  # trust is granted only by mark_verified after validation
             ),
         )
         if not defer_commit:

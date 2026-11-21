@@ -13,3 +13,18 @@ node_modules/
 artifacts/virtual-store-502b/
 *.f32
 *.npz
+# Local environments, credentials and CI runner workspace
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+.secrets/
+actions-runner/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/

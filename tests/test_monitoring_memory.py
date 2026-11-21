@@ -8,12 +8,12 @@ def test_memory_roundtrip(tmp_path):
     mem = MemoryEngine(str(tmp_path / "mem.db"))
     mem.record("proj-a", "outcome", {"ok": True}, verified=True)
     mem.record("proj-a", "failure", {"err": "boom"}, verified=False)
-    mem.put_fact("proj-a", "arch", "monolith")
+    mem.put_fact("proj-a", "arch", "monolith", verified=True)
     ev = mem.events("proj-a")
     assert len(ev) == 2
     assert mem.verified_outcomes("proj-a")[0]["payload"]["ok"] is True
     assert mem.get_fact("proj-a", "arch") == "monolith"
-    mem.put_fact("proj-a", "arch", "modular")
+    mem.put_fact("proj-a", "arch", "modular", verified=True)
     assert mem.get_fact("proj-a", "arch") == "modular"
 
 
