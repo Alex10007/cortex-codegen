@@ -469,3 +469,29 @@ Verification:
 - Strict sandbox remains **NOT RUNTIME-VERIFIED**.
 
 No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or main-branch update occurred.
+
+
+## Stage 16A.22 — descriptor-relative cgroup creation and initial configuration
+
+Changes:
+- The delegated root is opened once as a directory descriptor with no-follow semantics. Its opened device/inode identity is compared with the resolved root identity before any child is created.
+- Controller availability and subtree enablement are read relative to the pinned delegated-root descriptor.
+- Execution cgroups are created with descriptor-relative mkdir semantics. Existing UUID collisions fail closed; the implementation never reuses an existing directory.
+- The newly created child entry is inspected without following symlinks, opened relative to the pinned root, and its device/inode identity is compared with the opened directory descriptor.
+- Initial cpu.max, memory.max, pids.max, memory.swap.max, and memory.oom.group configuration is written relative to the opened child descriptor with O_NOFOLLOW.
+- Required cgroup.procs, cgroup.kill, and cgroup.events controls are checked relative to that descriptor without following symlinks.
+- Setup rollback verifies the child entry identity relative to the pinned parent descriptor and removes only that owned entry. Descriptor closure and rollback errors are retained as failure notes.
+- Added tests for descriptor-relative setup failure rollback and rejection of a symlinked initial control file without modifying its external target. Updated create fixtures to emulate cgroupfs controls under descriptor-relative mkdir.
+- Corrected a malformed escaped newline in the test module import discovered during branch inspection.
+
+Scope and residual risks:
+- The configured root must still be resolved and initially opened by pathname. The opened root is identity-checked and then retained; subsequent controller reads, child creation, child configuration, and rollback are relative to that descriptor.
+- This does not defend against a privileged actor that can alter the mounted cgroup hierarchy or change kernel delegation semantics. It is not a kernel-escape or host-isolation certification.
+- Unit tests emulate cgroup pseudo-files with regular files and `/proc/self/fd` directory resolution. They cannot establish compatibility of all open modes with a live cgroupfs mount or prove that the kernel enforces the configured limits.
+
+Verification:
+- Source, tests, and this report are committed on the remediation branch.
+- Tests have **not been executed**. GitHub Actions continues to fail before job steps are reported; no CI pass is claimed.
+- Live delegated-cgroup v2 and Bubblewrap qualification remains outstanding. Strict sandbox remains **NOT RUNTIME-VERIFIED**.
+
+No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or main-branch update occurred.
