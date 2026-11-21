@@ -327,3 +327,35 @@ inheritance, relative imports, module-alias calls, ambiguous exports, and
 unresolved third-party imports. These tests are committed but have not been
 executed. No model training, checkpoint changes, benchmark promotion, or
 Stage 12 champion change occurred.
+
+
+## Stage 17N — Scope-aware imports, re-exports, and conditional import evidence
+
+Extended the existing Python AST indexer and canonical graph so import bindings
+are keyed by module, lexical scope, and bound name. Imports inside functions
+and classes are recorded in their actual scope; local imports do not leak into
+module scope. The resolver respects explicit global and nonlocal declarations
+when assigning import bindings. Python class namespaces are not treated as
+lexical parents of method bodies.
+
+Package-level direct re-exports are resolved iteratively through the existing
+graph and symbol tables. The indexer emits reexports edges for uniquely
+resolved package exports. Conditional imports nested under if/else, loops,
+try/except/finally, and match cases are distinguished with conditional import
+edge types and counted separately. The implementation does not infer whether
+a runtime condition is true.
+
+Limitations: static AST analysis does not emulate runtime import execution,
+platform-specific conditions, exception fallback outcomes, import hooks,
+dynamic imports, sys.path mutation, namespace packages without indexed files,
+star-import expansion, or arbitrary cyclic re-export behavior. Re-export
+resolution is bounded by the number of indexed modules and only resolves
+uniquely declared direct symbols or already-resolved direct package exports.
+Function-local and class-local bindings are scope-aware, but dynamic control
+flow and all Python compiler symbol-table corner cases are not modeled.
+Cross-language inventories are unchanged.
+
+Added tests for function-local import isolation, nonlocal import binding,
+package re-exports, and conditional-import classification. These tests are
+committed but have not been executed. No model training, checkpoint changes,
+benchmark promotion, or Stage 12 champion change occurred.
