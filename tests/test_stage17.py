@@ -968,3 +968,58 @@ def test_compiler_scope_graph_captures_nested_free_global_and_special_scopes(tmp
     assert counts["compiler_nonlocal_symbols"] >= 1
     assert counts["compiler_global_symbols"] >= 1
     assert counts["compiler_scope_parse_errors"] == 0
+
+def test_stage17p_compiler_global_declaration_bypasses_enclosing_shadow(tmp_path):
+    root = tmp_path / "compiler-global-resolution"
+    root.mkdir()
+    (root / "mod.py").write_text(
+        "def selected():\\n"
+        "    return 'module'\\n"
+        "def outer():\\n"
+        "    def selected():\\n"
+        "        return 'outer'\\n"
+        "    def inner():\\n"
+        "        global selected\\n"
+        "        return selected()\\n"
+        "    return inner()\\n"
+    )
+    store = VectorStore(str(tmp_path / "global-resolution-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "global-resolution-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="stage17p-global")
+    module = f"py:{root.name}/mod.py:stage17p-global"
+    inner = module + ":func:outer.inner"
+    module_selected = module + ":func:selected"
+    outer_selected = module + ":func:outer.selected"
+    targets = {item["node"] for item in graph.neighbors(inner, etype="calls")}
+    assert targets == {module_selected}
+    assert outer_selected not in targets
+    assert counts["compiler_global_symbols"] >= 1
+
+
+def test_stage17p_compiler_nonlocal_declaration_selects_nearest_enclosing_binding(tmp_path):
+    root = tmp_path / "compiler-nonlocal-resolution"
+    root.mkdir()
+    (root / "mod.py").write_text(
+        "def selected():\\n"
+        "    return 'module'\\n"
+        "def outer():\\n"
+        "    def selected():\\n"
+        "        return 'outer'\\n"
+        "    def middle():\\n"
+        "        def inner():\\n"
+        "            nonlocal selected\\n"
+        "            return selected()\\n"
+        "        return inner()\\n"
+        "    return middle()\\n"
+    )
+    store = VectorStore(str(tmp_path / "nonlocal-resolution-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "nonlocal-resolution-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="stage17p-nonlocal")
+    module = f"py:{root.name}/mod.py:stage17p-nonlocal"
+    inner = module + ":func:outer.middle.inner"
+    outer_selected = module + ":func:outer.selected"
+    module_selected = module + ":func:selected"
+    targets = {item["node"] for item in graph.neighbors(inner, etype="calls")}
+    assert targets == {outer_selected}
+    assert module_selected not in targets
+    assert counts["compiler_nonlocal_symbols"] >= 1
