@@ -110,6 +110,52 @@ class CgroupV2:
         return resolved_base
 
     @staticmethod
+    def _open_delegated_root(root: str | os.PathLike[str]) -> tuple[Path, int]:
+        """Open every delegated-root path component without following symlinks."""
+        base = CgroupV2._resolve_delegated_root(root)
+        flags = (os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+                 | getattr(os, "O_CLOEXEC", 0))
+        nofollow = getattr(os, "O_NOFOLLOW", 0)
+        current_fd = -1
+        try:
+            current_fd = os.open("/", flags)
+            for component in base.parts[1:]:
+                if component in ("", ".", ".."):
+                    raise CgroupUnavailable(
+                        "delegated cgroup root contains an unsafe path component")
+                try:
+                    entry = os.stat(component, dir_fd=current_fd, follow_symlinks=False)
+                except OSError as exc:
+                    raise CgroupUnavailable(
+                        f"cannot inspect delegated-root component {component}: {exc}") from exc
+                if not stat.S_ISDIR(entry.st_mode):
+                    raise CgroupUnavailable(
+                        f"delegated-root component {component} is not a real directory")
+                try:
+                    next_fd = os.open(
+                        component, flags | nofollow, dir_fd=current_fd)
+                except OSError as exc:
+                    raise CgroupUnavailable(
+                        f"cannot open delegated-root component {component} without following links: {exc}") from exc
+                opened = os.fstat(next_fd)
+                if (not stat.S_ISDIR(opened.st_mode)
+                        or (opened.st_dev, opened.st_ino) != (entry.st_dev, entry.st_ino)):
+                    os.close(next_fd)
+                    raise CgroupUnavailable(
+                        f"delegated-root component {component} changed identity while opening")
+                os.close(current_fd)
+                current_fd = next_fd
+            final_info = os.fstat(current_fd)
+            if not stat.S_ISDIR(final_info.st_mode):
+                raise CgroupUnavailable("delegated cgroup root is not a directory")
+            result_fd = current_fd
+            current_fd = -1
+            return base, result_fd
+        finally:
+            if current_fd >= 0:
+                os.close(current_fd)
+
+    @staticmethod
     def _read_from_fd(directory_fd: int, name: str) -> str:
         flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
         try:
@@ -166,15 +212,10 @@ class CgroupV2:
         child_identity: tuple[int, int] | None = None
         transferred = False
         try:
-            # Pin the delegated root before reading controllers or creating the child.
-            expected_root = base.stat()
-            parent_fd = os.open(base, directory_flags | nofollow)
-            parent_info = os.fstat(parent_fd)
-            if (not stat.S_ISDIR(parent_info.st_mode)
-                    or (parent_info.st_dev, parent_info.st_ino)
-                    != (expected_root.st_dev, expected_root.st_ino)):
-                raise CgroupUnavailable(
-                    "delegated cgroup root changed identity while opening")
+            # Walk and pin every delegated-root component without following links.
+            opened_base, parent_fd = cls._open_delegated_root(root)
+            if opened_base != base:
+                raise CgroupUnavailable("delegated cgroup root changed during acquisition")
 
             available = set(cls._read_from_fd(parent_fd, "cgroup.controllers").split())
             enabled = set(cls._read_from_fd(parent_fd, "cgroup.subtree_control").split())
@@ -405,9 +446,14 @@ def probe_cgroup_v2() -> dict[str, object]:
             "io_limit": "NOT_CONFIGURED",
         }
     try:
-        base = CgroupV2._resolve_delegated_root(root)
-        available = set((base / "cgroup.controllers").read_text(encoding="ascii").split())
-        enabled = set((base / "cgroup.subtree_control").read_text(encoding="ascii").split())
+        base, root_fd = CgroupV2._open_delegated_root(root)
+        try:
+            available = set(CgroupV2._read_from_fd(
+                root_fd, "cgroup.controllers").split())
+            enabled = set(CgroupV2._read_from_fd(
+                root_fd, "cgroup.subtree_control").split())
+        finally:
+            os.close(root_fd)
     except (OSError, RuntimeError, CgroupUnavailable) as exc:
         return {
             "available": False,
