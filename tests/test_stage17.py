@@ -231,7 +231,7 @@ def test_verified_pipeline_learning_requires_strict_execution_evidence(tmp_path)
 
     store = VectorStore(str(tmp_path / "knowledge.sqlite"))
     learner = LearningEngine(store)
-    code = "def verified_add(a, b):\\n    return a + b\\n"
+    code = "def verified_add(a, b):\n    return a + b\n"
     provenance = Provenance(
         source_uri="file:///verified_add.py", license="project-local",
         version="test", content_sha256=hashlib.sha256(code.encode()).hexdigest(),
