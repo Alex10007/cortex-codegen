@@ -24,6 +24,55 @@ class CgroupV2:
         self.path = path
         self._closed = False
         self._identity = expected_identity or self._path_identity(path)
+        self._parent_fd = -1
+        self._dir_fd = -1
+        directory_flags = (os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+                           | getattr(os, "O_CLOEXEC", 0))
+        try:
+            self._parent_fd = os.open(path.parent, directory_flags)
+            self._dir_fd = os.open(
+                path.name,
+                directory_flags | getattr(os, "O_NOFOLLOW", 0),
+                dir_fd=self._parent_fd,
+            )
+            info = os.fstat(self._dir_fd)
+            if (info.st_dev, info.st_ino) != self._identity:
+                raise CgroupUnavailable(
+                    "execution cgroup changed while opening its directory")
+        except Exception:
+            self._close_directory_fds()
+            raise
+
+    def _close_directory_fds(self) -> None:
+        for attribute in ("_dir_fd", "_parent_fd"):
+            descriptor = getattr(self, attribute, -1)
+            if descriptor >= 0:
+                try:
+                    os.close(descriptor)
+                finally:
+                    setattr(self, attribute, -1)
+
+    def _read_at(self, name: str) -> str:
+        self._assert_owned_path()
+        flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+        try:
+            descriptor = os.open(name, flags, dir_fd=self._dir_fd)
+            with os.fdopen(descriptor, "r", encoding="ascii") as stream:
+                return stream.read()
+        except OSError as exc:
+            raise CgroupUnavailable(
+                f"cannot read {name} from owned cgroup: {exc}") from exc
+
+    def _write_at(self, name: str, value: str) -> None:
+        self._assert_owned_path()
+        flags = os.O_WRONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+        try:
+            descriptor = os.open(name, flags, dir_fd=self._dir_fd)
+            with os.fdopen(descriptor, "w", encoding="ascii") as stream:
+                stream.write(value)
+        except OSError as exc:
+            raise CgroupUnavailable(
+                f"cannot configure {name} in owned cgroup: {exc}") from exc
 
     @staticmethod
     def _path_identity(path: Path) -> tuple[int, int]:
@@ -140,21 +189,26 @@ class CgroupV2:
         self._assert_owned_path()
         if self._closed:
             raise CgroupUnavailable("execution cgroup is already closed")
-        self._write(self.path / "cgroup.procs", str(pid))
+        self._write_at("cgroup.procs", str(pid))
 
     def kill(self) -> None:
         self._assert_owned_path()
         if self._closed:
             return
-        self._write(self.path / "cgroup.kill", "1")
+        self._write_at("cgroup.kill", "1")
 
     @staticmethod
     def _read_events(path: Path) -> dict[str, int]:
         """Parse cgroup.events without accepting ambiguous or partial evidence."""
         try:
-            lines = path.read_text(encoding="ascii").splitlines()
+            contents = path.read_text(encoding="ascii")
         except OSError as exc:
             raise CgroupUnavailable(f"cannot read cgroup.events: {exc}") from exc
+        return CgroupV2._read_events_text(contents)
+
+    @staticmethod
+    def _read_events_text(contents: str) -> dict[str, int]:
+        lines = contents.splitlines()
         fields: dict[str, int] = {}
         for line in lines:
             parts = line.split()
@@ -177,9 +231,7 @@ class CgroupV2:
 
     def wait_empty(self, timeout_s: float = 5.0) -> None:
         self._assert_owned_path()
-        events = self.path / "cgroup.events"
-        if not events.exists():
-            raise CgroupUnavailable("cgroup.events is unavailable; cannot verify process-tree exit")
+        events = "cgroup.events"
         if type(timeout_s) not in (int, float):
             raise ValueError("timeout_s must be a finite positive number")
         try:
@@ -190,7 +242,7 @@ class CgroupV2:
             raise ValueError("timeout_s must be a finite positive number")
         deadline = time.monotonic() + timeout_value
         while True:
-            fields = self._read_events(events)
+            fields = self._read_events_text(self._read_at(events))
             if fields["populated"] == 0:
                 return
             remaining = deadline - time.monotonic()
@@ -202,40 +254,45 @@ class CgroupV2:
     @staticmethod
     def _read_counters(path: Path) -> dict[str, int]:
         try:
-            lines = path.read_text(encoding="ascii").splitlines()
+            contents = path.read_text(encoding="ascii")
         except OSError as exc:
             raise CgroupUnavailable(f"cannot read {path.name}: {exc}") from exc
+        return CgroupV2._read_counters_text(contents, path.name)
+
+    @staticmethod
+    def _read_counters_text(contents: str, name: str) -> dict[str, int]:
+        lines = contents.splitlines()
         counters: dict[str, int] = {}
         for line in lines:
             fields = line.split()
             if len(fields) != 2 or not fields[1].isdigit():
-                raise CgroupUnavailable(f"malformed counter in {path.name}: {line!r}")
+                raise CgroupUnavailable(f"malformed counter in {name}: {line!r}")
             if fields[0] in counters:
                 raise CgroupUnavailable(
-                    f"duplicate counter in {path.name}: {fields[0]!r}")
+                    f"duplicate counter in {name}: {fields[0]!r}")
             counters[fields[0]] = int(fields[1])
         if not counters:
-            raise CgroupUnavailable(f"no counters available in {path.name}")
+            raise CgroupUnavailable(f"no counters available in {name}")
         required = {
             "cpu.stat": {"nr_throttled", "throttled_usec"},
             "memory.events": {"oom", "oom_kill", "oom_group_kill"},
             "pids.events": {"max"},
-        }.get(path.name, set())
+        }.get(name, set())
         missing = required - counters.keys()
         if missing:
             raise CgroupUnavailable(
-                f"missing required counters in {path.name}: {sorted(missing)}")
+                f"missing required counters in {name}: {sorted(missing)}")
         return counters
 
     def snapshot(self) -> dict[str, object]:
         """Capture kernel-maintained resource events before the cgroup is removed."""
         self._assert_owned_path()
-        cpu = self._read_counters(self.path / "cpu.stat")
-        memory_events = self._read_counters(self.path / "memory.events")
-        pids_events = self._read_counters(self.path / "pids.events")
+        cpu = self._read_counters_text(self._read_at("cpu.stat"), "cpu.stat")
+        memory_events = self._read_counters_text(
+            self._read_at("memory.events"), "memory.events")
+        pids_events = self._read_counters_text(self._read_at("pids.events"), "pids.events")
         try:
-            memory_text = (self.path / "memory.current").read_text(
-                encoding="ascii").strip()
+            memory_text = self._read_at("memory.current").strip()
             if not memory_text.isascii() or not memory_text.isdecimal():
                 raise ValueError("memory.current must be a non-negative decimal integer")
             memory_current = int(memory_text)
@@ -255,11 +312,17 @@ class CgroupV2:
         self.wait_empty()
         self._assert_owned_path()
         try:
-            self.path.rmdir()
+            current = os.stat(
+                self.path.name, dir_fd=self._parent_fd, follow_symlinks=False)
+            if (current.st_dev, current.st_ino) != self._identity:
+                raise CgroupUnavailable(
+                    "execution cgroup path identity changed; refusing descriptor-relative removal")
+            os.rmdir(self.path.name, dir_fd=self._parent_fd)
         except OSError as exc:
             raise CgroupUnavailable(
                 f"execution cgroup is not empty or could not be removed: {exc}") from exc
         self._closed = True
+        self._close_directory_fds()
 
 
 def configured_cgroup_root() -> str | None:
