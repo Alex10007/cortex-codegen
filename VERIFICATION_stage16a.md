@@ -601,3 +601,24 @@ Verification:
 - Strict sandbox remains **NOT RUNTIME-VERIFIED** until the full suite runs and this new behavioral check passes on a real deployment host with delegated cgroup v2.
 
 No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or `main` update occurred.
+
+
+## Stage 16A.29 — CI isolation and API limiter connection lifecycle
+
+Additional pre-CI corrections:
+
+- The first self-hosted qualification workflow is restricted to the owner-controlled `fibonera/cortex-remediation-stage16a` branch. It has no `pull_request` trigger; the job also checks the triggering actor and exact branch.
+- Third-party GitHub Actions are pinned to immutable commit SHAs: `actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683` (v4.2.2) and `actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065` (v5.6.0).
+- Every CI job creates a fresh Python virtual environment under `RUNNER_TEMP`; dependency installation no longer modifies the runner account's system Python.
+- The CI preflight verifies that the selected interpreter is the virtual environment, refuses a mounted Windows C: drive, and compiles the Cortex and test packages before test collection.
+- The workflow runs dependency consistency checks, records the resolved package inventory, collects the test suite before execution, and hashes tracked verification artifacts before and after tests.
+- The rate limiter had a connection-lifecycle defect: using a SQLite connection as a context manager commits/rolls back transactions but does not close the connection. `consume()` now uses `contextlib.closing`, and a regression test checks connection closure on both accepted and rate-limited requests.
+- `.gitignore` now excludes local environment files, virtual environments, local secrets directories, and runner workspace files to reduce accidental credential/artifact commits.
+
+Verification status:
+- These changes are source-committed; the new connection-lifecycle regression and complete test suite have **not yet executed**.
+- The latest restricted workflow run is [44872381628](https://github.com/Alex10007/cortex-codegen/actions/runs/44872381628), currently waiting for a matching self-hosted runner.
+- Older queued/pending workflow runs were created before the final branch restriction and virtual-environment correction. They must be canceled in GitHub Actions before the runner is registered; do not let the ephemeral laptop runner accept those older jobs.
+- The first run remains a CPU-only software test. It does not qualify GPU training, production sandbox security, distributed training, or model capability.
+
+**Stage 16A.29 status: implemented in source; NOT RUNTIME-VERIFIED.** No training, checkpoint mutation, benchmark promotion, PR merge, or main-branch change occurred.
