@@ -1,5 +1,7 @@
 """Unit tests for fail-closed cgroup v2 resource enforcement."""
 import os
+import threading
+import time
 from pathlib import Path
 
 import pytest
@@ -573,4 +575,88 @@ def test_close_is_idempotent_after_successful_removal(tmp_path, monkeypatch):
     assert group._closed is True
     assert group._dir_fd == -1
     assert group._parent_fd == -1
+    assert not group_path.exists()
+
+
+
+def test_cgroup_operations_remain_bound_to_pinned_parent_after_path_replacement(
+        tmp_path):
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    group_path = root / "cortex-owned"
+    group_path.mkdir()
+    (group_path / "cgroup.events").write_text("populated 0\\n")
+    group = CgroupV2(group_path)
+
+    moved_root = tmp_path / "delegated-original"
+    root.rename(moved_root)
+    replacement_root = make_fake_cgroup_root(root)
+    replacement_group = replacement_root / group_path.name
+    replacement_group.mkdir()
+    sentinel = replacement_group / "owner-sentinel"
+    sentinel.write_text("replacement entry must survive")
+
+    # The manager must operate only through its pinned original parent fd.
+    group.close()
+
+    assert not (moved_root / group_path.name).exists()
+    assert sentinel.read_text() == "replacement entry must survive"
+    assert replacement_group.is_dir()
+
+
+def test_concurrent_close_calls_are_serialized(tmp_path, monkeypatch):
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    group_path = root / "cortex-owned"
+    group_path.mkdir()
+    (group_path / "cgroup.events").write_text("populated 0\\n")
+    group = CgroupV2(group_path)
+
+    first_waiting = threading.Event()
+    release_first = threading.Event()
+    wait_calls = []
+    removal_calls = []
+    errors = []
+    real_rmdir = os.rmdir
+
+    def controlled_wait_empty(timeout_s=5.0):
+        wait_calls.append(threading.get_ident())
+        if len(wait_calls) == 1:
+            first_waiting.set()
+            if not release_first.wait(timeout=3):
+                raise AssertionError("test did not release first close")
+        # Re-check through the manager's real descriptor-bound event reader.
+        fields = CgroupV2._read_events_text(group._read_at("cgroup.events"))
+        assert fields["populated"] == 0
+
+    def recording_rmdir(name, *, dir_fd=None):
+        if name == group_path.name:
+            removal_calls.append(name)
+            for item in group_path.iterdir():
+                item.unlink()
+        return real_rmdir(name, dir_fd=dir_fd)
+
+    monkeypatch.setattr(group, "wait_empty", controlled_wait_empty)
+    monkeypatch.setattr(os, "rmdir", recording_rmdir)
+
+    def close_worker():
+        try:
+            group.close()
+        except Exception as exc:  # captured for assertion in the parent thread
+            errors.append(exc)
+
+    first = threading.Thread(target=close_worker)
+    second = threading.Thread(target=close_worker)
+    first.start()
+    assert first_waiting.wait(timeout=3)
+    second.start()
+    time.sleep(0.05)
+    release_first.set()
+    first.join(timeout=3)
+    second.join(timeout=3)
+
+    assert not first.is_alive()
+    assert not second.is_alive()
+    assert errors == []
+    assert len(wait_calls) == 1
+    assert removal_calls == [group_path.name]
+    assert group._closed is True
     assert not group_path.exists()
