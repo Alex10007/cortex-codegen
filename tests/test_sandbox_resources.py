@@ -213,6 +213,32 @@ def test_wait_empty_rejects_invalid_timeout_values(tmp_path, timeout):
 
 
 
+def test_probe_rejects_delegated_root_reached_through_intermediate_symlink(tmp_path, monkeypatch):
+    make_fake_cgroup_root(tmp_path / "delegated-real")
+    alias_parent = tmp_path / "parent-alias"
+    alias_parent.symlink_to(tmp_path, target_is_directory=True)
+    aliased_root = alias_parent / "delegated-real"
+    monkeypatch.setenv("CORTEX_CGROUP_ROOT", str(aliased_root))
+
+    result = probe_cgroup_v2()
+
+    assert result["available"] is False
+    assert result["status"] == "FAIL"
+    assert "symlink aliases" in result["reason"]
+
+
+def test_probe_and_create_reject_missing_delegated_root_consistently(tmp_path, monkeypatch):
+    missing = tmp_path / "does-not-exist"
+    monkeypatch.setenv("CORTEX_CGROUP_ROOT", str(missing))
+
+    result = probe_cgroup_v2()
+
+    assert result["available"] is False
+    assert result["status"] == "FAIL"
+    with pytest.raises(CgroupUnavailable, match="cannot be resolved safely"):
+        CgroupV2.create(missing, mem_mb=128, nproc=4)
+
+
 def test_create_rejects_delegated_root_reached_through_symlink(tmp_path):
     real_root = make_fake_cgroup_root(tmp_path / "delegated-real")
     alias = tmp_path / "delegated-alias"
