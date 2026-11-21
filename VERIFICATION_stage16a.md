@@ -338,3 +338,23 @@ Verification:
 - Strict sandbox remains **NOT RUNTIME-VERIFIED**. Live delegated cgroup v2 + Bubblewrap qualification remains required.
 
 No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or `main` update occurred.
+
+
+
+## Stage 16A.16 — launch-gate descriptor failure containment
+
+Static review of the strict launch sequence found that descriptor closure itself could interrupt cleanup. In particular, an exception while closing the parent's gate-read descriptor after `Popen` could bypass cgroup attachment/termination handling, leaving a blocked launcher; a gate-write close failure after release could escape while the child continued executing.
+
+Changes:
+- Added a non-throwing launch-descriptor close helper that returns close failures for explicit handling.
+- On parent gate-read close failure, the launcher is terminated through the common process/cgroup cleanup path and the run fails closed.
+- Gate attachment, release, and gate-write closure now share one guarded failure path. Any failure triggers process/cgroup cleanup; secondary descriptor-close and cleanup failures are retained as exception notes.
+- Process-launch failure now attempts to close both parent descriptors independently before cleaning the unlaunched cgroup.
+- Added focused regression coverage for descriptor-close failure reporting and absent descriptors.
+
+Verification:
+- Source and regression tests are committed. **No Python test has been executed**; the latest GitHub Actions job failed before emitting steps or logs.
+- This is a source-level lifecycle correction, not evidence of live descriptor-race or cgroup behavior.
+- Strict sandbox remains **NOT RUNTIME-VERIFIED** pending a functioning Linux runner with delegated cgroup v2 and Bubblewrap.
+
+No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or `main` update occurred.
