@@ -189,3 +189,14 @@ This is static test-target recommendation, not dependency-complete coverage
 analysis. The engineering pipeline continues to run its full configured suite;
 no tests are silently skipped and no release gate has been weakened.
 Regression-selector tests were added but not executed.
+
+
+### Stage 17H hardening note
+
+Regression-test discovery now prunes common generated/vendor directories,
+caps discovery at 10,000 test files, includes unparseable test files
+conservatively in targeted recommendations, and treats discovery truncation
+as a reason to fall back to the full discovered suite. Changed-path inputs are
+bounded to 4,096 characters. The static capability audit now checks both the
+impact endpoint and the existing adaptive-generation API in one canonical
+API-file entry.

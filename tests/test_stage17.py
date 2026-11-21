@@ -268,9 +268,6 @@ def test_verified_pipeline_learning_requires_strict_execution_evidence(tmp_path)
 
 
 def test_change_impact_traverses_call_import_and_inheritance_dependents(tmp_path):
-    import hashlib
-    from pathlib import Path
-
     root = tmp_path / "repo"
     pkg = root / "pkg"
     pkg.mkdir(parents=True)

@@ -3,6 +3,7 @@ machine-verifiable results (exit code + captured output)."""
 from __future__ import annotations
 
 import ast
+import os
 import sys
 from pathlib import Path
 from typing import Any, Callable
@@ -44,11 +45,24 @@ def select_regression_tests(workspace: str, impact_report: dict[str, Any],
                 target_modules.add(".".join(parts))
                 target_stems.add(parts[-1].lower())
 
-    test_files = sorted({
-        p for pattern in ("test_*.py", "*_test.py")
-        for p in root.rglob(pattern)
-        if p.is_file() and not any(part.startswith(".") for part in p.relative_to(root).parts)
-    })
+    test_files: list[Path] = []
+    excluded_dirs = {".git", ".venv", "venv", "node_modules", ".tox",
+                     "__pycache__", "dist", "build", ".mypy_cache",
+                     ".pytest_cache", ".cortex-state"}
+    discovery_truncated = False
+    for current, dirs, filenames in os.walk(root):
+        dirs[:] = sorted(d for d in dirs
+                         if d not in excluded_dirs and not d.startswith("."))
+        for filename in filenames:
+            if ((filename.startswith("test_") and filename.endswith(".py"))
+                    or filename.endswith("_test.py")):
+                test_files.append(Path(current) / filename)
+                if len(test_files) >= 10000:
+                    discovery_truncated = True
+                    break
+        if discovery_truncated:
+            break
+    test_files.sort()
     selected: set[Path] = set()
     parse_failures: list[str] = []
     for test_path in test_files:
@@ -73,8 +87,10 @@ def select_regression_tests(workspace: str, impact_report: dict[str, Any],
         if any(stem in {"test_" + name, name + "_test"} for name in target_stems):
             selected.add(test_path)
 
+    # A test that cannot be parsed is not safe to omit from a targeted set.
+    selected.update(root / rel for rel in parse_failures)
     all_tests = [p.relative_to(root).as_posix() for p in test_files]
-    if selected:
+    if selected and not discovery_truncated:
         chosen = sorted(p.relative_to(root).as_posix() for p in selected)
         truncated = len(chosen) > max_tests
         return {
@@ -88,6 +104,7 @@ def select_regression_tests(workspace: str, impact_report: dict[str, Any],
             "fallback_to_full_suite": False,
             "limitations": [
                 "Static import/name matching can miss dynamic imports and indirect runtime dependencies.",
+                "Unparseable test files are included conservatively in the selected set.",
                 "Run the full suite before release unless a separately qualified coverage policy permits otherwise.",
             ],
         }
@@ -97,7 +114,7 @@ def select_regression_tests(workspace: str, impact_report: dict[str, Any],
         "targets": all_tests[:max_tests],
         "candidate_test_count": len(all_tests),
         "selected_test_count": min(len(all_tests), max_tests),
-        "truncated": len(all_tests) > max_tests,
+        "truncated": discovery_truncated or len(all_tests) > max_tests,
         "parse_failures": parse_failures,
         "fallback_to_full_suite": True,
         "limitations": [

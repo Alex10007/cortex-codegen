@@ -114,7 +114,10 @@ class KnowledgeGraph:
                 provenance = json.loads(provenance_json)
                 source_uri = provenance.get("source_uri", "")
                 parsed = urlparse(source_uri)
-                source_path = Path(unquote(parsed.path)).resolve(strict=False)                     if parsed.scheme == "file" else None
+                source_path = (
+                    Path(unquote(parsed.path)).resolve(strict=False)
+                    if parsed.scheme == "file" else None
+                )
             except (TypeError, ValueError, json.JSONDecodeError):
                 source_path = None
             if source_path is not None:
