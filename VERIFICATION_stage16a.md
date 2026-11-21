@@ -421,3 +421,25 @@ Verification:
 - Strict sandbox remains **NOT RUNTIME-VERIFIED** pending a functioning Linux runner with delegated cgroup v2 and Bubblewrap.
 
 No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or main update occurred.
+
+
+## Stage 16A.20 — cgroup directory identity binding
+
+Static review found that a `CgroupV2` instance retained only a pathname. If that path were renamed and replaced before teardown, a later `kill()`, `wait_empty()`, or `close()` could act on a different cgroup directory. Setup rollback had a similar pathname-reuse hazard.
+
+Changes:
+- Capture the created cgroup directory's `(st_dev, st_ino)` identity immediately after exclusive creation.
+- Verify the current path still identifies the same non-symlink directory before attach, kill, event polling, snapshot, and removal.
+- Re-check identity immediately before `rmdir()` and refuse teardown if the path has changed.
+- Setup rollback now checks the captured identity and refuses to remove a replacement directory.
+- Added regressions for directory replacement and symlink replacement, asserting replacement/owner data is left untouched.
+
+Safety boundary:
+- This is pathname identity-change detection, not a complete defense against a privileged concurrent rename/replacement between the identity check and filesystem operation (TOCTOU). Descriptor-relative `openat`/directory-fd operations remain the stronger follow-on hardening. No kernel cgroup behavior is inferred from these filesystem tests.
+
+Verification:
+- Source and regression tests committed; **not executed** in this increment.
+- GitHub Actions has repeatedly failed before emitting usable job steps/logs; no CI pass is claimed.
+- Strict sandbox remains **NOT RUNTIME-VERIFIED** pending a functioning Linux runner with delegated cgroup v2 and Bubblewrap.
+
+No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or `main` update occurred.
