@@ -226,3 +226,39 @@ Extended the existing `cortex.knowledge.indexer` to add syntax-level module and 
 Important limitation: these additional language scanners use conservative regular expressions, not compiler-grade parsers. They do not provide complete scope resolution, call-graph construction, type inference, macro expansion, package-manager resolution, Java package/import resolution, or Go package dependency resolution. Comments and string literals can cause false declaration matches. The new counts distinguish foreign-language files/symbols/imports from existing Python counts. These are repository-navigation foundations, not complete multi-language semantic intelligence.
 
 Added tests covering symbol indexing across TypeScript, Rust, Go, and Java, unique relative TypeScript import resolution, and explicit unresolved-import accounting. Tests are committed but have not been executed; the configured GitHub Actions runner has not yet produced a run for the current branch head. No training, checkpoint changes, or capability promotion occurred.
+
+
+
+## Stage 17K — Dependency-cycle and architecture-boundary diagnostics
+
+Extended the existing SQLite-backed `KnowledgeGraph` with two bounded
+repository diagnostics and exposed them through
+`CortexAgent.analyze_architecture`:
+
+- `dependency_cycles` computes strongly connected components over selected
+  canonical graph relationships (imports-local by default). It reports
+  cyclic components, their provenance-backed repository paths, graph bounds,
+  and truncation.
+- `architecture_boundary_violations` evaluates caller-supplied
+  repository-relative path-prefix rules against selected graph edges
+  (imports-local by default). It reports the exact source/target paths,
+  nodes, relationship and rule index. Prefix matching is segment-aware, so
+  `domain2/` does not match a `domain/` rule.
+- Both operate on the existing graph and only include nodes with
+  provenance-resolvable paths inside the requested repository root. The
+  implementation uses iterative strongly connected component traversal to
+  avoid Python recursion-depth dependence.
+
+Architecture rules are explicit inputs; Cortex does not invent a project's
+layering policy or claim to infer architecture intent. Results are diagnostic
+and advisory. They are not wired as a release gate, do not modify files, and
+do not change the engineering pipeline's full-suite test behavior.
+
+Limitations: cycles are only as complete as indexed relationships; unresolved
+imports, missing graph nodes, unindexed languages and dynamic dependencies
+remain invisible. Strongly connected components can contain multiple simple
+cycles. Boundary checks only evaluate the selected edge types and supplied
+path-prefix rules. Tests were added for multi-node cycles, self-loops,
+segment-aware boundary matching, and path-traversal rejection, but have not
+been executed. No model training, checkpoint change, or capability promotion
+occurred.
