@@ -51,7 +51,9 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
     root_path = Path(root).resolve()
     counts = {"files": 0, "modules": 0, "classes": 0, "functions": 0, "docs": 0,
               "edges": 0, "skipped": 0, "local_imports": 0, "calls": 0,
-              "unresolved_calls": 0, "inherits": 0}
+              "unresolved_calls": 0, "ambiguous_calls": 0, "inherits": 0,
+              "ambiguous_inheritance": 0, "type_references": 0,
+              "ambiguous_type_references": 0}
 
     py_files = [p for p in root_path.rglob("*.py")
                 if p.stat().st_size <= max_file_bytes]
@@ -405,7 +407,7 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
             graph.upsert_edge(caller_id, unique[0], "calls", version)
             counts["calls"] += 1
         elif len(definitions) > 1:
-            counts["ambiguous_calls"] = counts.get("ambiguous_calls", 0) + 1
+            counts["ambiguous_calls"] += 1
             counts["unresolved_calls"] += 1
         else:
             counts["unresolved_calls"] += 1
@@ -419,7 +421,7 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
             graph.upsert_edge(child_id, targets[0], "inherits", version)
             counts["inherits"] += 1
         elif len(class_definitions) > 1:
-            counts["ambiguous_inheritance"] = counts.get("ambiguous_inheritance", 0) + 1
+            counts["ambiguous_inheritance"] += 1
 
     for source_id, scope, type_name in pending_type_refs:
         module_id = source_id.split(":func:", 1)[0].split(":class:", 1)[0]
@@ -429,10 +431,9 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
         targets = sorted({item[0] for item in type_definitions})
         if len(type_definitions) == 1 and len(targets) == 1 and targets[0] != source_id:
             graph.upsert_edge(source_id, targets[0], "type_uses", version)
-            counts["type_references"] = counts.get("type_references", 0) + 1
+            counts["type_references"] += 1
         elif len(type_definitions) > 1:
-            counts["ambiguous_type_references"] = (
-                counts.get("ambiguous_type_references", 0) + 1)
+            counts["ambiguous_type_references"] += 1
 
     # Cross-language declaration inventory on the canonical graph. This
     # intentionally records syntax-level declarations and only resolves
