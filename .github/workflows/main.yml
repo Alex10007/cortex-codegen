@@ -1,11 +1,11 @@
-name: Cortex CI (isolated self-hosted)
+name: Cortex CI (restricted WSL runner)
 
 on:
   push:
     branches: [main, "vibe/**", "fibonera/**"]
   workflow_dispatch:
 
-# No pull_request trigger: this laptop runner must not execute untrusted PR code.
+# No pull_request trigger: the laptop runner must not execute untrusted PR code.
 permissions:
   contents: read
 
@@ -53,7 +53,12 @@ jobs:
           set -euxo pipefail
           git ls-files -z -- artifacts 'VERIFICATION*.md' |
             xargs -0 -r sha256sum > "$RUNNER_TEMP/cortex-evidence.before"
-          test -s "$RUNNER_TEMP/cortex-evidence.before"
+          if [ ! -s "$RUNNER_TEMP/cortex-evidence.before" ]; then
+            echo "No tracked Cortex evidence on this legacy branch."
+          else
+            echo "Captured immutable evidence fingerprints:"
+            wc -l "$RUNNER_TEMP/cortex-evidence.before"
+          fi
 
       - name: Install dependencies, collect tests and execute suite
         run: |
