@@ -1,0 +1,285 @@
+{
+  "kind": "cortex-stage13-structural-data-audit",
+  "owned_by": "Fibonera",
+  "workstream": "B-data-audit",
+  "dataset": "/workspace/github__Alex10007__cortex-codegen/artifacts/sft/dataset_v3.jsonl",
+  "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+  "n_records": {
+    "all": 332,
+    "train": 241,
+    "heldout": 65
+  },
+  "capability_coverage_matrix": {
+    "all": {
+      "n_records_with_code": 332,
+      "complete_program_rate": 0.988,
+      "basic_functions": {
+        "n_records": 328,
+        "share": 0.988
+      },
+      "nested_functions": {
+        "n_records": 27,
+        "share": 0.0813
+      },
+      "classes": {
+        "n_records": 0,
+        "share": 0.0
+      },
+      "multiple_classes": {
+        "n_records": 0,
+        "share": 0.0
+      },
+      "imports_and_modules": {
+        "n_records": 3,
+        "share": 0.009
+      },
+      "control_flow": {
+        "n_records": 171,
+        "share": 0.5151
+      },
+      "exceptions": {
+        "n_records": 24,
+        "share": 0.0723
+      },
+      "data_structures": {
+        "n_records": 132,
+        "share": 0.3976
+      },
+      "algorithms_recursion": {
+        "n_records": 6,
+        "share": 0.0181
+      },
+      "multi_function_programs": {
+        "n_records": 27,
+        "share": 0.0813
+      },
+      "tests_assertions": {
+        "n_records": 14,
+        "share": 0.0422
+      },
+      "decorators_annotations": {
+        "n_records": 56,
+        "share": 0.1687
+      },
+      "docstrings": {
+        "n_records": 328,
+        "share": 0.988
+      },
+      "multiline_strings": {
+        "n_records": 328,
+        "share": 0.988
+      },
+      "complete_within_record": {
+        "n_records": 328,
+        "share": 0.988
+      }
+    },
+    "train": {
+      "n_records_with_code": 241,
+      "complete_program_rate": 0.9834,
+      "basic_functions": {
+        "n_records": 237,
+        "share": 0.9834
+      },
+      "nested_functions": {
+        "n_records": 23,
+        "share": 0.0954
+      },
+      "classes": {
+        "n_records": 0,
+        "share": 0.0
+      },
+      "multiple_classes": {
+        "n_records": 0,
+        "share": 0.0
+      },
+      "imports_and_modules": {
+        "n_records": 1,
+        "share": 0.0041
+      },
+      "control_flow": {
+        "n_records": 121,
+        "share": 0.5021
+      },
+      "exceptions": {
+        "n_records": 20,
+        "share": 0.083
+      },
+      "data_structures": {
+        "n_records": 91,
+        "share": 0.3776
+      },
+      "algorithms_recursion": {
+        "n_records": 4,
+        "share": 0.0166
+      },
+      "multi_function_programs": {
+        "n_records": 23,
+        "share": 0.0954
+      },
+      "tests_assertions": {
+        "n_records": 7,
+        "share": 0.029
+      },
+      "decorators_annotations": {
+        "n_records": 43,
+        "share": 0.1784
+      },
+      "docstrings": {
+        "n_records": 237,
+        "share": 0.9834
+      },
+      "multiline_strings": {
+        "n_records": 237,
+        "share": 0.9834
+      },
+      "complete_within_record": {
+        "n_records": 237,
+        "share": 0.9834
+      }
+    },
+    "heldout": {
+      "n_records_with_code": 65,
+      "complete_program_rate": 1.0,
+      "basic_functions": {
+        "n_records": 65,
+        "share": 1.0
+      },
+      "nested_functions": {
+        "n_records": 4,
+        "share": 0.0615
+      },
+      "classes": {
+        "n_records": 0,
+        "share": 0.0
+      },
+      "multiple_classes": {
+        "n_records": 0,
+        "share": 0.0
+      },
+      "imports_and_modules": {
+        "n_records": 1,
+        "share": 0.0154
+      },
+      "control_flow": {
+        "n_records": 39,
+        "share": 0.6
+      },
+      "exceptions": {
+        "n_records": 2,
+        "share": 0.0308
+      },
+      "data_structures": {
+        "n_records": 31,
+        "share": 0.4769
+      },
+      "algorithms_recursion": {
+        "n_records": 1,
+        "share": 0.0154
+      },
+      "multi_function_programs": {
+        "n_records": 4,
+        "share": 0.0615
+      },
+      "tests_assertions": {
+        "n_records": 6,
+        "share": 0.0923
+      },
+      "decorators_annotations": {
+        "n_records": 7,
+        "share": 0.1077
+      },
+      "docstrings": {
+        "n_records": 65,
+        "share": 1.0
+      },
+      "multiline_strings": {
+        "n_records": 65,
+        "share": 1.0
+      },
+      "complete_within_record": {
+        "n_records": 65,
+        "share": 1.0
+      }
+    }
+  },
+  "audit_dataset_structure": {
+    "n_records": 332,
+    "parses_rate": 0.988,
+    "complete_program_rate": 0.988,
+    "with_class_rate": 0.0,
+    "with_imports_rate": 0.009,
+    "delimiters_balanced_rate": 1.0,
+    "docstring_records_rate": 0.988,
+    "function_len_astnodes_avg": 24.9,
+    "function_len_astnodes_max": 156,
+    "nesting_depth_avg": 2.14,
+    "nesting_depth_max": 9
+  },
+  "structural_cut_summary": {
+    "all": {
+      "records_needing_cuts": 163,
+      "cuts": 531,
+      "clean_cuts": 354,
+      "fallback_hard_cuts": 177
+    },
+    "train": {
+      "records_needing_cuts": 111,
+      "cuts": 360,
+      "clean_cuts": 242,
+      "fallback_hard_cuts": 118
+    },
+    "heldout": {
+      "records_needing_cuts": 35,
+      "cuts": 118,
+      "clean_cuts": 79,
+      "fallback_hard_cuts": 39
+    }
+  },
+  "context_fits_by_style": {
+    "legacy": {
+      "rows": 454,
+      "rows_with_eot_in_context": 0,
+      "eot_in_context_total": 0,
+      "avg_prompt_tokens": 148.5
+    },
+    "eval_aligned": {
+      "rows": 450,
+      "rows_with_eot_in_context": 257,
+      "eot_in_context_total": 257,
+      "avg_prompt_tokens": 150.9
+    }
+  },
+  "dataset_overlap": {
+    "n_records": 241,
+    "exact_duplicate_records": 0,
+    "repeated_function_bodies": 2,
+    "repeated_function_body_examples": [
+      "train/FunctionDef:wrapper"
+    ],
+    "train_val_heldout_near_dup_pairs_ge_0.8": 0,
+    "splits": {
+      "train": 241,
+      "val": 0,
+      "heldout": 0
+    }
+  },
+  "benchmark_contamination": {
+    "max_contamination_overlap": 0.2472,
+    "worst_task": "t-wordcount",
+    "worst_record": "repo::cortexpkg_textools"
+  },
+  "single_function_bias_note": "stage-12 measured classes at 0.0%; this matrix re-measures the same structural gap rather than adding examples",
+  "experiment": {
+    "experiment_id": "stage13-B-structural-data-audit",
+    "parent_commit": "a8c4e98",
+    "source_commit": "402de4691ef7",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "the structural coverage matrix shows the class/nested/multi-function gaps measured in stage 12 (classes 0.0%) reproduce on every split, and structural cut statistics quantify how much of the record stream the 256-token sequence cannot hold",
+    "acceptance_criteria": "immutable dataset fingerprints unchanged; measured from parsed records only; no data modification",
+    "started": "2026-11-20T11:11:02+0000",
+    "finished": "2026-11-20T11:11:04+0000",
+    "decision": "EXECUTED"
+  }
+}

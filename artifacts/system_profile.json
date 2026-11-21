@@ -1,0 +1,11 @@
+{
+  "cpu_cores": 5,
+  "ram_total_gb": 5.92,
+  "ram_available_gb": 5.55,
+  "disk_free_gb": 5459.39,
+  "has_cuda": false,
+  "gpu_name": "none",
+  "platform": "Linux x86_64",
+  "python_version": "3.12.14",
+  "torch_version": "2.15.0+cpu"
+}

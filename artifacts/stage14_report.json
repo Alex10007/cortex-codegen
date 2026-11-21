@@ -1,0 +1,901 @@
+{
+  "kind": "cortex-stage14-report",
+  "owned_by": "Fibonera",
+  "stage": 14,
+  "summary": {
+    "parent_commit": "c30ceb5",
+    "A_two_b_training": "BLOCKED - 0 CUDA devices; ~46 GB RAM required vs measured available; no paid procurement authorized ($0.00 spent)",
+    "B_feedback_rows": 47,
+    "B_candidate_parse_rate": 0.0208,
+    "B_passed_reference_doctests": 1,
+    "B_repair_success_rate": 0.0,
+    "B_capability": {
+      "n_tasks": 15,
+      "pass_at_1": 0.0,
+      "syntax_valid_rate": 0.0,
+      "complete_program_rate": 0.0,
+      "execution_attempted_rate": 1.0,
+      "per_task": [
+        {
+          "suite": "v1",
+          "task_id": "t-palindrome",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-fizzbuzz",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-wordcount",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-run-length-encode",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-interval-merge",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-aggregate",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-window-free",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-off-by-one",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-mutation",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-testgen-cases",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-refactor-fluent",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-api-handler",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-security-safe-substitute",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-performance-sort-k",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-multi-call-node",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        }
+      ],
+      "v1_pass_at_1": 0.0,
+      "v1_n_tasks": 3,
+      "v1_per_task": [
+        {
+          "suite": "v1",
+          "task_id": "t-palindrome",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-fizzbuzz",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-wordcount",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        }
+      ],
+      "v3_pass_at_1": 0.0,
+      "v3_n_tasks": 12,
+      "v3_per_task": [
+        {
+          "suite": "v3",
+          "task_id": "t3-run-length-encode",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-interval-merge",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-aggregate",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-window-free",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-off-by-one",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-mutation",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-testgen-cases",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-refactor-fluent",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-api-handler",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-security-safe-substitute",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-performance-sort-k",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-multi-call-node",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        }
+      ]
+    },
+    "B_heldout_final": {
+      "native": 3.2048,
+      "eval_aligned": 3.2174
+    },
+    "C_findings": {
+      "heldout_eval_aligned_delta_structural_vs_control": -0.0126,
+      "heldout_native_delta_structural_vs_control": 0.0,
+      "structural_vs_stage13_align_delta": -0.0374,
+      "regression_persists_at_6000": false
+    },
+    "C_arms": {
+      "control_h6000": {
+        "heldout_eval_aligned_final": 2.925,
+        "capability": {
+          "n_tasks": 15,
+          "pass_at_1": 0.0,
+          "syntax_valid_rate": 0.0,
+          "complete_program_rate": 0.0,
+          "execution_attempted_rate": 1.0,
+          "per_task": [
+            {
+              "suite": "v1",
+              "task_id": "t-palindrome",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v1",
+              "task_id": "t-fizzbuzz",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v1",
+              "task_id": "t-wordcount",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-run-length-encode",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-interval-merge",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-sql-sqlite-aggregate",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-sql-sqlite-window-free",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-debug-off-by-one",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-debug-mutation",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-testgen-cases",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-refactor-fluent",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-api-handler",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-security-safe-substitute",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-performance-sort-k",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-multi-call-node",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            }
+          ],
+          "v1_pass_at_1": 0.0,
+          "v1_n_tasks": 3,
+          "v1_per_task": [
+            {
+              "suite": "v1",
+              "task_id": "t-palindrome",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v1",
+              "task_id": "t-fizzbuzz",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v1",
+              "task_id": "t-wordcount",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            }
+          ],
+          "v3_pass_at_1": 0.0,
+          "v3_n_tasks": 12,
+          "v3_per_task": [
+            {
+              "suite": "v3",
+              "task_id": "t3-run-length-encode",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-interval-merge",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-sql-sqlite-aggregate",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-sql-sqlite-window-free",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-debug-off-by-one",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-debug-mutation",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-testgen-cases",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-refactor-fluent",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-api-handler",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-security-safe-substitute",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-performance-sort-k",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-multi-call-node",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            }
+          ]
+        }
+      },
+      "structural_h6000": {
+        "heldout_eval_aligned_final": 2.9124,
+        "capability": {
+          "n_tasks": 15,
+          "pass_at_1": 0.0,
+          "syntax_valid_rate": 0.0,
+          "complete_program_rate": 0.0,
+          "execution_attempted_rate": 1.0,
+          "per_task": [
+            {
+              "suite": "v1",
+              "task_id": "t-palindrome",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v1",
+              "task_id": "t-fizzbuzz",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v1",
+              "task_id": "t-wordcount",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-run-length-encode",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-interval-merge",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-sql-sqlite-aggregate",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-sql-sqlite-window-free",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-debug-off-by-one",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-debug-mutation",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-testgen-cases",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-refactor-fluent",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-api-handler",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-security-safe-substitute",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-performance-sort-k",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-multi-call-node",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            }
+          ],
+          "v1_pass_at_1": 0.0,
+          "v1_n_tasks": 3,
+          "v1_per_task": [
+            {
+              "suite": "v1",
+              "task_id": "t-palindrome",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v1",
+              "task_id": "t-fizzbuzz",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v1",
+              "task_id": "t-wordcount",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            }
+          ],
+          "v3_pass_at_1": 0.0,
+          "v3_n_tasks": 12,
+          "v3_per_task": [
+            {
+              "suite": "v3",
+              "task_id": "t3-run-length-encode",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-interval-merge",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-sql-sqlite-aggregate",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-sql-sqlite-window-free",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-debug-off-by-one",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-debug-mutation",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-testgen-cases",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-refactor-fluent",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-api-handler",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-security-safe-substitute",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-performance-sort-k",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            },
+            {
+              "suite": "v3",
+              "task_id": "t3-multi-call-node",
+              "nonempty": true,
+              "parse": false,
+              "complete_program": false,
+              "executed": true,
+              "passed": false
+            }
+          ]
+        }
+      }
+    },
+    "D_decision": "NOT PROMOTED",
+    "D_gates_passed": 0,
+    "D_champion_candidate": "structural_h6000",
+    "fingerprint_v1": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177",
+    "fingerprint_v2": "64ea2c020004af92854aebdde0557678293313b06881fdf5b5abb54e8729c8a3",
+    "fingerprint_v3": "c70feb13b061a35b9b3940296c40ea8365aa57089b325050ef238dc93774ccbb",
+    "spend_usd": 0.0,
+    "gpu_hours": 0.0,
+    "authoritative_store_untouched": true
+  }
+}

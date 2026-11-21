@@ -1,0 +1,17 @@
+{
+  "config": "cortex-demo",
+  "records_overfit": [
+    "all_classes",
+    "dotproduct",
+    "separate",
+    "_TrimmedRelease.release"
+  ],
+  "steps_executed": 50,
+  "loss_first": 10.4376,
+  "loss_last": 0.982,
+  "target_loss": 1.0,
+  "reached_target": true,
+  "greedy_next_token_accuracy_on_memorized_examples": 0.88,
+  "free_running_sample": "\n    \"\"\"\n    \"\"\"\n    \"\"\"\n    return c.\n    \"\"\"\n    \"\"\"\n    \"\"\"\n    \"\"\"\n    \"\"\"\n    \"\"\"\n    \"\"\"\n    \"\"\"\n    >>> list in all_classes(c2):\n    \"\"\"\n    return c.mro()\n    \"\"\"\n",
+  "peak_rss_mb": 1152.1
+}

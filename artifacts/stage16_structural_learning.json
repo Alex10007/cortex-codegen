@@ -1,0 +1,237 @@
+{
+  "kind": "cortex-stage16-structural-learning",
+  "owned_by": "Fibonera",
+  "workstream": "3-structural",
+  "primary_arm": "exposure_sched",
+  "comparison": {
+    "control": {
+      "indent_transition_accuracy": 0.9216,
+      "structural_token_accuracy": {
+        "n_batches": 6,
+        "accuracy_overall": 0.5742,
+        "accuracy_whitespace": 0.8661,
+        "accuracy_structure_keyword": 0.7288,
+        "accuracy_delimiter": 0.6667,
+        "accuracy_other": 0.4439,
+        "token_counts": {
+          "whitespace": 254,
+          "structure_keyword": 59,
+          "delimiter": 192,
+          "other": 775,
+          "overall": 1280
+        }
+      },
+      "first_transition_divergence": {
+        "n_examples": 16,
+        "n_with_transition_error": 3,
+        "examples_with_all_transitions_correct": 13,
+        "first_error_position_mean": 46.7,
+        "first_error_position_max": 89
+      },
+      "free_running_parse_rate": 0.125
+    },
+    "primary": {
+      "indent_transition_accuracy": 0.9216,
+      "structural_token_accuracy": {
+        "n_batches": 6,
+        "accuracy_overall": 0.5742,
+        "accuracy_whitespace": 0.8661,
+        "accuracy_structure_keyword": 0.7288,
+        "accuracy_delimiter": 0.6667,
+        "accuracy_other": 0.4439,
+        "token_counts": {
+          "whitespace": 254,
+          "structure_keyword": 59,
+          "delimiter": 192,
+          "other": 775,
+          "overall": 1280
+        }
+      },
+      "first_transition_divergence": {
+        "n_examples": 16,
+        "n_with_transition_error": 3,
+        "examples_with_all_transitions_correct": 13,
+        "first_error_position_mean": 46.7,
+        "first_error_position_max": 89
+      },
+      "free_running_parse_rate": 0.125
+    },
+    "rep2_free_running_parse_rate": 0.125
+  },
+  "primary_free_running_probes": {
+    "n_probes": 8,
+    "parse_rate": 0.125,
+    "complete_program_rate": 0.0,
+    "per_probe": [
+      {
+        "probe": "nested_function",
+        "parse": false,
+        "complete_program": false,
+        "taxonomy": "unexpected_indentation_transition",
+        "stopped": "eot",
+        "eot_step": 38,
+        "n_generated_tokens": 38,
+        "first_invalid": {
+          "first_invalid_index": 3,
+          "position": "beginning",
+          "directly_introduced_by_newest_token": true,
+          "failure_class": "invalid_token_direct",
+          "category": "incorrect_indentation",
+          "parser_message": "unexpected indent",
+          "error_line": 2,
+          "error_column": 4
+        }
+      },
+      {
+        "probe": "nested_control",
+        "parse": true,
+        "complete_program": false,
+        "taxonomy": "complete_program",
+        "stopped": "repetition_degeneracy_at_step_8",
+        "eot_step": null,
+        "n_generated_tokens": 8,
+        "first_invalid": {
+          "first_invalid_index": null,
+          "position": null,
+          "directly_introduced_by_newest_token": null,
+          "failure_class": "valid_program",
+          "category": null,
+          "parser_message": null,
+          "error_line": null,
+          "error_column": null
+        }
+      },
+      {
+        "probe": "class_with_methods",
+        "parse": false,
+        "complete_program": false,
+        "taxonomy": "unexpected_indentation_transition",
+        "stopped": "eot",
+        "eot_step": 34,
+        "n_generated_tokens": 34,
+        "first_invalid": {
+          "first_invalid_index": 4,
+          "position": "beginning",
+          "directly_introduced_by_newest_token": true,
+          "failure_class": "invalid_token_direct",
+          "category": "incorrect_indentation",
+          "parser_message": "unexpected indent",
+          "error_line": 3,
+          "error_column": 4
+        }
+      },
+      {
+        "probe": "exception_handling",
+        "parse": false,
+        "complete_program": false,
+        "taxonomy": "other_parser_confirmed_syntax_error",
+        "stopped": "eot",
+        "eot_step": 2,
+        "n_generated_tokens": 2,
+        "first_invalid": {
+          "first_invalid_index": 2,
+          "position": "middle",
+          "directly_introduced_by_newest_token": true,
+          "failure_class": "invalid_token_direct",
+          "category": "other_parser_confirmed_syntax_error",
+          "parser_message": "invalid syntax",
+          "error_line": 2,
+          "error_column": 1
+        }
+      },
+      {
+        "probe": "imports_and_module",
+        "parse": false,
+        "complete_program": false,
+        "taxonomy": "unexpected_indentation_transition",
+        "stopped": "eot",
+        "eot_step": 40,
+        "n_generated_tokens": 40,
+        "first_invalid": {
+          "first_invalid_index": 5,
+          "position": "beginning",
+          "directly_introduced_by_newest_token": true,
+          "failure_class": "invalid_token_direct",
+          "category": "incorrect_indentation",
+          "parser_message": "unexpected indent",
+          "error_line": 2,
+          "error_column": 8
+        }
+      },
+      {
+        "probe": "multi_function",
+        "parse": false,
+        "complete_program": false,
+        "taxonomy": "unexpected_indentation_transition",
+        "stopped": "repetition_degeneracy_at_step_8",
+        "eot_step": null,
+        "n_generated_tokens": 8,
+        "first_invalid": {
+          "first_invalid_index": 2,
+          "position": "beginning",
+          "directly_introduced_by_newest_token": true,
+          "failure_class": "invalid_token_direct",
+          "category": "incorrect_indentation",
+          "parser_message": "unexpected indent",
+          "error_line": 1,
+          "error_column": 2
+        }
+      },
+      {
+        "probe": "docstring_program",
+        "parse": false,
+        "complete_program": false,
+        "taxonomy": "premature_eot_open_construct",
+        "stopped": "eot",
+        "eot_step": 53,
+        "n_generated_tokens": 53,
+        "first_invalid": {
+          "first_invalid_index": null,
+          "position": null,
+          "directly_introduced_by_newest_token": null,
+          "failure_class": "incomplete_only_never_invalid",
+          "category": "premature_stop_open_construct",
+          "parser_message": "unterminated triple-quoted string literal (detected at line 7)",
+          "error_line": 5,
+          "error_column": 5
+        }
+      },
+      {
+        "probe": "longer_program",
+        "parse": false,
+        "complete_program": false,
+        "taxonomy": "other_parser_confirmed_syntax_error",
+        "stopped": "eot",
+        "eot_step": 2,
+        "n_generated_tokens": 2,
+        "first_invalid": {
+          "first_invalid_index": 2,
+          "position": "middle",
+          "directly_introduced_by_newest_token": true,
+          "failure_class": "invalid_token_direct",
+          "category": "other_parser_confirmed_syntax_error",
+          "parser_message": "invalid syntax",
+          "error_line": 2,
+          "error_column": 1
+        }
+      }
+    ]
+  },
+  "findings": {
+    "teacher_forced_not_regressed": true,
+    "free_running_changed": false,
+    "note": "phase-3 acceptance requires free-running change; teacher-forced-only improvement is NOT accepted"
+  },
+  "experiment": {
+    "experiment_id": "stage16-3-structural-transition-learning",
+    "parent_commit": "799a217",
+    "source_commit": "799a21758b1a",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "the exposure arms' free-running improvement is coupled to a measurable change in teacher-forced structural prediction (first-transition divergence and indent-transition accuracy), not only to lower loss",
+    "acceptance_criteria": "control vs pre-registered primary arm (exposure_sched) compared on: teacher-forced indent-transition accuracy, per-class structural accuracy, FIRST transition divergence position on the real held-out split, and the free-running parse rates from the arms' instrumented probes; a structural objective is accepted only if free-running parse rate changes, never on token metrics alone; no separate grammar engine, decoder unchanged",
+    "started": "2026-11-20T21:28:45+0000",
+    "finished": "2026-11-20T21:28:46+0000",
+    "decision": "EXECUTED"
+  }
+}

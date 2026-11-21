@@ -1,0 +1,119 @@
+{
+  "kind": "cortex-capability-maturity",
+  "owned_by": "Fibonera",
+  "levels": {
+    "0": "conceptual-or-specified",
+    "1": "implemented",
+    "2": "executes-correctly",
+    "3": "learns-from-training",
+    "4": "improves-on-heldout",
+    "5": "independently-reproduces",
+    "6": "outperforms-baseline",
+    "7": "transfers-to-unfamiliar"
+  },
+  "capabilities": [
+    {
+      "capability": "checkpoint_recovery",
+      "level": 5,
+      "level_name": "independently-reproduces",
+      "status": "next gate unmet: outperforms_baseline",
+      "evidence_keys": [
+        "executes",
+        "implemented",
+        "improves_heldout",
+        "independent_reproduction",
+        "learns",
+        "note"
+      ]
+    },
+    {
+      "capability": "code_generation_execution_verified",
+      "level": 2,
+      "level_name": "executes-correctly",
+      "status": "blocked: pass@1 = 0.0 on all immutable suites (stages 6-10)",
+      "evidence_keys": [
+        "blocked",
+        "executes",
+        "implemented"
+      ]
+    },
+    {
+      "capability": "divergent_reasoning",
+      "level": 2,
+      "level_name": "executes-correctly",
+      "status": "blocked: pass rates 0.0 (REJECTED-BY-EVALUATION, stage 9)",
+      "evidence_keys": [
+        "blocked",
+        "executes",
+        "implemented"
+      ]
+    },
+    {
+      "capability": "full_scale_2b_training",
+      "level": 1,
+      "level_name": "implemented",
+      "status": "blocked: 0 CUDA devices (workstreams A/B)",
+      "evidence_keys": [
+        "blocked",
+        "implemented"
+      ]
+    },
+    {
+      "capability": "moe_expert_specialization",
+      "level": 2,
+      "level_name": "executes-correctly",
+      "status": "blocked: input-conditional routing measured (JS up to 0.024) but task-performance specialization not demonstrated",
+      "evidence_keys": [
+        "blocked",
+        "executes",
+        "implemented"
+      ]
+    },
+    {
+      "capability": "virtual_parameter_training",
+      "level": 4,
+      "level_name": "improves-on-heldout",
+      "status": "next gate unmet: independent_reproduction",
+      "evidence_keys": [
+        "executes",
+        "implemented",
+        "improves_heldout",
+        "learns"
+      ]
+    }
+  ],
+  "stage10_readiness_summary": {
+    "max_capability_level": 5,
+    "shared_subsystems": [
+      "model",
+      "tokenizer",
+      "training",
+      "virtual",
+      "coordinator",
+      "moe",
+      "divergent",
+      "evaluation",
+      "recovery",
+      "audit"
+    ],
+    "roadmap": [
+      "raise code generation to level 4: first pass@1 > 0 at fixed decoding on v1/v3",
+      "MoE task-performance panel once pass > 0",
+      "virtual-coverage -> capability correlation at GPU scale",
+      "2B pretraining once the workstream-A gate passes"
+    ]
+  },
+  "workstream": "I-readiness",
+  "experiment": {
+    "experiment_id": "stage10-I-readiness",
+    "parent_commit": "a8c4e98",
+    "source_commit": "a8c4e98377bd",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "capability maturity levels are derived from artifact evidence only",
+    "acceptance_criteria": "each level requires its evidence gate; missing artifacts mean missing levels",
+    "started": "2026-11-20T02:04:46+0000",
+    "finished": "2026-11-20T02:04:46+0000",
+    "decision": "EXECUTED"
+  }
+}

@@ -1,0 +1,1278 @@
+{
+  "kind": "cortex-stage12-autoregressive-diagnostics",
+  "owned_by": "Fibonera",
+  "workstream": "A-diagnostics",
+  "decoding": {
+    "temperature": 0.2,
+    "top_k": 50,
+    "max_new_tokens": 180
+  },
+  "per_subject": {
+    "dense-control": {
+      "n_tasks": 15,
+      "parse_rate": 0.0,
+      "complete_program_rate": 0.0,
+      "pass_at_1": 0.0,
+      "stopped_distribution": {
+        "eot": 10,
+        "max_new_tokens": 5
+      },
+      "first_invalid_class_distribution": {
+        "invalid_token_direct": 13,
+        "incomplete_only_never_invalid": 2
+      },
+      "first_invalid_category_distribution": {
+        "incorrect_indentation": 11,
+        "premature_stop_open_construct": 2,
+        "other_parser_confirmed_syntax_error": 2
+      },
+      "first_invalid_position_distribution": {
+        "beginning": 13,
+        "none": 2
+      },
+      "directly_introduced_share": 0.8667,
+      "reference_token_probability_style_ab": {
+        "t-palindrome": {
+          "eval_style_prompt": {
+            "n_scored": 42,
+            "mean_ref_token_logprob": -5.766072,
+            "mean_ref_token_prob": 0.163354,
+            "min_ref_token_logprob": -18.66164
+          },
+          "train_style_prompt": {
+            "n_scored": 42,
+            "mean_ref_token_logprob": -5.862231,
+            "mean_ref_token_prob": 0.157852,
+            "min_ref_token_logprob": -18.726467
+          }
+        },
+        "t-fizzbuzz": {
+          "eval_style_prompt": {
+            "n_scored": 64,
+            "mean_ref_token_logprob": -3.652323,
+            "mean_ref_token_prob": 0.237414,
+            "min_ref_token_logprob": -12.847073
+          },
+          "train_style_prompt": {
+            "n_scored": 64,
+            "mean_ref_token_logprob": -3.663607,
+            "mean_ref_token_prob": 0.241593,
+            "min_ref_token_logprob": -12.902891
+          }
+        },
+        "t-wordcount": {
+          "eval_style_prompt": {
+            "n_scored": 53,
+            "mean_ref_token_logprob": -4.045429,
+            "mean_ref_token_prob": 0.228093,
+            "min_ref_token_logprob": -13.666858
+          },
+          "train_style_prompt": {
+            "n_scored": 53,
+            "mean_ref_token_logprob": -4.106348,
+            "mean_ref_token_prob": 0.22873,
+            "min_ref_token_logprob": -13.806291
+          }
+        }
+      },
+      "per_task": [
+        {
+          "suite": "v1",
+          "task_id": "t-palindrome",
+          "text_head": "\ndef _is_name(func):\n    \"\"\"\n    return _is_name(value)\n    if not None:\n        return _is_name(name)\n    return _get_name(args, _name=None)\n    return _is_name(self)\n    return _args\n    return _args\n<|endoftext|>",
+          "n_tokens": 75,
+          "stopped": "eot",
+          "eot_step": 75,
+          "entropy_mean": 0.3972,
+          "first_invalid": {
+            "first_invalid_index": null,
+            "position": null,
+            "directly_introduced_by_newest_token": null,
+            "failure_class": "incomplete_only_never_invalid",
+            "category": "premature_stop_open_construct",
+            "parser_message": "unterminated triple-quoted string literal (detected at line 11)",
+            "error_line": 3,
+            "error_column": 5
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-fizzbuzz",
+          "text_head": "\n    >>> list(iterable(iterable):\n        \"\"\"\n        return self._is_name(self.get(self.get(self.get(self.get_kwargs)\n        return self._is_name(self.name)\n    return self.is_name(self)\n<|endoftext|>",
+          "n_tokens": 65,
+          "stopped": "eot",
+          "eot_step": 65,
+          "entropy_mean": 0.3376,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-wordcount",
+          "text_head": "\ndef __init__(self, other):\n        \"\"\"Return the version of the first value of the first\n        >>> list(self.is_text(self.is_text(self.stream.stream.stream)\n        >>> c.is_text(self.stream.stream.stream.stream.stream.stream.stream.\n        >>> list(text.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.stream.strea",
+          "n_tokens": 180,
+          "stopped": "max_new_tokens",
+          "eot_step": null,
+          "entropy_mean": 0.1897,
+          "first_invalid": {
+            "first_invalid_index": null,
+            "position": null,
+            "directly_introduced_by_newest_token": null,
+            "failure_class": "incomplete_only_never_invalid",
+            "category": "premature_stop_open_construct",
+            "parser_message": "unterminated triple-quoted string literal (detected at line 6)",
+            "error_line": 3,
+            "error_column": 9
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-run-length-encode",
+          "text_head": "<|endoftext|>",
+          "n_tokens": 1,
+          "stopped": "eot",
+          "eot_step": 1,
+          "entropy_mean": 0.7897,
+          "first_invalid": {
+            "first_invalid_index": 1,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "other_parser_confirmed_syntax_error",
+            "parser_message": "invalid syntax",
+            "error_line": 1,
+            "error_column": 1
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-interval-merge",
+          "text_head": "\n    >>> list(iterable, 3, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1",
+          "n_tokens": 180,
+          "stopped": "max_new_tokens",
+          "eot_step": null,
+          "entropy_mean": 0.1252,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-aggregate",
+          "text_head": "<|endoftext|>",
+          "n_tokens": 1,
+          "stopped": "eot",
+          "eot_step": 1,
+          "entropy_mean": 0.5466,
+          "first_invalid": {
+            "first_invalid_index": 1,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "other_parser_confirmed_syntax_error",
+            "parser_message": "invalid syntax",
+            "error_line": 1,
+            "error_column": 1
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-window-free",
+          "text_head": "\n    >>> list(iterable):\n    \"\"\"\n    return _is_name(name)\n    return self._get_name(self)\n    return self._get_name(self)\n    return self._get_name(self)\n    return self._get_name(self)\n    return self._get_name(self)\n    return self._get_value(self)\n    return self._name\n<|endoftext|>",
+          "n_tokens": 94,
+          "stopped": "eot",
+          "eot_step": 94,
+          "entropy_mean": 0.2196,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-off-by-one",
+          "text_head": "    \"\"\"\n    return _is_name(iterable)\n    return _is_name(name)\n    return _is_name(iterable)\n    return self.is_name(value)\n    return _is_name(value)\n    return _get_name(name, _name=True)\n    return _is_name(value)\n    return _name\n<|endoftext|>",
+          "n_tokens": 85,
+          "stopped": "eot",
+          "eot_step": 85,
+          "entropy_mean": 0.416,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-mutation",
+          "text_head": "    \"\"\"\n    return self._is_name(name, _is_name=True)\n    return _is_name(func)\n    return _is_name(args, _is_name(args, _get_value=True)\n    if not None:\n        return _get_name(value, _get_name=True)\n    return _is_name(name, _get_name=True)\n    return _is_args(value, _get_name=None)\n    return _name\n<|endoftext|>",
+          "n_tokens": 118,
+          "stopped": "eot",
+          "eot_step": 118,
+          "entropy_mean": 0.4146,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-testgen-cases",
+          "text_head": "\n    >>> list(iterable('2.0')\n    >>> list(i('1.0.0')\n    >>> list(1)\n    '1.0.0.0'\n    \"\"\"\n    return self.items(b.0)\n    return a.get('1.0')\n    return _get_name(iterable, 2)\n    return self.read(b)\n    return _is_name(data)\n    return _get_name(self)\n<|endoftext|>",
+          "n_tokens": 110,
+          "stopped": "eot",
+          "eot_step": 110,
+          "entropy_mean": 0.5074,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-refactor-fluent",
+          "text_head": "\n    >>> list(func):\n    \"\"\"\n    return a_name(\"1.0.\n\n    >>> list(iterable, 3)\n    >>> list(b('0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.",
+          "n_tokens": 180,
+          "stopped": "max_new_tokens",
+          "eot_step": null,
+          "entropy_mean": 0.1158,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-api-handler",
+          "text_head": "\n    >>> list(get_request(text)\n    'foo':\n        \"\"\"\n    return _get_text(self)\n<|endoftext|>",
+          "n_tokens": 31,
+          "stopped": "eot",
+          "eot_step": 31,
+          "entropy_mean": 0.4826,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-security-safe-substitute",
+          "text_head": "\n    >>> _check_name(\"b-a-b-b-1\")\n    '1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0",
+          "n_tokens": 180,
+          "stopped": "max_new_tokens",
+          "eot_step": null,
+          "entropy_mean": 0.1076,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-performance-sort-k",
+          "text_head": "\n    >>> list(b('1.3.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.1.0.0.0.0.0.0.0",
+          "n_tokens": 180,
+          "stopped": "max_new_tokens",
+          "eot_step": null,
+          "entropy_mean": 0.0655,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-multi-call-node",
+          "text_head": "        if not isinstance(self.get_name(self.get_args)\n        return self.is_name(self.name, self.get_args)\n    if not self._get_value:\n        return self._get_name(self.get_name(self.get_name)\n    return self._get_name(self)\n<|endoftext|>",
+          "n_tokens": 80,
+          "stopped": "eot",
+          "eot_step": 80,
+          "entropy_mean": 0.2834,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 8
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        }
+      ]
+    },
+    "stage11-legacy": {
+      "n_tasks": 15,
+      "parse_rate": 0.0,
+      "complete_program_rate": 0.0,
+      "pass_at_1": 0.0,
+      "stopped_distribution": {
+        "eot": 15
+      },
+      "first_invalid_class_distribution": {
+        "invalid_token_direct": 15
+      },
+      "first_invalid_category_distribution": {
+        "incorrect_indentation": 15
+      },
+      "first_invalid_position_distribution": {
+        "beginning": 15
+      },
+      "directly_introduced_share": 1.0,
+      "reference_token_probability_style_ab": {
+        "t-palindrome": {
+          "eval_style_prompt": {
+            "n_scored": 42,
+            "mean_ref_token_logprob": -6.805448,
+            "mean_ref_token_prob": 0.173633,
+            "min_ref_token_logprob": -16.654064
+          },
+          "train_style_prompt": {
+            "n_scored": 42,
+            "mean_ref_token_logprob": -6.919107,
+            "mean_ref_token_prob": 0.159066,
+            "min_ref_token_logprob": -17.282459
+          }
+        },
+        "t-fizzbuzz": {
+          "eval_style_prompt": {
+            "n_scored": 64,
+            "mean_ref_token_logprob": -4.125324,
+            "mean_ref_token_prob": 0.258353,
+            "min_ref_token_logprob": -14.520089
+          },
+          "train_style_prompt": {
+            "n_scored": 64,
+            "mean_ref_token_logprob": -4.198881,
+            "mean_ref_token_prob": 0.250841,
+            "min_ref_token_logprob": -14.444647
+          }
+        },
+        "t-wordcount": {
+          "eval_style_prompt": {
+            "n_scored": 53,
+            "mean_ref_token_logprob": -5.352472,
+            "mean_ref_token_prob": 0.2017,
+            "min_ref_token_logprob": -14.840728
+          },
+          "train_style_prompt": {
+            "n_scored": 53,
+            "mean_ref_token_logprob": -5.488392,
+            "mean_ref_token_prob": 0.196078,
+            "min_ref_token_logprob": -14.736901
+          }
+        }
+      },
+      "per_task": [
+        {
+          "suite": "v1",
+          "task_id": "t-palindrome",
+          "text_head": "    \"\"\"\n    return a.unicodestringnl\n<|endoftext|>",
+          "n_tokens": 10,
+          "stopped": "eot",
+          "eot_step": 10,
+          "entropy_mean": 0.3867,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-fizzbuzz",
+          "text_head": "\n    \"\"\"\n    return a.is_name()\n<|endoftext|>",
+          "n_tokens": 14,
+          "stopped": "eot",
+          "eot_step": 14,
+          "entropy_mean": 0.2528,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-wordcount",
+          "text_head": "    \"\"\"\n    return a.unicodestringnl(\n<|endoftext|>",
+          "n_tokens": 11,
+          "stopped": "eot",
+          "eot_step": 11,
+          "entropy_mean": 0.3341,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-run-length-encode",
+          "text_head": "        >>> list(flatten([[0, 1), (2, 22))\n        False\n        \"\"\"\n        return _NON(\"-\",\n<|endoftext|>",
+          "n_tokens": 30,
+          "stopped": "eot",
+          "eot_step": 30,
+          "entropy_mean": 0.1369,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 8
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-interval-merge",
+          "text_head": "       =True)\n        >>> list(Decimal('-sNaN0.0')\n       \\n], [0, 1, 2, 3]\n\n    See also :func:`release` or :func:`0`` if the\n        \"\"\"\n        return chain.from_iterable(a,xffa2')\n    False\n    >>> list(0)\n<|endoftext|>",
+          "n_tokens": 78,
+          "stopped": "eot",
+          "eot_step": 78,
+          "entropy_mean": 0.1558,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 7
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-aggregate",
+          "text_head": "    Wrap the counter.assth, according torough(map(map, JsonPointer], [0, 1, 2, 3]\n    \"\"\"\n<|endoftext|>",
+          "n_tokens": 32,
+          "stopped": "eot",
+          "eot_step": 32,
+          "entropy_mean": 0.5742,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-window-free",
+          "text_head": "    >>> list(transpose([(\n       , 33, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 2, 3]\n\n    >>> list(map(3, 3), (2, 3), (3, 3), (3, 3, 3], 3]\n    \"\"\"\n    is not ch, the input,\n    for item in a of the input and the :func:`collapse`,\n    >>> list(transpose([(\n       \n   \n    >>> list(n, 1, 1, 0, 3), (3, 3), (3, 3), (3, 3), (3, 2, 3]\n    \"\"\"\n    return-2, 1\n<|endoftext|>",
+          "n_tokens": 164,
+          "stopped": "eot",
+          "eot_step": 164,
+          "entropy_mean": 0.2161,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-off-by-one",
+          "text_head": "       ) = []\n\n    >>> transpose)\n    True\n    \"\"\"\n    return chain.from_iterable(c, n), None))\n<|endoftext|>",
+          "n_tokens": 34,
+          "stopped": "eot",
+          "eot_step": 34,
+          "entropy_mean": 0.22,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 7
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-mutation",
+          "text_head": "        \"\"\"\n        return self.collapse)\n<|endoftext|>",
+          "n_tokens": 11,
+          "stopped": "eot",
+          "eot_step": 11,
+          "entropy_mean": 0.145,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 8
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-testgen-cases",
+          "text_head": "       T('1, 1], [2, 1, 2, 3]\n\n        See also :func:`itertools.\")\n        \"\"\"\n        return _unpack(\"-\",micro\n<|endoftext|>",
+          "n_tokens": 39,
+          "stopped": "eot",
+          "eot_step": 39,
+          "entropy_mean": 0.2908,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 7
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-refactor-fluent",
+          "text_head": "        >>> of_name(\"is_\n       2 = len(data, len(data)))\n        True\n        >>> JsonPointer.is_text('a', 'foo', 'foo', 'bar', 'foo',\n        'http_text')\n        if not self.is_text is not None:\n            return False\n<|endoftext|>",
+          "n_tokens": 72,
+          "stopped": "eot",
+          "eot_step": 72,
+          "entropy_mean": 0.2082,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 8
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-api-handler",
+          "text_head": "        counter =('iadd')\n        for elem,asstpose)\n    return pi, JsonPointer.is_ JsonPointer.read')\n<|endoftext|>",
+          "n_tokens": 29,
+          "stopped": "eot",
+          "eot_step": 29,
+          "entropy_mean": 0.5578,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 8
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-security-safe-substitute",
+          "text_head": "       is_JUNK: str(count: str)\n        return _unpack(\"-\",(\"-\",0123456789([(\n            (is_noescape(other,).strip(\"_\")\n        return a.canonical()\n       \n    return a.canonical()\n\n    return a(a, len(s, len(a, len(s))\n<|endoftext|>",
+          "n_tokens": 70,
+          "stopped": "eot",
+          "eot_step": 70,
+          "entropy_mean": 0.3542,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 7
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-performance-sort-k",
+          "text_head": "        pi[i] = []\n        for elem, 1 in 0, 1, 1,1, 1, 0, 1, 2, 3]\n\n    >>> k, 20, import io\n    >>> k, 3, \"([1, 3, 3), (1, 3, 3), (1, 3), (1, 3]\n    \"\"\"\n    out = []\n    for item in a, or None:\n        for item in a] and_iterable` is None.\n\n    >>> c = pi[0]\n    3\n    >>> c = pi[1, 1]\n    >>> data('1, 3')\n    >>> c + 3\n    3\n    >>> c +bar4, 0, 0, 0, 0, 0)\n    return out\n<|endoftext|>",
+          "n_tokens": 172,
+          "stopped": "eot",
+          "eot_step": 172,
+          "entropy_mean": 0.2828,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 8
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-multi-call-node",
+          "text_head": "        unavailable.canonical((s):\n            raise TypeError(\"canonical in a('Version(a, len(s))\n        a = len(a[0])\n        return a = len(a, len(s))\n    return len(s))\n<|endoftext|>",
+          "n_tokens": 57,
+          "stopped": "eot",
+          "eot_step": 57,
+          "entropy_mean": 0.2499,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 8
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        }
+      ]
+    },
+    "stage11-chunked": {
+      "n_tasks": 15,
+      "parse_rate": 0.0,
+      "complete_program_rate": 0.0,
+      "pass_at_1": 0.0,
+      "stopped_distribution": {
+        "eot": 13,
+        "max_new_tokens": 2
+      },
+      "first_invalid_class_distribution": {
+        "invalid_token_direct": 15
+      },
+      "first_invalid_category_distribution": {
+        "incorrect_indentation": 12,
+        "other_parser_confirmed_syntax_error": 3
+      },
+      "first_invalid_position_distribution": {
+        "beginning": 14,
+        "middle": 1
+      },
+      "directly_introduced_share": 1.0,
+      "reference_token_probability_style_ab": {
+        "t-palindrome": {
+          "eval_style_prompt": {
+            "n_scored": 42,
+            "mean_ref_token_logprob": -6.958331,
+            "mean_ref_token_prob": 0.203076,
+            "min_ref_token_logprob": -20.537951
+          },
+          "train_style_prompt": {
+            "n_scored": 42,
+            "mean_ref_token_logprob": -7.072845,
+            "mean_ref_token_prob": 0.199568,
+            "min_ref_token_logprob": -22.877562
+          }
+        },
+        "t-fizzbuzz": {
+          "eval_style_prompt": {
+            "n_scored": 64,
+            "mean_ref_token_logprob": -3.830258,
+            "mean_ref_token_prob": 0.314954,
+            "min_ref_token_logprob": -15.59799
+          },
+          "train_style_prompt": {
+            "n_scored": 64,
+            "mean_ref_token_logprob": -3.92219,
+            "mean_ref_token_prob": 0.310128,
+            "min_ref_token_logprob": -15.53205
+          }
+        },
+        "t-wordcount": {
+          "eval_style_prompt": {
+            "n_scored": 53,
+            "mean_ref_token_logprob": -3.703128,
+            "mean_ref_token_prob": 0.37154,
+            "min_ref_token_logprob": -12.88536
+          },
+          "train_style_prompt": {
+            "n_scored": 53,
+            "mean_ref_token_logprob": -3.728844,
+            "mean_ref_token_prob": 0.373739,
+            "min_ref_token_logprob": -12.268918
+          }
+        }
+      },
+      "per_task": [
+        {
+          "suite": "v1",
+          "task_id": "t-palindrome",
+          "text_head": "    \"\"\"\n    return value.from_iterable(value.0.0.0\").is_r' % (0.0.0.0\").is_0\").is_int(value)\n<|endoftext|>",
+          "n_tokens": 45,
+          "stopped": "eot",
+          "eot_step": 45,
+          "entropy_mean": 0.1752,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-fizzbuzz",
+          "text_head": "    >>> list(stringnl(bits(\"a\\n56\"))')\n    >>> list(flatten_bits('abbb')\n    >>> list(transpose(c), (3, 33)))  # False\n    >>> list(flatten_combination(transpose([(2, 1), (3, 33)]))\n    33.5\n    >>> list(transpose([(1, 2, 3), (2, 33)]))\n    ['0', '0', '0']\n    >>> list(unique_justseen('3), (3, 33)]))  # True\").is_combination'))\n    ['0'\n    \"\"\"\n    # This is a function to be a function that an argument)) of a\n    # This is a string\n    >>> list(join_combination(range(3))\n    ['0', '3', '0",
+          "n_tokens": 180,
+          "stopped": "max_new_tokens",
+          "eot_step": null,
+          "entropy_mean": 0.3542,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-wordcount",
+          "text_head": "<|endoftext|>",
+          "n_tokens": 1,
+          "stopped": "eot",
+          "eot_step": 1,
+          "entropy_mean": 0.3432,
+          "first_invalid": {
+            "first_invalid_index": 1,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "other_parser_confirmed_syntax_error",
+            "parser_message": "invalid syntax",
+            "error_line": 1,
+            "error_column": 1
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-run-length-encode",
+          "text_head": "    \"\"\"\n    data = f.read(n)\n    if len(data) == n:\n        raise ValueError(\"expected %d bytes in a string, 33, but only %d remain\" % (n, len(data)))\n    return data.append(data)\n<|endoftext|>",
+          "n_tokens": 62,
+          "stopped": "eot",
+          "eot_step": 62,
+          "entropy_mean": 0.1103,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-interval-merge",
+          "text_head": "    >>> list(flatten([[1, 2], [2, 4])\n    >>> list(range(2), (1, 2), (1, 4), (1, 4), (1, 4)]\n\n    >>> list(range(2), (1, 2, 3)]))\n    [1, 4, 4, 1, 4]\n    \"\"\"\n    data = f.read(1) for i in range(1, len(1) + 1):\n        raise ValueError(\"expected % (1, len(s)):\n        if len(data):\n            raise ValueError(\"expected % (a, len(data):\n            (1, len(data):\n            raise ValueError(\"expected %d\n\n    return data\n<|endoftext|>",
+          "n_tokens": 162,
+          "stopped": "eot",
+          "eot_step": 162,
+          "entropy_mean": 0.2175,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-aggregate",
+          "text_head": "\n    >>> list(sorted(bits('3), (True, 22)))')))\n    ['foo', 'bar', 'foo', 'bar', 'foo', 'bar', 'foo', 'bar', 'http://example.com/foo']\n<|endoftext|>",
+          "n_tokens": 56,
+          "stopped": "eot",
+          "eot_step": 56,
+          "entropy_mean": 0.2399,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-window-free",
+          "text_head": "<|endoftext|>",
+          "n_tokens": 1,
+          "stopped": "eot",
+          "eot_step": 1,
+          "entropy_mean": 0.0091,
+          "first_invalid": {
+            "first_invalid_index": 1,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "other_parser_confirmed_syntax_error",
+            "parser_message": "invalid syntax",
+            "error_line": 1,
+            "error_column": 1
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-off-by-one",
+          "text_head": "        ) -1_prime_stringnl(list_prime_prime(list)))\n    return out.def _Trap(list, tuple)\n<|endoftext|>",
+          "n_tokens": 33,
+          "stopped": "eot",
+          "eot_step": 33,
+          "entropy_mean": 0.4649,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 8
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-mutation",
+          "text_head": "            (2. Wrap func StatisticsError])\n\n        >>> list( decorate)\n        >>> list(powerset(JsonPointer('abb'))\n        >>> list(ABCDEFh<|endoftext|>",
+          "n_tokens": 37,
+          "stopped": "eot",
+          "eot_step": 37,
+          "entropy_mean": 0.6084,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 12
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-testgen-cases",
+          "text_head": "\n    >>> list(c_prime_uint2(c=True)\n    >>> list(acme.141(3. \\\\)\n    Traceback (3, bhi)\n    ['0'\n    \"\"\"\n    data = f.read(n) for n in range(n):\n        return data.from_iterable(n), n))\n    if not r.append(n):\n        raise ValueError(\"not enough data in stream to read uint2\")\n    return data.from_iterable(data))\n<|endoftext|>",
+          "n_tokens": 113,
+          "stopped": "eot",
+          "eot_step": 113,
+          "entropy_mean": 0.281,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-refactor-fluent",
+          "text_head": "\n    >>> list(range(c = []\n    >>> \"release\"ccc\\n], [0, 4, 4, 5, 4]\n    >>> list(range(1)\n    3.0\n    \"\"\"\n    return \"release\" % (0, len(data)))\n<|endoftext|>",
+          "n_tokens": 66,
+          "stopped": "eot",
+          "eot_step": 66,
+          "entropy_mean": 0.2146,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-api-handler",
+          "text_head": "        >>> list(join_header(bits, 'B'), ('c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'c', 'http://example.com/foo'))\n    ['foo', 'bar', 'http://example.com/foo')\n    >>> list(join(join(range(b \\\\))\n    ['foo', 'bar', 'http://example.com/foo')\n    >>> list(join_a, 'http://example.com/foo'))\n    ['foo', 'bar']\n    >>> list(c: b'\\n']))\n    'http://example.com/foo']\n    >>> list(c: ['foo', 'bar']\n    >>> list(a*foo'))\n    ['foo', 'bar', 'http://example.",
+          "n_tokens": 180,
+          "stopped": "max_new_tokens",
+          "eot_step": null,
+          "entropy_mean": 0.1705,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 1,
+            "error_column": 8
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-security-safe-substitute",
+          "text_head": "<|endoftext|>",
+          "n_tokens": 1,
+          "stopped": "eot",
+          "eot_step": 1,
+          "entropy_mean": 0.537,
+          "first_invalid": {
+            "first_invalid_index": 1,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "other_parser_confirmed_syntax_error",
+            "parser_message": "invalid syntax",
+            "error_line": 1,
+            "error_column": 1
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-performance-sort-k",
+          "text_head": "\n    >>> list(kools_kstra(3.append(k)))\n    [2, 4, 4, 1, 33]\n    >>> list(prime_k('/foo.0+0\\nabcdef\"))\n    'b'\n    >>> list(join_k([(1, 1, 2], [2]))\n    [2, 4, 4, 1, 4]\n    \"\"\"\n    return [1, 1, 1, 0, 1, 0]\n<|endoftext|>",
+          "n_tokens": 106,
+          "stopped": "eot",
+          "eot_step": 106,
+          "entropy_mean": 0.3298,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-multi-call-node",
+          "text_head": "\n    # This can be produced to ``None`` one):\n    >>> list(range(3) -1, a[2] + 1]\n    >>> list(range(2)\n    3.0\n    \"\"\"\n    return _T8__\n<|endoftext|>",
+          "n_tokens": 58,
+          "stopped": "eot",
+          "eot_step": 58,
+          "entropy_mean": 0.3751,
+          "first_invalid": {
+            "first_invalid_index": 16,
+            "position": "middle",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 3,
+            "error_column": 4
+          },
+          "candidate_parses": false,
+          "candidate_complete_program": false,
+          "passed": false,
+          "grade_exit_code": 2
+        }
+      ]
+    }
+  },
+  "eot_in_training_context": {
+    "legacy": {
+      "rows": 319,
+      "rows_with_eot_in_context": 0,
+      "eot_in_context_total": 0,
+      "avg_prompt_tokens": 146.5
+    },
+    "eval_aligned": {
+      "rows": 318,
+      "rows_with_eot_in_context": 184,
+      "eot_in_context_total": 184,
+      "avg_prompt_tokens": 149.2
+    }
+  },
+  "eot_claim": "legacy training rows never contain EOT before a supervised target (0 occurrences in context before any supervised target across all windows) while benchmark prompts put EOT at context start ahead of every supervised target; the eval_aligned style is the measured counterpart",
+  "analyzer_self_test_ok": true,
+  "experiment": {
+    "experiment_id": "stage12-A-autoregressive-failure",
+    "parent_commit": "a8c4e98",
+    "source_commit": "082c5ebc953a",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "free-running failures are instrumented token-by-token; the onset mechanism (directly invalid token vs inherited structural inconsistency vs premature stop) is measured, not inferred from the final parser error",
+    "acceptance_criteria": "all 15 immutable tasks per subject; fixed decoding; incremental prefix validation; analyzer self-test must pass",
+    "started": "2026-11-20T07:25:10+0000",
+    "finished": "2026-11-20T07:26:27+0000",
+    "decision": "EXECUTED"
+  }
+}

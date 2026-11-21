@@ -1,0 +1,95 @@
+{
+  "kind": "cortex-stage15-promotion-audit",
+  "owned_by": "Fibonera",
+  "workstream": "J-promotion",
+  "reference_constants": {
+    "stage14_champion": {
+      "heldout_native": 2.9074,
+      "heldout_eval_aligned": 2.9124,
+      "syntax_valid_rate": 0.0,
+      "complete_program_rate": 0.0,
+      "v1_pass_at_1": 0.0,
+      "v3_pass_at_1": 0.0,
+      "feedback_arm_heldout_eval_aligned": 3.2174,
+      "feedback_target_bearing_steps": 102
+    },
+    "heldout_limit": 3.3015
+  },
+  "gates": {
+    "gate1_reproducible_structural_improvement": {
+      "ok": true,
+      "measured": {
+        "rep1_delta_stage14": -0.0126,
+        "rep2_delta_stage15_seed": -0.0126,
+        "structural_beats_control_in_both_reps": true,
+        "rep2_structural_vs_stage13_champion": -0.0374,
+        "reproduces": true
+      }
+    },
+    "gate2_complete_generation": {
+      "ok": false,
+      "measured": {
+        "v1_syntax": 0.0,
+        "v3_syntax": 0.0,
+        "v1_complete": 0.0,
+        "v3_complete": 0.0
+      }
+    },
+    "gate3_execution_improvement": {
+      "ok": false,
+      "measured": {
+        "unseen_pass_at_1": 0.0
+      }
+    },
+    "gate4_generalization": {
+      "ok": false,
+      "measured": {
+        "perturbed_pass_at_1": 0.0,
+        "n_probes": 14,
+        "seed_base": 20261700
+      }
+    },
+    "gate5_independent_coding_success": {
+      "ok": false,
+      "measured": {
+        "v1_pass_at_1": 0.0,
+        "v3_pass_at_1": 0.0
+      }
+    },
+    "gate6_reliable_improvement": {
+      "ok": false,
+      "measured": {
+        "tasks_with_at_least_one_pass_unseen": 0,
+        "repair_plus_direct_successes": 0,
+        "total_counted": 0
+      }
+    }
+  },
+  "heldout_loss_gate": {
+    "limit": 3.3015,
+    "ok": true
+  },
+  "champion_candidate": {
+    "arm": "stage14-structural_h6000",
+    "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage14-structural_h6000.pt",
+    "checkpoint_sha256": "c87907616e9f84febce27b40dba5015cf81f8e3940816498bccd088be4229e27"
+  },
+  "gates_passed": 1,
+  "promotion_decision": "NOT PROMOTED - immutable benchmark pass@1 remains 0.0 (or is not reproducible across tasks); negative result preserved; stage-14 structural arm retained as the best held-out configuration",
+  "rollback": {
+    "baseline_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage14-structural_h6000.pt",
+    "procedure": "restore the pre-declared stage-15 reference arm (stage-14 structural); stage-15 checkpoints are additive separate files"
+  },
+  "experiment": {
+    "experiment_id": "stage15-J-promotion-gates",
+    "parent_commit": "318e601",
+    "source_commit": "318e60124894",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "the six pre-registered stage-15 gates decide promotion; gates are evaluated from measured per-task rows only",
+    "acceptance_criteria": "gate1: structural arm <= control in BOTH repetitions; gate2: champion syntax_valid_rate > 0 and complete_program_rate > 0 on immutable suites; gate3: unseen-suite pass@1 > 0 (execution-verified); gate4: perturbed pass@1 > 0; gate5: immutable v1/v3 pass@1 > 0 conclusively verified; gate6: >= 2 execution-verified successes across all suites; PROMOTED iff gate5 AND gate6 AND held-out <= 3.3015 in both styles; thresholds fixed before any stage-15 execution",
+    "started": "2026-11-20T16:45:56+0000",
+    "finished": "2026-11-20T16:45:56+0000",
+    "decision": "NOT PROMOTED"
+  }
+}

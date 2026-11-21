@@ -1,0 +1,551 @@
+{
+  "kind": "cortex-stage15-generalization",
+  "owned_by": "Fibonera",
+  "workstream": "E-generalization",
+  "unseen_suite_fingerprint": "0d0bff384bc234b4fa8b5fe01914678f4e38333dfad2ddb3c920ceb3d7eb05a7",
+  "harness_sanity": {
+    "per_task": [
+      {
+        "task_id": "t15-matrix-transpose",
+        "reference_passes": true
+      },
+      {
+        "task_id": "t15-caesar-shift",
+        "reference_passes": true
+      },
+      {
+        "task_id": "t15-multi-function-stats",
+        "reference_passes": true
+      },
+      {
+        "task_id": "t15-closure-adder",
+        "reference_passes": true
+      },
+      {
+        "task_id": "t15-safe-div",
+        "reference_passes": true
+      },
+      {
+        "task_id": "t15-word-counter-class",
+        "reference_passes": true
+      },
+      {
+        "task_id": "t15-group-by-length",
+        "reference_passes": true
+      },
+      {
+        "task_id": "t15-window-max",
+        "reference_passes": true
+      }
+    ],
+    "all_references_pass": true
+  },
+  "capability": {
+    "v1_pass_at_1": 0.0,
+    "v1_n_tasks": 3,
+    "v1_syntax_valid_rate": 0.0,
+    "v1_complete_program_rate": 0.0,
+    "v3_pass_at_1": 0.0,
+    "v3_n_tasks": 12,
+    "v3_syntax_valid_rate": 0.0,
+    "v3_complete_program_rate": 0.0,
+    "unseen_pass_at_1": 0.0,
+    "unseen_n_tasks": 8,
+    "unseen_syntax_valid_rate": 0.0,
+    "unseen_complete_program_rate": 0.0
+  },
+  "per_task": [
+    {
+      "suite": "v1",
+      "task_id": "t-palindrome",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v1",
+      "task_id": "t-fizzbuzz",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v1",
+      "task_id": "t-wordcount",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-run-length-encode",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-interval-merge",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-sql-sqlite-aggregate",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-sql-sqlite-window-free",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-debug-off-by-one",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-debug-mutation",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-testgen-cases",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-refactor-fluent",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-api-handler",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-security-safe-substitute",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-performance-sort-k",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "v3",
+      "task_id": "t3-multi-call-node",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "unseen",
+      "task_id": "t15-matrix-transpose",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "unseen",
+      "task_id": "t15-caesar-shift",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "unseen",
+      "task_id": "t15-multi-function-stats",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "unseen",
+      "task_id": "t15-closure-adder",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "unseen",
+      "task_id": "t15-safe-div",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "unseen",
+      "task_id": "t15-word-counter-class",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "unseen",
+      "task_id": "t15-group-by-length",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    },
+    {
+      "suite": "unseen",
+      "task_id": "t15-window-max",
+      "nonempty": true,
+      "parse": false,
+      "complete_program": false,
+      "executed": true,
+      "passed": false
+    }
+  ],
+  "perturbation": {
+    "n_probes": 14,
+    "pass_at_1": 0.0,
+    "seed_base": 20261700,
+    "per_probe": [
+      {
+        "task_id": "t-palindrome-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t-fizzbuzz-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t-wordcount-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-run-length-encode-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-interval-merge-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-sql-sqlite-aggregate-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-sql-sqlite-window-free-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-debug-off-by-one-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-debug-mutation-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-refactor-fluent-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-api-handler-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-security-safe-substitute-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-performance-sort-k-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-multi-call-node-perturbed",
+        "nonempty": true,
+        "executed": true,
+        "passed": false
+      }
+    ],
+    "rejected": [
+      {
+        "task_id": "t3-testgen-cases",
+        "reason": "no def/class found"
+      }
+    ]
+  },
+  "unseen_pass_at_k": {
+    "k": 3,
+    "n_tasks": 8,
+    "pass_at_1_mean": 0.0,
+    "tasks_with_at_least_one_pass": 0,
+    "per_task": [
+      {
+        "task_id": "t15-matrix-transpose",
+        "passes": 0,
+        "samples": [
+          {
+            "sample": 0,
+            "temperature": 0.2,
+            "passed": false
+          },
+          {
+            "sample": 1,
+            "temperature": 0.7,
+            "passed": false
+          },
+          {
+            "sample": 2,
+            "temperature": 1.0,
+            "passed": false
+          }
+        ]
+      },
+      {
+        "task_id": "t15-caesar-shift",
+        "passes": 0,
+        "samples": [
+          {
+            "sample": 0,
+            "temperature": 0.2,
+            "passed": false
+          },
+          {
+            "sample": 1,
+            "temperature": 0.7,
+            "passed": false
+          },
+          {
+            "sample": 2,
+            "temperature": 1.0,
+            "passed": false
+          }
+        ]
+      },
+      {
+        "task_id": "t15-multi-function-stats",
+        "passes": 0,
+        "samples": [
+          {
+            "sample": 0,
+            "temperature": 0.2,
+            "passed": false
+          },
+          {
+            "sample": 1,
+            "temperature": 0.7,
+            "passed": false
+          },
+          {
+            "sample": 2,
+            "temperature": 1.0,
+            "passed": false
+          }
+        ]
+      },
+      {
+        "task_id": "t15-closure-adder",
+        "passes": 0,
+        "samples": [
+          {
+            "sample": 0,
+            "temperature": 0.2,
+            "passed": false
+          },
+          {
+            "sample": 1,
+            "temperature": 0.7,
+            "passed": false
+          },
+          {
+            "sample": 2,
+            "temperature": 1.0,
+            "passed": false
+          }
+        ]
+      },
+      {
+        "task_id": "t15-safe-div",
+        "passes": 0,
+        "samples": [
+          {
+            "sample": 0,
+            "temperature": 0.2,
+            "passed": false
+          },
+          {
+            "sample": 1,
+            "temperature": 0.7,
+            "passed": false
+          },
+          {
+            "sample": 2,
+            "temperature": 1.0,
+            "passed": false
+          }
+        ]
+      },
+      {
+        "task_id": "t15-word-counter-class",
+        "passes": 0,
+        "samples": [
+          {
+            "sample": 0,
+            "temperature": 0.2,
+            "passed": false
+          },
+          {
+            "sample": 1,
+            "temperature": 0.7,
+            "passed": false
+          },
+          {
+            "sample": 2,
+            "temperature": 1.0,
+            "passed": false
+          }
+        ]
+      },
+      {
+        "task_id": "t15-group-by-length",
+        "passes": 0,
+        "samples": [
+          {
+            "sample": 0,
+            "temperature": 0.2,
+            "passed": false
+          },
+          {
+            "sample": 1,
+            "temperature": 0.7,
+            "passed": false
+          },
+          {
+            "sample": 2,
+            "temperature": 1.0,
+            "passed": false
+          }
+        ]
+      },
+      {
+        "task_id": "t15-window-max",
+        "passes": 0,
+        "samples": [
+          {
+            "sample": 0,
+            "temperature": 0.2,
+            "passed": false
+          },
+          {
+            "sample": 1,
+            "temperature": 0.7,
+            "passed": false
+          },
+          {
+            "sample": 2,
+            "temperature": 1.0,
+            "passed": false
+          }
+        ]
+      }
+    ]
+  },
+  "experiment": {
+    "experiment_id": "stage15-E-generalization-unseen-suite",
+    "parent_commit": "318e601",
+    "source_commit": "318e60124894",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "any capability appearing on train-sample tasks transfers to previously unseen tasks (new function names, classes, nested functions, exception handling, multi-function modules) and perturbed formulations",
+    "acceptance_criteria": "8 authored unseen tasks with execution-validated reference solutions (harness sanity must pass first); suite fingerprint recorded (0d0bff384bc234b4...); tasks never exposed to training; perturbation probes at seed_base 20261700; perturbation pass@k with 3 sampled candidates per unseen task at temperatures 0.2/0.7/1.0; promotion strictly by the pre-registered gates",
+    "started": "2026-11-20T16:42:06+0000",
+    "finished": "2026-11-20T16:44:34+0000",
+    "decision": "EXECUTED"
+  }
+}

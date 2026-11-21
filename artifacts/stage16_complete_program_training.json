@@ -1,0 +1,347 @@
+{
+  "kind": "cortex-stage16-complete-program",
+  "owned_by": "Fibonera",
+  "workstream": "4-complete-program",
+  "record_length_stats": {
+    "n_records": 306,
+    "total_tokens_mean": 464.7,
+    "total_tokens_max": 2046,
+    "total_tokens_over_256": 216,
+    "retention": {
+      "256": 0.2941,
+      "512": 0.719,
+      "1024": 0.9346
+    }
+  },
+  "structural_cut_summary": {
+    "records_needing_cuts": 111,
+    "cuts": 360,
+    "clean_cuts": 242,
+    "fallback_hard_cuts": 118
+  },
+  "fitting_records_at_256": 74,
+  "curriculum_arm": {
+    "arm": "complete_curriculum",
+    "config": {
+      "rate": "zero",
+      "curriculum": {
+        "switch_step": 1500
+      },
+      "data_pool": "dataset_v3_train_structural",
+      "fit_pool": "complete_fitting_records_256"
+    },
+    "seed": 20261816,
+    "steps": 3000,
+    "lr": 5e-05,
+    "batch": 4,
+    "heldout_native_initial": 3.3015,
+    "heldout_eval_aligned_initial": 3.3026,
+    "curve": [
+      {
+        "step": 0,
+        "heldout_native": 3.3015,
+        "heldout_eval_aligned": 3.3026
+      },
+      {
+        "step": 500,
+        "heldout_native": 3.0216,
+        "heldout_eval_aligned": 3.0278
+      },
+      {
+        "step": 1000,
+        "heldout_native": 2.9447,
+        "heldout_eval_aligned": 2.9509
+      },
+      {
+        "step": 1500,
+        "heldout_native": 2.8778,
+        "heldout_eval_aligned": 2.8847
+      },
+      {
+        "step": 2000,
+        "heldout_native": 2.5109,
+        "heldout_eval_aligned": 2.5031
+      },
+      {
+        "step": 2500,
+        "heldout_native": 2.5678,
+        "heldout_eval_aligned": 2.5701
+      },
+      {
+        "step": 3000,
+        "heldout_native": 2.6331,
+        "heldout_eval_aligned": 2.6362
+      }
+    ],
+    "heldout_native_final": 2.6331,
+    "heldout_eval_aligned_final": 2.6362,
+    "loss_first": 4.0721,
+    "loss_last": 1.6313,
+    "target_bearing_steps": 3000,
+    "exposure_step_frac": 0.0,
+    "supervised_tokens_per_step_mean": 487.3,
+    "grad_norm_samples": [
+      3.1326,
+      2.3879,
+      2.8292,
+      2.8234,
+      4.3051,
+      3.914,
+      3.8047,
+      2.8951,
+      3.1481,
+      3.5666,
+      2.7859,
+      2.9472,
+      3.5112,
+      2.2106,
+      5.2488,
+      2.9956,
+      4.2467,
+      4.2183,
+      5.0888,
+      3.1168,
+      4.0587,
+      6.2141,
+      4.4371,
+      7.2389,
+      5.2122,
+      6.4145,
+      4.8833,
+      5.5839,
+      5.4883,
+      3.561
+    ],
+    "grad_norm_mean": 4.0756,
+    "capability": {
+      "n_tasks": 15,
+      "pass_at_1": 0.0,
+      "v1_pass_at_1": 0.0,
+      "v3_pass_at_1": 0.0,
+      "syntax_valid_rate": 0.0,
+      "complete_program_rate": 0.0,
+      "execution_attempted_rate": 1.0
+    },
+    "structural_token_accuracy": {
+      "n_batches": 6,
+      "accuracy_overall": 0.6141,
+      "accuracy_whitespace": 0.9016,
+      "accuracy_structure_keyword": 0.8136,
+      "accuracy_delimiter": 0.7292,
+      "accuracy_other": 0.4761,
+      "token_counts": {
+        "whitespace": 254,
+        "structure_keyword": 59,
+        "delimiter": 192,
+        "other": 775,
+        "overall": 1280
+      }
+    },
+    "free_running_probes": {
+      "n_probes": 8,
+      "parse_rate": 0.0,
+      "complete_program_rate": 0.0,
+      "per_probe": [
+        {
+          "probe": "nested_function",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "unexpected_indentation_transition",
+          "stopped": "eot",
+          "eot_step": 102,
+          "n_generated_tokens": 102,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 8
+          }
+        },
+        {
+          "probe": "nested_control",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "unexpected_indentation_transition",
+          "stopped": "eot",
+          "eot_step": 82,
+          "n_generated_tokens": 82,
+          "first_invalid": {
+            "first_invalid_index": 4,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 3,
+            "error_column": 8
+          }
+        },
+        {
+          "probe": "class_with_methods",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "unexpected_indentation_transition",
+          "stopped": "repetition_degeneracy_at_step_12",
+          "eot_step": null,
+          "n_generated_tokens": 12,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 8
+          }
+        },
+        {
+          "probe": "exception_handling",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "unexpected_indentation_transition",
+          "stopped": "eot",
+          "eot_step": 33,
+          "n_generated_tokens": 33,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 8
+          }
+        },
+        {
+          "probe": "imports_and_module",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "unexpected_indentation_transition",
+          "stopped": "max_new_tokens",
+          "eot_step": null,
+          "n_generated_tokens": 180,
+          "first_invalid": {
+            "first_invalid_index": 4,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 3,
+            "error_column": 8
+          }
+        },
+        {
+          "probe": "multi_function",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "unexpected_indentation_transition",
+          "stopped": "max_new_tokens",
+          "eot_step": null,
+          "n_generated_tokens": 180,
+          "first_invalid": {
+            "first_invalid_index": 4,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 3,
+            "error_column": 8
+          }
+        },
+        {
+          "probe": "docstring_program",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "unexpected_indentation_transition",
+          "stopped": "eot",
+          "eot_step": 107,
+          "n_generated_tokens": 107,
+          "first_invalid": {
+            "first_invalid_index": 4,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 3,
+            "error_column": 8
+          }
+        },
+        {
+          "probe": "longer_program",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "unexpected_indentation_transition",
+          "stopped": "max_new_tokens",
+          "eot_step": null,
+          "n_generated_tokens": 180,
+          "first_invalid": {
+            "first_invalid_index": 4,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 3,
+            "error_column": 8
+          }
+        }
+      ]
+    },
+    "seconds": 920.8,
+    "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-complete_curriculum.pt"
+  },
+  "control_arm_summary": {
+    "heldout_eval_aligned_final": 2.9038,
+    "target_bearing_steps": 3000,
+    "supervised_tokens_per_step_mean": 594.7,
+    "exposure_step_frac": 0.0
+  },
+  "cortex_s_feasibility_probe": {
+    "preset": {
+      "name": "cortex-s",
+      "theoretical_param_count": 41997312,
+      "max_seq_len": 1024,
+      "dim": 512,
+      "n_layers": 8,
+      "status": "ModelStatus.DECLARED"
+    },
+    "live_param_count": 41997312,
+    "param_count_matches_declared": true,
+    "probe_seq_width": 511,
+    "probe_batch": 2,
+    "loss_last": 9.9478,
+    "secs_per_step_mean": 0.86,
+    "secs_per_step_list": [
+      0.86,
+      0.86,
+      0.86
+    ],
+    "peak_rss_delta_mb": 0.0,
+    "context_within_declared_max": true
+  },
+  "findings": {
+    "curriculum_vs_control_parse_rate": -0.125,
+    "curriculum_vs_control_heldout": -0.2676
+  },
+  "experiment": {
+    "experiment_id": "stage16-4-complete-program-and-context",
+    "parent_commit": "799a217",
+    "source_commit": "799a21758b1a",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "the stage-15 finding that only 9 of 32 execution-verified records fit SEQ=256 is a context-capacity artifact: a complete-record curriculum (fitting-only records first, then structure-preserving segmentation over ALL records) changes complete-program generation, and the declared CORTEX_S config admits real long-context steps within CPU memory",
+    "acceptance_criteria": "measured length distributions and retention at 256/512/1024 from real tokenization; the pre-registered complete_curriculum arm (1500 fitting-only steps then 1500 structural all-records steps, seed 20261816) compared to the matched 3000-step control; CORTEX_S feasibility probe executes REAL forward/backward steps (probe only, never claimed as full-scale training)",
+    "started": "2026-11-20T20:36:21+0000",
+    "finished": "2026-11-20T20:52:24+0000",
+    "decision": "EXECUTED"
+  }
+}

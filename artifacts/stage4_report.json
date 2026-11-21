@@ -1,0 +1,240 @@
+{
+  "model_2b": {
+    "config": "cortex-2b",
+    "dim": 2560,
+    "n_layers": 24,
+    "n_heads": 20,
+    "head_dim": 128,
+    "vocab_size": 32768,
+    "max_seq_len": 8192,
+    "tie_word_embeddings": false,
+    "f_fn_mult": 4,
+    "d_ff": 10240,
+    "theoretical_param_count": 2056012800,
+    "meta_instantiated_param_count": 2056012800,
+    "counts_match": true,
+    "at_least_2e9": true,
+    "breakdown": {
+      "tok_emb": 83886080,
+      "head": 83886080,
+      "final_ln": 5120,
+      "blocks": 1888235520
+    },
+    "training_status": "DECLARED-NOT-TRAINED (no host with sufficient compute in this environment; see scaling plan)"
+  },
+  "scaling_plan_2b": {
+    "config": "cortex-2b",
+    "params": 2056012800,
+    "human": "2,056,012,800 (2.056B)",
+    "batch_size": 8,
+    "seq_len": 8192,
+    "amp_bf16": true,
+    "memory": {
+      "params": 2056012800,
+      "param_bytes": 8224051200,
+      "grad_bytes": 8224051200,
+      "optimizer_bytes": 16448102400,
+      "activation_bytes_est": 193273528320,
+      "total_bytes_est": 226169733120,
+      "total_gb_est": 226.17,
+      "note": "parameters and AdamW states dominate; activation estimate uses 12 x dim per token per layer including MLP, fp32"
+    },
+    "host": {
+      "cores": 5,
+      "ram_bytes": 6359416832,
+      "ram_gb": 6.36,
+      "disk_free_gb": 5869.21,
+      "cuda": {
+        "available": false,
+        "device_count": 0,
+        "names": [],
+        "bf16_supported": false
+      },
+      "cpu_bf16_autocast_executed_ok": true
+    },
+    "host_fits_full_state": false,
+    "strategy": "multi-GPU: ZeRO-3 / FSDP full sharding across ~2 x 40GB devices (DDP world); CPU-offload optimizer optional",
+    "gradient_checkpointing_advised": true
+  },
+  "scalable_path_validation": {
+    "config": "cortex-demo",
+    "precision": "bf16-cpu",
+    "amp_used": true,
+    "steps": 20,
+    "losses_finite": true,
+    "loss_first": 10.3988,
+    "loss_last": 8.8186,
+    "checkpoint_saved_and_reloaded": true,
+    "params": 8071296,
+    "wall_time_s": 6.25,
+    "metrics_path": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/amp-smoke/amp_smoke.jsonl",
+    "note": "real executed run; proves precision path + checkpoint round-trip"
+  },
+  "dataset_v3": {
+    "path": "/workspace/github__Alex10007__cortex-codegen/artifacts/sft/dataset_v3.jsonl",
+    "counts": {
+      "train": 241,
+      "val": 26,
+      "heldout": 65
+    },
+    "stats": {
+      "v2_records": 328,
+      "extra_input": 4,
+      "extra_deduped_vs_v2": 0,
+      "added_to_train": 4
+    },
+    "seeds": {
+      "split": 1337,
+      "val_carve": 1338
+    },
+    "fingerprints": {
+      "full": "c6f0868a64d3532b2b8f25a58f9e8cb56ad25d0bc169cdc9030541573d6f5631",
+      "train": "f9cc3aec5cfc34480899da8ebd845de4077306c241c390d6633cb57b4feb9dca",
+      "val": "5ddc9366ea09995df7ec0d28fd985f70e80d7324fb171c099adff1fd3a61c1eb",
+      "heldout": "95ced4a256f5d75f3558a1269c30bb2f80130b7e28701f495f7f841061cde726"
+    },
+    "heldout_val_immutability": {
+      "heldout_unchanged": true,
+      "val_unchanged": true
+    },
+    "multifile_verify_ok": true
+  },
+  "staged_training": [
+    {
+      "epoch": 1,
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage4/stage4-epoch-001.pt",
+      "heldout_loss": 3.9336297718464506,
+      "v1_pass_at_1": 0.0,
+      "v1_nonempty": 1.0,
+      "v2_pass_at_1": 0.0,
+      "v2_compile_ok_rate": 0.2,
+      "v2_executed_rate": 1.0
+    },
+    {
+      "epoch": 2,
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage4/stage4-epoch-002.pt",
+      "heldout_loss": 3.7720988332253027,
+      "v1_pass_at_1": 0.0,
+      "v1_nonempty": 1.0,
+      "v2_pass_at_1": 0.0,
+      "v2_compile_ok_rate": 0.2,
+      "v2_executed_rate": 1.0
+    },
+    {
+      "epoch": 3,
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage4/stage4-epoch-003.pt",
+      "heldout_loss": 3.653704558292327,
+      "v1_pass_at_1": 0.0,
+      "v1_nonempty": 1.0,
+      "v2_pass_at_1": 0.0,
+      "v2_compile_ok_rate": 0.2,
+      "v2_executed_rate": 1.0
+    },
+    {
+      "epoch": 4,
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage4/stage4-epoch-004.pt",
+      "heldout_loss": 3.564237281100514,
+      "v1_pass_at_1": 0.0,
+      "v1_nonempty": 1.0,
+      "v2_pass_at_1": 0.0,
+      "v2_compile_ok_rate": 0.2,
+      "v2_executed_rate": 1.0
+    }
+  ],
+  "baselines": [
+    {
+      "label": "pretrained-base",
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-demo/final.pt",
+      "heldout_loss": 4.273625717258812,
+      "v1_pass_at_1": 0.0,
+      "v1_nonempty": 1.0,
+      "v2_pass_at_1": 0.0,
+      "v2_compile_ok_rate": 0.2,
+      "v2_executed_rate": 1.0
+    },
+    {
+      "label": "stage2-sft-unshifted-labels",
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft/sft-final.pt",
+      "heldout_loss": 8.281554180226632,
+      "v1_pass_at_1": 0.0,
+      "v1_nonempty": 0.0,
+      "v2_pass_at_1": 0.0,
+      "v2_compile_ok_rate": 1.0,
+      "v2_executed_rate": 1.0
+    },
+    {
+      "label": "stage3-sft-unshifted-labels",
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-expansion/sft-expansion-epoch-003.pt",
+      "heldout_loss": 8.497879124046719,
+      "v1_pass_at_1": 0.0,
+      "v1_nonempty": 0.0,
+      "v2_pass_at_1": 0.0,
+      "v2_compile_ok_rate": 1.0,
+      "v2_executed_rate": 1.0
+    }
+  ],
+  "rag_ablation": {
+    "v1_without_retrieval_pass_at_1": 0.0,
+    "v1_with_retrieval_pass_at_1": 0.0,
+    "tasks_with_retrieved_pattern": 1,
+    "note": "retrieval from the execution-verified pattern store (kind=pattern, verified=1); no retraining involved"
+  },
+  "promotion": {
+    "promoted": false,
+    "reasons": [
+      "pass@1 did not improve by >= 0.1 (base=0.0, cand=0.0)"
+    ],
+    "baseline": {
+      "pass_at_1": 0.0,
+      "val_loss": 8.497879124046719
+    },
+    "candidate": {
+      "pass_at_1": 0.0,
+      "compile_ok_rate": 0.2,
+      "executed_rate": 1.0,
+      "per_tier": {},
+      "val_loss": 3.564237281100514
+    },
+    "candidate_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage4/stage4-epoch-004.pt",
+    "baseline_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-expansion/sft-expansion-epoch-003.pt"
+  },
+  "benchmark_integrity": {
+    "v1_status": "unmodified",
+    "v1_fingerprint": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177"
+  },
+  "diagnostics": {
+    "prompt_format_ab": {
+      "eval_style": {
+        "passed": false,
+        "generated_head": "\n\n    \"\"\"\n    return _is_name(self)\n    return _get_name(self)\n    return None\n<|endoftext|>\n    return self.\n<|endoftext|>\n    return None\n<|endoftext|>\n    return self.\n\n    return self.\n    return self.\n    return self.\n\n    return self."
+      },
+      "sft_style": {
+        "passed": false,
+        "generated_head": "\n\n\ndef __init__(self, self, self.get_self.get(self, self.get_self.get(self.._get_value)\n    if self.get_name is not None:\n        return self.get_get(self.get(self.get_get(self.get_get(self.get_get(self.get_name)\n        return self.get_get"
+      }
+    },
+    "decode_ablation": {
+      "greedy": {
+        "passed": false,
+        "generated_head": "\n\n\ndef __init__(self, a):\n        \"\"\"Return the default is a value of the default of the default.\n\n        >>> list(1, 1, 1, 1)\n        \"\"\"\n        return self.get(self.get(self.get(self.get(self.get(self.get(self.get(self.get(self.get(self"
+      },
+      "temp02-k50": {
+        "passed": false,
+        "generated_head": "\n\n    \"\"\"\n    return a_name is not None:\n        return a\n<|endoftext|>\n    return None\n<|endoftext|>\n    return _get_name(self)\n    return None\n<|endoftext|>\n    return None\n<|endoftext|>\n    return None\n<|endoftext|>\n\ndef _get_name(self, "
+      },
+      "temp07-k50": {
+        "passed": false,
+        "generated_head": "\n\n    >>> a_string(\"1'1(1)\n    \"\"\"\n    return _string = list(b)\n    if\ndef _read(name) == _1:\n        else:\n        if not in self in self.get(self.get(self,\n            return _get_name(data)\n        return self.name\n<|endoftext|> >>> valu"
+      }
+    },
+    "compile_stage": {
+      "stage": "syntax-error",
+      "generated_head": "\n        \"\"\"\n        return self.get(self.get(self.get(self.get(self.=None)\n        return self.get(self.get(self.get(self. = self.get(self.get(self.get(self. = self.get(self.get(self. = self.get(self.get(self.get(self.get(self.get(self.get(self.get(self. = self.get(self.get(self.get(self.get(self.get(self.get(self.get(self.get(self.get(self. = self.get(self.get(self.",
+      "text_head": "\n        \"\"\"\n        return self.get(self.get(self.get(self.get(self.=None)\n        return self.get(self.get(self.get(self. = self.get(self.get(self.get(self. = self.get(self.get(self. = self.get(self.get(self.get(self.get(self.get(self.get(self.get(self. = self.get(self.get(self.get(self.get(self.get(self.get(self.get(self.get(self.get(self. = self.get(self.get(self."
+    },
+    "teacher_forced_token_accuracy": {
+      "stage4_final": 0.4452,
+      "note": "labels now properly shifted; accuracy is true next-token"
+    }
+  }
+}

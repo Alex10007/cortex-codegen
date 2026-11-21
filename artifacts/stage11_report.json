@@ -1,0 +1,22 @@
+{
+  "kind": "cortex-stage11-report",
+  "owned_by": "Fibonera",
+  "stage": 11,
+  "summary": {
+    "parent_commit": "8eba46c",
+    "A_stream_drop_eliminated": false,
+    "B_decision": "NOT PROMOTED",
+    "B_finding": "4000-step horizon from the same parent: legacy (fit-rate 28.9%) held-out 2.96 with 3101 target steps; chunked (100% coverage) held-out 2.8819 with 4000 target steps; benchmarks v1/v3 pass@1 0.0/0.0",
+    "D_syntax_error_share": 1.0,
+    "E_all_integrity_ok": true,
+    "fingerprint_v1": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177",
+    "fingerprint_v2": "64ea2c020004af92854aebdde0557678293313b06881fdf5b5abb54e8729c8a3",
+    "fingerprint_v3": "c70feb13b061a35b9b3940296c40ea8365aa57089b325050ef238dc93774ccbb",
+    "spend_usd": 0.0,
+    "gpu_hours": 0.0,
+    "authoritative_store_untouched": true,
+    "D_protocol": "2 arms x (v1 + v3) = 30 diagnostics, matching the stage-10 C1 baseline protocol",
+    "D_syntax_error_share_legacy_control": 1.0,
+    "D_syntax_error_share_delta_vs_control": 0.0
+  }
+}

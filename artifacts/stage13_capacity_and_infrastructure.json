@@ -1,0 +1,55 @@
+{
+  "kind": "cortex-stage13-capacity-and-infrastructure",
+  "owned_by": "Fibonera",
+  "workstream": "I-capacity",
+  "hardware": {
+    "cpu_cores": 5,
+    "ram_total_gb": 5.92,
+    "ram_available_gb": 4.83,
+    "has_cuda": false,
+    "cuda_devices": 0
+  },
+  "architectures": {
+    "cortex_demo_actual_params": 8071296,
+    "cortex_demo_expected": 8071296,
+    "cortex_2b_theoretical": 2056012800,
+    "cortex_2b_count_is_2056012800": true,
+    "virtual_allocation_500b_untouched": null,
+    "authoritative_store": {
+      "slots_updated": 35292,
+      "unique_trained_scalars": null,
+      "scan": {
+        "params_per_slot": 6144,
+        "optimizer_steps_per_slot": {
+          "n": 35292,
+          "mean": 5.56,
+          "p50": 4.0,
+          "max": 228,
+          "total": 196357
+        }
+      }
+    }
+  },
+  "gradient_participation_demo_model": {
+    "tensors_with_grad_after_warm_pass_only": 0,
+    "note": "counts refreshed at forward/backward time; the dense demo model participates fully"
+  },
+  "two_b_gate_feasible_locally": {
+    "feasible": false,
+    "reason": "needs ~46.0 GB RAM (16 B/param x1.5 activations headroom), available 4.8 GB"
+  },
+  "two_b_training_decision": "BLOCKED - 0 CUDA devices; ~46 GB RAM required vs measured available; no paid procurement authorized ($0.00 spent)",
+  "gpu_procurement": "requires explicit Fibonera authorization; none granted",
+  "experiment": {
+    "experiment_id": "stage13-I-capacity-and-infrastructure",
+    "parent_commit": "a8c4e98",
+    "source_commit": "402de4691ef7",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "demo-scale, 2B-physical and 500B-virtual architecture accounts are re-verified from live objects and the authoritative store; 2B training remains gated on genuine GPU qualification",
+    "acceptance_criteria": "no procurement; authoritative store untouched; allocated parameters never counted as trained",
+    "started": "2026-11-20T12:03:00+0000",
+    "finished": "2026-11-20T12:03:18+0000",
+    "decision": "BLOCKED"
+  }
+}

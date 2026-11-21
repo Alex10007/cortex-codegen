@@ -1,0 +1,286 @@
+{
+  "kind": "cortex-stage13-execution-feedback",
+  "owned_by": "Fibonera",
+  "workstream": "F-execution-feedback",
+  "classification_source": "diagnose_candidate via grade_single (existing engine, no duplicate)",
+  "per_subject": {
+    "dense-warm6-parent": {
+      "n": 15,
+      "stage_distribution": {
+        "syntax_generation_failure": 15
+      },
+      "per_task": [
+        {
+          "task_id": "t-palindrome",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t-fizzbuzz",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t-wordcount",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-run-length-encode",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-interval-merge",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-sql-sqlite-aggregate",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-sql-sqlite-window-free",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-debug-off-by-one",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-debug-mutation",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-testgen-cases",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-refactor-fluent",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-api-handler",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-security-safe-substitute",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-performance-sort-k",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "truncation",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-multi-call-node",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        }
+      ]
+    },
+    "stage12-chunked_control": {
+      "n": 15,
+      "stage_distribution": {
+        "syntax_generation_failure": 14,
+        "runs_or_tests_failing": 1
+      },
+      "per_task": [
+        {
+          "task_id": "t-palindrome",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t-fizzbuzz",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t-wordcount",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-run-length-encode",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-interval-merge",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-sql-sqlite-aggregate",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-sql-sqlite-window-free",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-debug-off-by-one",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-debug-mutation",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-testgen-cases",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-refactor-fluent",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-api-handler",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-security-safe-substitute",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-performance-sort-k",
+          "stage": "syntax_generation_failure",
+          "diagnosis": "syntax_error",
+          "parses": false,
+          "complete_program": false,
+          "executed": true
+        },
+        {
+          "task_id": "t3-multi-call-node",
+          "stage": "runs_or_tests_failing",
+          "diagnosis": "non_execution",
+          "parses": true,
+          "complete_program": false,
+          "executed": true
+        }
+      ]
+    }
+  },
+  "stage_distribution_total": {
+    "syntax_generation_failure": 29,
+    "runs_or_tests_failing": 1
+  },
+  "feedback_training_experiment": {
+    "status": "NOT TESTED",
+    "pre_registered_hypothesis": "executing generated candidates in the existing sandbox and conditioning repair prompts on actual stderr improves pass@1 (divergent_eval already implements repair_round); an optimizer-updated feedback experiment requires a new registered run with its own checkpoint lineage",
+    "ticket": "deferred to a registered stage-14 experiment"
+  },
+  "experiment": {
+    "experiment_id": "stage13-F-execution-feedback",
+    "parent_commit": "a8c4e98",
+    "source_commit": "402de4691ef7",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "execution evidence classifies each generation into a feedback stage (passed / syntax_generation / runs_or_tests / unknown) using the existing diagnose_candidate + grade_single path - no duplicate engine; execution-derived training supervision is a NOT TESTED pre-registered follow-up",
+    "acceptance_criteria": "no credit for plausible-looking code; actual stdout/stderr/exit codes from the existing sandbox; no duplicate execution engine",
+    "started": "2026-11-20T12:03:00+0000",
+    "finished": "2026-11-20T12:03:00+0000",
+    "decision": "EXECUTED"
+  }
+}

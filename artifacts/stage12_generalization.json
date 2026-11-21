@@ -1,0 +1,219 @@
+{
+  "kind": "cortex-stage12-generalization",
+  "owned_by": "Fibonera",
+  "workstream": "C-generalization",
+  "probe_model": "cortex-sft-stage11-chunked_stream.pt",
+  "dataset_overlap": {
+    "n_records": 332,
+    "exact_duplicate_records": 0,
+    "repeated_function_bodies": 2,
+    "repeated_function_body_examples": [
+      "train/FunctionDef:wrapper"
+    ],
+    "train_val_heldout_near_dup_pairs_ge_0.8": 22,
+    "splits": {
+      "train": 241,
+      "val": 26,
+      "heldout": 65
+    }
+  },
+  "benchmark_contamination": {
+    "max_contamination_overlap": 0.2472,
+    "worst_task": "t-wordcount",
+    "worst_record": "repo::cortexpkg_textools"
+  },
+  "perturbation_probes_valid": 14,
+  "perturbation_probes_rejected": [
+    {
+      "task_id": "t3-testgen-cases",
+      "reason": "no def/class found"
+    }
+  ],
+  "teacher_forced_accuracy": {
+    "train_subset": 0.9322,
+    "heldout_subset": 0.6214
+  },
+  "memorization_probes": {
+    "n": 12,
+    "parse_rate": 0.0,
+    "mean_word_jaccard_vs_own_code": 0.3261,
+    "per_record": [
+      {
+        "split": "train",
+        "record": "once",
+        "parses": false,
+        "word_jaccard_vs_own_code": 0.2021
+      },
+      {
+        "split": "train",
+        "record": "SequenceMatcher.set_seq2",
+        "parses": false,
+        "word_jaccard_vs_own_code": 0.2405
+      },
+      {
+        "split": "train",
+        "record": "bypass_when",
+        "parses": false,
+        "word_jaccard_vs_own_code": 0.4043
+      },
+      {
+        "split": "train",
+        "record": "Context.max",
+        "parses": false,
+        "word_jaccard_vs_own_code": 0.3472
+      },
+      {
+        "split": "train",
+        "record": "_parse_request_range",
+        "parses": false,
+        "word_jaccard_vs_own_code": 0.1875
+      },
+      {
+        "split": "train",
+        "record": "JsonPointer.contains",
+        "parses": false,
+        "word_jaccard_vs_own_code": 0.339
+      },
+      {
+        "split": "heldout",
+        "record": "Version.minor",
+        "parses": false,
+        "word_jaccard_vs_own_code": 0.6857
+      },
+      {
+        "split": "heldout",
+        "record": "Version.base_version",
+        "parses": false,
+        "word_jaccard_vs_own_code": 0.2785
+      },
+      {
+        "split": "heldout",
+        "record": "merge",
+        "parses": false,
+        "word_jaccard_vs_own_code": 0.1931
+      },
+      {
+        "split": "heldout",
+        "record": "Counter.__iand__",
+        "parses": false,
+        "word_jaccard_vs_own_code": 0.3051
+      },
+      {
+        "split": "heldout",
+        "record": "Counter.__or__",
+        "parses": false,
+        "word_jaccard_vs_own_code": 0.4091
+      },
+      {
+        "split": "heldout",
+        "record": "pstdev",
+        "parses": false,
+        "word_jaccard_vs_own_code": 0.321
+      }
+    ]
+  },
+  "perturbed_task_results": {
+    "n": 14,
+    "parse_rate": 0.0,
+    "complete_program_rate": 0.0,
+    "pass_at_1": 0.0,
+    "per_task": [
+      {
+        "task_id": "t-palindrome-perturbed",
+        "parse": false,
+        "complete_program": false,
+        "passed": false
+      },
+      {
+        "task_id": "t-fizzbuzz-perturbed",
+        "parse": false,
+        "complete_program": false,
+        "passed": false
+      },
+      {
+        "task_id": "t-wordcount-perturbed",
+        "parse": false,
+        "complete_program": false,
+        "passed": false
+      },
+      {
+        "task_id": "t3-run-length-encode-perturbed",
+        "parse": false,
+        "complete_program": false,
+        "passed": false
+      },
+      {
+        "task_id": "t3-interval-merge-perturbed",
+        "parse": false,
+        "complete_program": false,
+        "passed": false
+      },
+      {
+        "task_id": "t3-sql-sqlite-aggregate-perturbed",
+        "parse": false,
+        "complete_program": false,
+        "passed": false
+      },
+      {
+        "task_id": "t3-sql-sqlite-window-free-perturbed",
+        "parse": false,
+        "complete_program": false,
+        "passed": false
+      },
+      {
+        "task_id": "t3-debug-off-by-one-perturbed",
+        "parse": false,
+        "complete_program": false,
+        "passed": false
+      },
+      {
+        "task_id": "t3-debug-mutation-perturbed",
+        "parse": false,
+        "complete_program": false,
+        "passed": false
+      },
+      {
+        "task_id": "t3-refactor-fluent-perturbed",
+        "parse": false,
+        "complete_program": false,
+        "passed": false
+      },
+      {
+        "task_id": "t3-api-handler-perturbed",
+        "parse": false,
+        "complete_program": false,
+        "passed": false
+      },
+      {
+        "task_id": "t3-security-safe-substitute-perturbed",
+        "parse": false,
+        "complete_program": false,
+        "passed": false
+      },
+      {
+        "task_id": "t3-performance-sort-k-perturbed",
+        "parse": false,
+        "complete_program": false,
+        "passed": false
+      },
+      {
+        "task_id": "t3-multi-call-node-perturbed",
+        "parse": false,
+        "complete_program": false,
+        "passed": false
+      }
+    ]
+  },
+  "experiment": {
+    "experiment_id": "stage12-C-memorization-generalization",
+    "parent_commit": "a8c4e98",
+    "source_commit": "082c5ebc953a",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "teacher-forced accuracy is high (train 0.9979 / held-out 0.6285 measured at stage 10) while free-running generation is 0% parseable: memorized local patterns without transfer",
+    "acceptance_criteria": "overlap metrics from persisted records; perturbed probes execution-validated before use; benchmarks never modified",
+    "started": "2026-11-20T06:24:26+0000",
+    "finished": "2026-11-20T06:25:31+0000",
+    "decision": "EXECUTED"
+  }
+}

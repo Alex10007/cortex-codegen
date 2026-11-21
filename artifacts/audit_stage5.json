@@ -1,0 +1,53 @@
+{
+  "alignment": {
+    "suite": "input-target alignment",
+    "n_records": 6,
+    "all_pass": true,
+    "checks": [
+      {
+        "check": "shift: y[t] == x[t+1] over real tokens",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "prompt labels fully masked (-100)",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "completion region labels = actual next tokens",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "final unmasked target is EOT",
+        "ok": true,
+        "detail": null
+      },
+      {
+        "check": "padded labels masked (-100)",
+        "ok": true,
+        "detail": null
+      }
+    ]
+  },
+  "loss_and_padding": {
+    "suite": "loss computation & padding",
+    "loss_matches_token_mean_over_unmasked": true,
+    "unmasked_targets": 179,
+    "total_positions": 510,
+    "loss": 10.482254028320312,
+    "pad_keys_excluded": true,
+    "pad_attention_note": "outputs identical while pad-token identities vary once pad_mask is applied",
+    "all_pass": true
+  },
+  "gradient_flow": {
+    "suite": "gradient flow",
+    "loss_finite": true,
+    "params_total": 51,
+    "params_without_grad": [],
+    "params_nonfinite_grad": [],
+    "params_zero_grad": [],
+    "all_pass": true
+  }
+}

@@ -1,0 +1,172 @@
+{
+  "kind": "cortex-stage13-training-stream",
+  "owned_by": "Fibonera",
+  "workstream": "C-stream",
+  "seq_len": 256,
+  "per_split": {
+    "train": {
+      "completion_coverage_fixed": {
+        "complete": true,
+        "total_completion_targets": 35857
+      },
+      "completion_coverage_structural": {
+        "complete": true,
+        "total_completion_targets": 35857
+      },
+      "coverage_identical": true,
+      "windows_fixed": {
+        "records_with_windows": 185,
+        "records_total": 241,
+        "n_windows": 319,
+        "min_window_len": 4,
+        "max_window_len": 256,
+        "mean_window_len": 190.75
+      },
+      "windows_structural": {
+        "records_with_windows": 185,
+        "records_total": 241,
+        "n_windows": 434,
+        "min_window_len": 2,
+        "max_window_len": 256,
+        "mean_window_len": 140.47
+      }
+    },
+    "val": {
+      "completion_coverage_fixed": {
+        "complete": true,
+        "total_completion_targets": 4129
+      },
+      "completion_coverage_structural": {
+        "complete": true,
+        "total_completion_targets": 4129
+      },
+      "coverage_identical": true,
+      "windows_fixed": {
+        "records_with_windows": 23,
+        "records_total": 26,
+        "n_windows": 42,
+        "min_window_len": 5,
+        "max_window_len": 256,
+        "mean_window_len": 174.43
+      },
+      "windows_structural": {
+        "records_with_windows": 23,
+        "records_total": 26,
+        "n_windows": 59,
+        "min_window_len": 2,
+        "max_window_len": 256,
+        "mean_window_len": 124.46
+      }
+    },
+    "heldout": {
+      "completion_coverage_fixed": {
+        "complete": true,
+        "total_completion_targets": 11289
+      },
+      "completion_coverage_structural": {
+        "complete": true,
+        "total_completion_targets": 11289
+      },
+      "coverage_identical": true,
+      "windows_fixed": {
+        "records_with_windows": 51,
+        "records_total": 65,
+        "n_windows": 93,
+        "min_window_len": 3,
+        "max_window_len": 256,
+        "mean_window_len": 199.52
+      },
+      "windows_structural": {
+        "records_with_windows": 51,
+        "records_total": 65,
+        "n_windows": 134,
+        "min_window_len": 2,
+        "max_window_len": 256,
+        "mean_window_len": 138.78
+      }
+    },
+    "all": {
+      "completion_coverage_fixed": {
+        "complete": true,
+        "total_completion_targets": 51275
+      },
+      "completion_coverage_structural": {
+        "complete": true,
+        "total_completion_targets": 51275
+      },
+      "coverage_identical": true,
+      "windows_fixed": {
+        "records_with_windows": 259,
+        "records_total": 332,
+        "n_windows": 454,
+        "min_window_len": 3,
+        "max_window_len": 256,
+        "mean_window_len": 191.04
+      },
+      "windows_structural": {
+        "records_with_windows": 259,
+        "records_total": 332,
+        "n_windows": 627,
+        "min_window_len": 2,
+        "max_window_len": 256,
+        "mean_window_len": 138.6
+      }
+    }
+  },
+  "coverage_guarantee_holds": true,
+  "chunk_boundary_audit_train": {
+    "fixed": {
+      "n_windows": 319,
+      "pct_window_end_inside_open_construct": 0.4984,
+      "pct_window_end_clean": 0.5016,
+      "kinds": {
+        "open_delimiter": 18,
+        "open_quote": 141,
+        "clean": 160
+      },
+      "n_supervised_targets_snapshot_note": "target-end construct state measured via the SAME window text (input row) - the streamed completion token layout is shared"
+    },
+    "structural": {
+      "n_windows": 434,
+      "pct_window_end_inside_open_construct": 0.0438,
+      "pct_window_end_clean": 0.9562,
+      "kinds": {
+        "open_delimiter": 3,
+        "open_quote": 16,
+        "clean": 415
+      },
+      "n_supervised_targets_snapshot_note": "target-end construct state measured via the SAME window text (input row) - the streamed completion token layout is shared"
+    }
+  },
+  "supervised_note": {
+    "window_overlap": "window k (k>=2) starts at the previous end-1 so the boundary token is an INPUT in exactly one row and the streamed completion is supervised exactly once",
+    "fallback_cuts": "when no clean boundary exists below the window limit the cut falls back to the hard limit (documented, may be unbalanced)"
+  },
+  "eot_context_stats": {
+    "legacy": {
+      "rows": 319,
+      "rows_with_eot_in_context": 0,
+      "eot_in_context_total": 0,
+      "avg_prompt_tokens": 146.5
+    },
+    "eval_aligned": {
+      "rows": 318,
+      "rows_with_eot_in_context": 184,
+      "eot_in_context_total": 184,
+      "avg_prompt_tokens": 149.2
+    }
+  },
+  "decision_note": "the fixed segmentation stays the DEFAULT in make_batch_chunked until a stage-13 arm passes its pre-registered gate; the structural path is opt-in (segmentation=\"structural\")",
+  "experiment": {
+    "experiment_id": "stage13-C-training-stream-integrity",
+    "parent_commit": "a8c4e98",
+    "source_commit": "402de4691ef7",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "structural-boundary segmentation preserves exactly-once completion supervision (the fixed-mode guarantee) while cutting at lexically clean boundaries, reducing mid-construct window ends below the stage-12 measured 49.84% without dropping supervised targets",
+    "acceptance_criteria": "completion_coverage identical between fixed and structural on every split; window length <= seq_len; prompt never split; fixed default retained until the gates pass",
+    "started": "2026-11-20T11:11:04+0000",
+    "finished": "2026-11-20T11:11:08+0000",
+    "decision": "EXECUTED"
+  }
+}

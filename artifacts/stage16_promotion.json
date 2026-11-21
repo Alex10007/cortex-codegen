@@ -1,0 +1,380 @@
+{
+  "kind": "cortex-stage16-promotion",
+  "owned_by": "Fibonera",
+  "workstream": "11-promotion",
+  "primary_arm": "exposure_sched",
+  "candidate_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched.pt",
+  "candidate_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+  "gates": {
+    "gateA_reproducibility": {
+      "ok": false,
+      "measured": {
+        "primary_parse_rate": 0.125,
+        "rep2_parse_rate": 0.125,
+        "control_parse_rate": 0.125,
+        "required_delta": 0.25
+      }
+    },
+    "gateB_free_running_structure": {
+      "ok": false,
+      "measured": {
+        "primary_parse_rate": 0.125,
+        "control_parse_rate": 0.125,
+        "delta": 0.0,
+        "required_delta": 0.25
+      }
+    },
+    "gateC_complete_programs": {
+      "ok": false,
+      "measured": {
+        "v1_complete": 0.0,
+        "v3_complete": 0.0
+      }
+    },
+    "gateD_functional_correctness": {
+      "ok": false,
+      "measured": {
+        "v1_pass_at_1": 0.0,
+        "v3_pass_at_1": 0.0,
+        "t15_pass_at_1": 0.0
+      }
+    },
+    "gateE_generalization": {
+      "ok": false,
+      "measured": {
+        "t16_pass_at_1": 0.0,
+        "perturbed_pass_at_1": 0.0
+      }
+    },
+    "gateF_self_correction": {
+      "ok": false,
+      "measured": {
+        "repair_successes": 0,
+        "n_repaired": 11
+      }
+    },
+    "gateG_regression_control": {
+      "ok": true,
+      "measured": {
+        "primary_heldout_native": 2.8998,
+        "primary_heldout_eval_aligned": 2.9038,
+        "limit": 3.3015,
+        "baseline_reference_heldout_eval_aligned": 2.9124
+      }
+    },
+    "gateH_independent_audit": {
+      "ok": true,
+      "measured": {
+        "kind": "cortex-stage16-independent-audit",
+        "owned_by": "Fibonera",
+        "stage": 16,
+        "parent_commit": "799a217",
+        "software_vs_capability_note": "PASS entries verify software correctness and measurement integrity; learned capability is reported separately via the pre-registered 8-gate promotion decision and the measured pass@1 values",
+        "independent_logic": {
+          "fingerprints": {
+            "v1_recomputed": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177",
+            "v1_matches_immutable": true,
+            "v2_matches_immutable": true,
+            "v3_recomputed": "c70feb13b061a35b9b3940296c40ea8365aa57089b325050ef238dc93774ccbb",
+            "v3_matches_immutable": true
+          },
+          "unseen_suite_fingerprints": {
+            "t15_recomputed": "0d0bff384bc234b4fa8b5fe01914678f4e38333dfad2ddb3c920ceb3d7eb05a7",
+            "t15_artifact_value": "0d0bff384bc234b4fa8b5fe01914678f4e38333dfad2ddb3c920ceb3d7eb05a7",
+            "t16_recomputed": "eb496a4a5ec6c341db82b92d8fb6f0c5f685ab406c7c2087320a6f2fbdab3096",
+            "t16_artifact_value": "eb496a4a5ec6c341db82b92d8fb6f0c5f685ab406c7c2087320a6f2fbdab3096",
+            "recompute_matches_helper": true,
+            "artifact_matches_helper": true
+          },
+          "benchmark_files": {
+            "diff_vs_parent_commit_empty": true,
+            "working_tree_clean_for_benchmark_files": true
+          },
+          "prior_artifacts": {
+            "stage_pre16_artifacts_modified": [],
+            "untouched": true
+          },
+          "dataset_tokenizer_checksums": {
+            "dataset_v3": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+            "tokenizer": "ae6a01d800bce3de490c098667889447c403e2b2da690ba1c3bec75fab907c73"
+          },
+          "store_recount": {
+            "slots_updated_recount": 35292,
+            "expected_35292": true,
+            "n_allocated_500b": null
+          },
+          "lineage": {
+            "prior_stage_artifacts": {
+              "stage10_report.json": "OK",
+              "stage11_report.json": "OK",
+              "stage12_report.json": "OK",
+              "stage13_report.json": "OK",
+              "stage14_report.json": "OK",
+              "stage14_independent_audit.json": "OK",
+              "stage15_report.json": "OK",
+              "stage15_independent_audit.json": "OK"
+            },
+            "preserved_checkpoints_present": {
+              "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage12-chunked_control.pt": true,
+              "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage14-structural_h6000.pt": true,
+              "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage15-control_rep2.pt": true,
+              "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage15-structural_rep2.pt": true
+            }
+          }
+        },
+        "checks": {
+          "fingerprints_immutable": {
+            "status": "PASS",
+            "evidence": {
+              "benchmarks": {
+                "v1_recomputed": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177",
+                "v1_matches_immutable": true,
+                "v2_matches_immutable": true,
+                "v3_recomputed": "c70feb13b061a35b9b3940296c40ea8365aa57089b325050ef238dc93774ccbb",
+                "v3_matches_immutable": true
+              },
+              "unseen_suites": {
+                "t15_recomputed": "0d0bff384bc234b4fa8b5fe01914678f4e38333dfad2ddb3c920ceb3d7eb05a7",
+                "t15_artifact_value": "0d0bff384bc234b4fa8b5fe01914678f4e38333dfad2ddb3c920ceb3d7eb05a7",
+                "t16_recomputed": "eb496a4a5ec6c341db82b92d8fb6f0c5f685ab406c7c2087320a6f2fbdab3096",
+                "t16_artifact_value": "eb496a4a5ec6c341db82b92d8fb6f0c5f685ab406c7c2087320a6f2fbdab3096",
+                "recompute_matches_helper": true,
+                "artifact_matches_helper": true
+              }
+            }
+          },
+          "benchmark_files_untouched": {
+            "status": "PASS",
+            "evidence": {
+              "diff_vs_parent_commit_empty": true,
+              "working_tree_clean_for_benchmark_files": true
+            }
+          },
+          "prior_stage_artifacts_untouched": {
+            "status": "PASS",
+            "evidence": {
+              "stage_pre16_artifacts_modified": [],
+              "untouched": true
+            }
+          },
+          "experiment_registration": {
+            "status": "PASS",
+            "evidence": {
+              "artifacts_checked": 11,
+              "problems": []
+            }
+          },
+          "exposure_rows_rederived": {
+            "status": "PASS",
+            "evidence": {
+              "rows_checked": 24,
+              "rows_invalid": 0,
+              "examples_invalid": [],
+              "ambiguous_name_rows": [],
+              "aligned_exact_prefix_rows": 0,
+              "early_rows": 24,
+              "coverage_note": "every supervised token is the verified reference continuation after the model prefix"
+            }
+          },
+          "baseline_rederived": {
+            "status": "PASS",
+            "evidence": {
+              "per_probe_rows_persisted": true,
+              "rederived_parse_rate": 0.0,
+              "reported_parse_rate": 0.0,
+              "parse_rate_matches": true,
+              "first_indent_transition_failures_rederived": 8,
+              "checkpoint_hashes_match_recomputed": true
+            }
+          },
+          "capability_rederived": {
+            "status": "PASS",
+            "evidence": {
+              "n_per_task_rows": 31,
+              "duplicate_task_ids": false,
+              "rate_mismatches": [],
+              "rates_match_report": true,
+              "harness_all_references_pass": true
+            }
+          },
+          "self_correction_rederived": {
+            "status": "PASS",
+            "evidence": {
+              "direct_successes_rederived": 0,
+              "direct_successes_reported": 0,
+              "match_direct": true,
+              "n_repaired_rederived": 11,
+              "match_repaired": true,
+              "repair_successes_rederived": 0,
+              "match_successes": true,
+              "all_rounds_have_revisions": true
+            }
+          },
+          "execution_feedback_rederived": {
+            "status": "PASS",
+            "evidence": {
+              "candidate_success_rederived": 1,
+              "candidate_success_reported": 1,
+              "success_matches": true,
+              "contaminated_candidates_rederived": 0,
+              "contamination_zero": true,
+              "coverage_invalid_rows": 0,
+              "lineage_invalid_rows": 0,
+              "target_bearing_steps_reported": 600,
+              "target_bearing_steps_match": true
+            }
+          },
+          "checkpoint_recovery_reexecuted": {
+            "status": "PASS",
+            "evidence": {
+              "primary_reload": {
+                "status": "OK",
+                "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched.pt",
+                "steps": 3000,
+                "stage": 16,
+                "restores_params": 8071296,
+                "arch_matches": true
+              },
+              "recovery_entries": {
+                "recovery_entries": {
+                  "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-control.pt": {
+                    "exists": true,
+                    "recovery_recorded_restores": true
+                  },
+                  "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_const.pt": {
+                    "exists": true,
+                    "recovery_recorded_restores": true
+                  },
+                  "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched.pt": {
+                    "exists": true,
+                    "recovery_recorded_restores": true
+                  },
+                  "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched_rep2.pt": {
+                    "exists": true,
+                    "recovery_recorded_restores": true
+                  },
+                  "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_early.pt": {
+                    "exists": true,
+                    "recovery_recorded_restores": true
+                  },
+                  "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_weight.pt": {
+                    "exists": true,
+                    "recovery_recorded_restores": true
+                  },
+                  "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-complete_curriculum.pt": {
+                    "exists": true,
+                    "recovery_recorded_restores": true
+                  },
+                  "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-feedback_grounded.pt": {
+                    "exists": true,
+                    "recovery_recorded_restores": true
+                  },
+                  "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage14-structural_h6000.pt": {
+                    "exists": true,
+                    "recovery_recorded_restores": true
+                  }
+                },
+                "all_present": true
+              }
+            }
+          },
+          "authoritative_store_untouched": {
+            "status": "PASS",
+            "evidence": {
+              "slots_updated_recount": 35292,
+              "expected_35292": true,
+              "n_allocated_500b": null
+            }
+          },
+          "stage_lineage_intact": {
+            "status": "PASS",
+            "evidence": {
+              "prior_stage_artifacts": {
+                "stage10_report.json": "OK",
+                "stage11_report.json": "OK",
+                "stage12_report.json": "OK",
+                "stage13_report.json": "OK",
+                "stage14_report.json": "OK",
+                "stage14_independent_audit.json": "OK",
+                "stage15_report.json": "OK",
+                "stage15_independent_audit.json": "OK"
+              },
+              "preserved_checkpoints_present": {
+                "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage12-chunked_control.pt": true,
+                "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage14-structural_h6000.pt": true,
+                "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage15-control_rep2.pt": true,
+                "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage15-structural_rep2.pt": true
+              }
+            }
+          },
+          "promotion_decision_rederived": {
+            "status": "PASS",
+            "evidence": {
+              "rederived_gates": {
+                "gateA_reproducibility": false,
+                "gateB_free_running_structure": false,
+                "gateC_complete_programs": false,
+                "gateD_functional_correctness": false,
+                "gateE_generalization": false,
+                "gateF_self_correction": false
+              },
+              "reported_gates_ok": {
+                "gateA_reproducibility": false,
+                "gateB_free_running_structure": false,
+                "gateC_complete_programs": false,
+                "gateD_functional_correctness": false,
+                "gateE_generalization": false,
+                "gateF_self_correction": false,
+                "gateG_regression_control": true,
+                "gateH_independent_audit": false
+              },
+              "gates_agree": true,
+              "rederived_promoted": false,
+              "reported_decision": "NOT PROMOTED",
+              "promotion_decision_agrees": true
+            }
+          }
+        },
+        "summary_counts": {
+          "PASS": 13,
+          "FAIL": 0,
+          "BLOCKED": 0,
+          "NOT YET TESTED": 0
+        },
+        "summary": "13 PASS / 0 FAIL",
+        "all_pass": true
+      },
+      "status": "PASS"
+    }
+  },
+  "gates_passed": 2,
+  "promotion_decision": "NOT PROMOTED - stage-12 champion retained with rollback recorded; negative result preserved",
+  "rollback": {
+    "baseline_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage12-chunked_control.pt",
+    "stage15_reference_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage14-structural_h6000.pt",
+    "procedure": "stage-16 checkpoints are additive separate files; restore stage-12 champion by loading cortex-sft-stage12-chunked_control.pt"
+  },
+  "capacity_status": "BLOCKED - unchanged since stage 9",
+  "objective_arm_reference": {
+    "weighted_arm_parse_rate": 0.0
+  },
+  "curriculum_arm_reference": {
+    "curriculum_vs_control_parse_rate": -0.125
+  },
+  "feedback_arm_reference": {
+    "target_bearing_steps": 600,
+    "regression_vs_stage15_reference": 0.3035
+  },
+  "experiment": {
+    "experiment_id": "stage16-11-promotion-gates",
+    "parent_commit": "799a217",
+    "source_commit": "799a21758b1a",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "the eight pre-registered gates A-H decide promotion; a held-out improvement alone never promotes; thresholds fixed in the script docstring before any stage-16 execution",
+    "acceptance_criteria": "gates evaluated from measured per-task/trajectory rows only; PROMOTED iff all of A..H PASS; champion retained otherwise",
+    "started": "2026-11-20T21:29:24+0000",
+    "finished": "2026-11-20T21:29:24+0000",
+    "decision": "NOT PROMOTED"
+  }
+}

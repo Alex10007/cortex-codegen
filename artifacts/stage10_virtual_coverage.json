@@ -1,0 +1,64 @@
+{
+  "kind": "cortex-stage10-virtual-strategies",
+  "owned_by": "Fibonera",
+  "workstream": "D-virtual",
+  "compute_budget_per_arm_steps": 300,
+  "authoritative_unique_trained_scalars": 216834048,
+  "authoritative_store_untouched_note": "this stage's arms run entirely on disposable stores; the audit re-verifies the authoritative scan after the run",
+  "arms": {
+    "dense_only": {
+      "loss_first": 2.6055,
+      "loss_last": 1.4653,
+      "heldout_before": 3.3015,
+      "heldout_after": 2.9398,
+      "unique_slots_updated": 0,
+      "unique_scalars_updated": 0,
+      "seconds": 38.1
+    },
+    "joint_breadth": {
+      "loss_first": 7.2977,
+      "loss_last": 1.5686,
+      "heldout_before": 3.3015,
+      "heldout_after": 2.9566,
+      "unique_slots_updated": 2400,
+      "unique_scalars_updated": 14745600,
+      "optimizer_steps_per_slot": {
+        "n": 2400,
+        "mean": 4.0,
+        "p50": 4.0,
+        "max": 4,
+        "total": 9600
+      },
+      "seconds": 74.4
+    },
+    "joint_depth": {
+      "loss_first": 7.6608,
+      "loss_last": 2.687,
+      "heldout_before": 3.3015,
+      "heldout_after": 4.0483,
+      "unique_slots_updated": 8,
+      "unique_scalars_updated": 49152,
+      "optimizer_steps_per_slot": {
+        "n": 8,
+        "mean": 1200.0,
+        "p50": 1200.0,
+        "max": 1200,
+        "total": 9600
+      },
+      "seconds": 52.8
+    }
+  },
+  "finding": "fixed 300-step budget: dense heldout 2.9398, breadth 2.9566 (2400 slots, 1 step/slot), depth 4.0483 (8 slots, ~300 steps/slot); best heldout arm: dense_only",
+  "experiment": {
+    "experiment_id": "stage10-D-virtual-strategies",
+    "parent_commit": "a8c4e98",
+    "source_commit": "a8c4e98377bd",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "at fixed compute, breadth expansion (fresh slots) differs from depth (repeat-slot) training; the useful question is which moves held-out loss",
+    "acceptance_criteria": "identical batches; honest negative results preserved; the authoritative store is never touched",
+    "started": "2026-11-20T01:58:10+0000",
+    "finished": "2026-11-20T02:01:23+0000",
+    "decision": "EXECUTED"
+  }
+}

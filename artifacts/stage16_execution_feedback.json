@@ -1,0 +1,995 @@
+{
+  "kind": "cortex-stage16-execution-feedback",
+  "owned_by": "Fibonera",
+  "workstream": "6-execution-feedback",
+  "primary_arm": "exposure_sched",
+  "candidates": [
+    {
+      "rec_name": "JsonPointer.contains",
+      "instruction_sha256": "dea6a8d778e27c5e1a7223c6cea5b7e312685216117ff4dd3c166fe78166985c",
+      "generated_source": "def is_seq1(self, raiseit=True):\n        \"\"\"Return True if the operand is StatisticsError.\n\n        >>> c = Counter('a')\n        True\n        >>> c = Counter('a')\n        True\n        >>> c = Counter('a')\n        True\n        >>> c.is_canonical(Decimal('2.5'))\n        False\n        >>> c.is_canonical(Decimal('2.50'))\n        False\n        >>> c.is_abs(Decimal('2.5'))\n        False\n        >>> c.is_header('2')\n        False\n        >>> c.is_header('2.5'))\n        False\n        >>> c.is_bytes('2.50'))\n        False\n        >>> c.is_bytes('2.50'))\n        False",
+      "generated_source_sha256": "c876e6d3b3e52dab867fcbc32f52a3c34d276659bc675453953c5bc8c884cd8d",
+      "source_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched.pt",
+      "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+      "generation_config": {
+        "temperature": 0.2,
+        "top_k": 50,
+        "max_new_tokens": 180
+      },
+      "contaminated": false,
+      "verdict": {
+        "passed": false,
+        "executed": false,
+        "exit_code": null,
+        "exec_stderr_tail": "  File \"<string>\", line 3\n    \"\"\"Return True if the operand is StatisticsError.\n    ^\nSyntaxError: unterminated triple-quoted string literal (detected at line 24)\n",
+        "doctest_failures": 0,
+        "doctests_total": 0
+      },
+      "error_class": "syntax_failure",
+      "failure_category": "syntax_failure"
+    },
+    {
+      "rec_name": "ExceptionTrap.passes",
+      "instruction_sha256": "95801ba2084a95f85b617a09fc44940aa8f8439808d02170217b403c1efbbc63",
+      "generated_source": "def _convert_other(self, _convert_other(self, Decimal):\n        \"\"\"Return a from a string.\n\n        >>> @functools.wraps(func)\n        def wrapper(*args, **kwargs):\n            return _convert_other(self.0, **kwargs)\n<|endoftext|>",
+      "generated_source_sha256": "38a7203fc2efd0c73d76ed9bdbb698df0dbea52cefee551433a1a376d29619f1",
+      "source_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched.pt",
+      "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+      "generation_config": {
+        "temperature": 0.2,
+        "top_k": 50,
+        "max_new_tokens": 180
+      },
+      "contaminated": false,
+      "verdict": {
+        "passed": false,
+        "executed": false,
+        "exit_code": null,
+        "exec_stderr_tail": "  File \"<string>\", line 2\n    \"\"\"Return a from a string.\n    ^\nSyntaxError: unterminated triple-quoted string literal (detected at line 7)\n",
+        "doctest_failures": 0,
+        "doctests_total": 0
+      },
+      "error_class": "syntax_failure",
+      "failure_category": "syntax_failure"
+    },
+    {
+      "rec_name": "filename_component",
+      "instruction_sha256": "19f40a6d6551cab7a928aa629ea16241df7b3182f2bf7188f0195c0d9d0cc60c",
+      "generated_source": "def _convert_(value: str) -> str:\n    \"\"\"Return a list of a string.\n\n    >>> value = 'http://example.com/foo/bar/foo/bar/foo/bar/foo/bar/bar/foo/bar/foo/bar/foo/bar/foo/bar/foo/bar/bar/foo/bar/foo/bar/bar/foo/bar/bar/foo/bar/foo/foo/bar/bar/foo/bar/foo/bar/foo/bar/foo/bar/bar/foo/bar/foo/bar/foo/bar/bar/foo/bar/foo/bar/bar/foo/b\", \"bar/foo/bar/foo/bar/bar/foo/b/bar/bar/foo/bar/bar/bar/foo/",
+      "generated_source_sha256": "baee4d455db4f7af6225c71f38b20d6bce1bc9ca8be67d07b17b30a1cc6437f9",
+      "source_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched.pt",
+      "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+      "generation_config": {
+        "temperature": 0.2,
+        "top_k": 50,
+        "max_new_tokens": 180
+      },
+      "contaminated": false,
+      "verdict": {
+        "passed": false,
+        "executed": false,
+        "exit_code": null,
+        "exec_stderr_tail": "  File \"<string>\", line 2\n    \"\"\"Return a list of a string.\n    ^\nSyntaxError: unterminated triple-quoted string literal (detected at line 4)\n",
+        "doctest_failures": 0,
+        "doctests_total": 0
+      },
+      "error_class": "syntax_failure",
+      "failure_category": "syntax_failure"
+    },
+    {
+      "rec_name": "method_cache",
+      "instruction_sha256": "693567eda86ef207677cac18a20669027ed887be5cafb7e3ba9c81f4ee144154",
+      "generated_source": "def_______________, 'kwargs: str)\n    \"\"\"\n    return self.is_        return False\n        return self\n<|endoftext|>",
+      "generated_source_sha256": "5c657fcc663c2cbcddb8b4fb6ea88d327ea2e398a5b83c42c635a8d672e2afc3",
+      "source_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched.pt",
+      "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+      "generation_config": {
+        "temperature": 0.2,
+        "top_k": 50,
+        "max_new_tokens": 180
+      },
+      "contaminated": false,
+      "verdict": {
+        "passed": false,
+        "executed": false,
+        "exit_code": null,
+        "exec_stderr_tail": "  File \"<string>\", line 2\n    def_______________, 'kwargs: str)\n                        ^\nSyntaxError: unterminated string literal (detected at line 2)\n",
+        "doctest_failures": 0,
+        "doctests_total": 0
+      },
+      "error_class": "syntax_failure",
+      "failure_category": "syntax_failure"
+    },
+    {
+      "rec_name": "replace",
+      "instruction_sha256": "835d9477e59a83dcfbfebcf42b77ccf8339df3661a872210815feb9c159a099e",
+      "generated_source": "def replace(r' %r' %r' %r'\n    >>> list(b\"\\n\"))\n    'foo\\n'\n    >>> list(b\"\\n\"))\n    'foo'\n    \"\"\"\n    return _convert_other(a, n))\n<|endoftext|>",
+      "generated_source_sha256": "2dc204e2987e8a5a2218a1a9e7a65c740ad4d6e0f708a022d3849be4d2b2e191",
+      "source_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched.pt",
+      "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+      "generation_config": {
+        "temperature": 0.2,
+        "top_k": 50,
+        "max_new_tokens": 180
+      },
+      "contaminated": false,
+      "verdict": {
+        "passed": false,
+        "executed": false,
+        "exit_code": null,
+        "exec_stderr_tail": "  File \"<string>\", line 4\n    >>> list(b\"\\n\"))\n                   ^\nSyntaxError: unmatched ')'\n",
+        "doctest_failures": 0,
+        "doctests_total": 0
+      },
+      "error_class": "syntax_failure",
+      "failure_category": "syntax_failure"
+    },
+    {
+      "rec_name": "_rank",
+      "instruction_sha256": "24592315d79223001be3cfc76fb1c622417f353df3e0e247cdef87e461b32a09",
+      "generated_source": "\"\"\"Return a string as a string are a string., to be a string.\n    return-release\n<|endoftext|>",
+      "generated_source_sha256": "420e0d080b4471d5ec4184701839111cc3b100265324838858a10f734600b837",
+      "source_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched.pt",
+      "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+      "generation_config": {
+        "temperature": 0.2,
+        "top_k": 50,
+        "max_new_tokens": 180
+      },
+      "contaminated": false,
+      "verdict": {
+        "passed": false,
+        "executed": false,
+        "exit_code": null,
+        "exec_stderr_tail": "  File \"<string>\", line 2\n    \"\"\"Return a string as a string are a string., to be a string.\n    ^\nSyntaxError: unterminated triple-quoted string literal (detected at line 4)\n",
+        "doctest_failures": 0,
+        "doctests_total": 0
+      },
+      "error_class": "syntax_failure",
+      "failure_category": "syntax_failure"
+    },
+    {
+      "rec_name": "format_timestamp",
+      "instruction_sha256": "779b50b2f9a0f1b054e1a5bc8aafac68ceff7b57cc38f2bb6f7f66161c3a7924",
+      "generated_source": "def list(iterable):\n    \"\"\"Returns the operand with a list of a string.\n\n    >>> list(range(3.B, 3., 5.C.A[0, 3] = None\n    >>> list(Decimal('3.3.C.50'))\n    ['A', 'B', 'B', ', 'A', 'B', ', 'C.50')\n    'A', 'B', 'A', ', ', 'A', 'B', 'B', ', 'A',\n    \"\"\"\n    return a, a, None\n<|endoftext|>",
+      "generated_source_sha256": "8df9a36b1e351125a1c572518b4f292d08153ed44b3d0193f88b1faf2b38dff2",
+      "source_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched.pt",
+      "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+      "generation_config": {
+        "temperature": 0.2,
+        "top_k": 50,
+        "max_new_tokens": 180
+      },
+      "contaminated": false,
+      "verdict": {
+        "passed": false,
+        "executed": false,
+        "exit_code": null,
+        "exec_stderr_tail": "  File \"<string>\", line 10\n    <|endoftext|>\n    ^\nSyntaxError: invalid syntax\n",
+        "doctest_failures": 0,
+        "doctests_total": 0
+      },
+      "error_class": "syntax_failure",
+      "failure_category": "syntax_failure"
+    },
+    {
+      "rec_name": "Context.copy_abs",
+      "instruction_sha256": "cb76f87b18f69e4f4c3c653c789428b0b83c74c8bf610b6c9b9415e1259d5a74",
+      "generated_source": "def is_abs(self, a):\n        \"\"\"Return True if the operand is flatten the operand.\n\n        >>> ExtendedContext.is_abs(Decimal('2.1'))\n        Decimal('2.1')\n        >>> ExtendedContext.copy_abs(Decimal('2.1'))\n        Decimal('2.1')\n        >>> ExtendedContext.copy_abs(Decimal('-1'))\n        Decimal('2.1')\n        >>> ExtendedContext.copy_abs(Decimal('2.1'))\n        Decimal('2.1')\n        >>> ExtendedContext.copy_abs(Decimal('1'))\n        Decimal('2.1')\n        >>> ExtendedContext.copy_abs(Decimal('2.5'))\n        Decimal('1')\n        \"\"\"\n        a = _convert_other(a, raiseit=True)\n        return a.is_",
+      "generated_source_sha256": "a4d274b5a954218d6b074b24ff70fcb467de9f455fd4ea1c1e8dc36e0a549379",
+      "source_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched.pt",
+      "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+      "generation_config": {
+        "temperature": 0.2,
+        "top_k": 50,
+        "max_new_tokens": 180
+      },
+      "contaminated": false,
+      "verdict": {
+        "passed": true,
+        "executed": true,
+        "exit_code": null,
+        "exec_stderr_tail": "",
+        "doctest_failures": 0,
+        "doctests_total": 3
+      },
+      "error_class": "success",
+      "failure_category": "success"
+    },
+    {
+      "rec_name": "mode",
+      "instruction_sha256": "c0c788619b1923d028e42ed37e94285ba286a380c27f000c0c1cf0327c8fe51c",
+      "generated_source": "def \"bcde\"): str(data: str) -> str:\n    \"\"\"\n    Wrap func and not a string will be a function to be a\n    function:\n\n    >>> print(io.BytesIO(b\"\\n\"))\n    'baz'\n    >>> print(io.BytesIO(b\"\\n\"))\n    'baz'\n    >>> print(io.BytesIO(b\"\\n\"))\n    'baz'\n    >>> take(5, 3, 3, 3), (1, 3, 3))\n    'foo-bar'\n    \"\"\"\n    return _convert_other(data, *args, **kwargs)\n<|endoftext|>",
+      "generated_source_sha256": "d5eb28f21ce6d69dec3dd98fb86a9db81bc9b164e4529385d28d9c0848810a40",
+      "source_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched.pt",
+      "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+      "generation_config": {
+        "temperature": 0.2,
+        "top_k": 50,
+        "max_new_tokens": 180
+      },
+      "contaminated": false,
+      "verdict": {
+        "passed": false,
+        "executed": false,
+        "exit_code": null,
+        "exec_stderr_tail": "  File \"<string>\", line 2\n    def \"bcde\"): str(data: str) -> str:\n              ^\nSyntaxError: unmatched ')'\n",
+        "doctest_failures": 0,
+        "doctests_total": 0
+      },
+      "error_class": "syntax_failure",
+      "failure_category": "syntax_failure"
+    },
+    {
+      "rec_name": "import_object",
+      "instruction_sha256": "f06528c5a7543f694f74c7398294c59635cc7106d60e9a4fa30eb8ef84cae03e",
+      "generated_source": "def _convert_other(value: str) -> str:\n    \"\"\"Return a string.\n\n    >>> import_name(Decimal('x')')\n    'epoch'\n    True\n    >>> import_object('x')\n    'xff'\n    \"\"\"\n    return _convert_other(args, _convert_other(args, b)\n<|endoftext|>",
+      "generated_source_sha256": "bbf4564e669e3746ab9267b971f59a258855f7ac947eb375fa16b153728d85e8",
+      "source_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched.pt",
+      "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+      "generation_config": {
+        "temperature": 0.2,
+        "top_k": 50,
+        "max_new_tokens": 180
+      },
+      "contaminated": false,
+      "verdict": {
+        "passed": false,
+        "executed": false,
+        "exit_code": null,
+        "exec_stderr_tail": "  File \"<string>\", line 10\n    return _convert_other(args, _convert_other(args, b)\n                         ^\nSyntaxError: '(' was never closed\n",
+        "doctest_failures": 0,
+        "doctests_total": 0
+      },
+      "error_class": "syntax_failure",
+      "failure_category": "syntax_failure"
+    },
+    {
+      "rec_name": "Decimal.__new__",
+      "instruction_sha256": "09d74edbf55ed2beb267cfbb7f30ce57571f4e8c925c30c5476efc8502db70dc",
+      "generated_source": "def __args__(self, other):\n        \"\"\"Return a list of the operand.\n\n        >>> ExtendedContext.is_other(Decimal('2.50'))\n        Decimal('2.5')\n        >>> ExtendedContext.is_combination(Decimal('2.50'))\n        Decimal('2.50')\n        >>> ExtendedContext.is_combination(Decimal('2'))\n        Decimal('2.5')\n        >>> ExtendedContext.is_ratio(Decimal('2.5'))\n        Decimal('2.5')\n        >>> ExtendedContext.is_ratio(Decimal('2.50'))\n        Decimal('2.5')\n        >>> ExtendedContext.is_ratio(Decimal('2.5'))\n        Decimal('2.5')\n        >>> ExtendedContext.is_header('2.5'))\n        Decimal('2.5')\n        >>> ExtendedContext",
+      "generated_source_sha256": "098d392770ddd9ff907020981cac4fd64bfb781ed55afe7f252c52d5c9e6469f",
+      "source_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched.pt",
+      "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+      "generation_config": {
+        "temperature": 0.2,
+        "top_k": 50,
+        "max_new_tokens": 180
+      },
+      "contaminated": false,
+      "verdict": {
+        "passed": false,
+        "executed": false,
+        "exit_code": null,
+        "exec_stderr_tail": "  File \"<string>\", line 3\n    \"\"\"Return a list of the operand.\n    ^\nSyntaxError: unterminated triple-quoted string literal (detected at line 19)\n",
+        "doctest_failures": 0,
+        "doctests_total": 0
+      },
+      "error_class": "syntax_failure",
+      "failure_category": "syntax_failure"
+    },
+    {
+      "rec_name": "Context.is_snan",
+      "instruction_sha256": "8caf89e97f55df033eb4026dd8566c8e32019aca5d4d60edea41fb3186eaf0e2",
+      "generated_source": "def is_snan(self, a):\n        \"\"\"Returns True if the operand is a otherwise return False.\n\n        >>> ExtendedContext.is_snan(Decimal('2.50'))\n        False\n        >>> ExtendedContext.is_snan(Decimal('2.50'))\n        False\n        >>> ExtendedContext.is_snan(Decimal('NaN'))\n        False\n        >>> ExtendedContext.is_snan(Decimal('NaN'))\n        False\n        >>> ExtendedContext.is_infinite(Decimal('2.50'))\n        False\n        >>> ExtendedContext.is_snan(Decimal('2.50'))\n        True\n        >>> ExtendedContext.is_snan(Decimal('NaN'))\n        False\n        >>> ExtendedContext.is_snan(Decimal('2.5'))\n        False\n        >>> ExtendedContext.is_snan(Decimal('NaN'))\n        False",
+      "generated_source_sha256": "c9fe47872202b79484f078f38d5d33358fb8f59d4b69d43da374be26e871d423",
+      "source_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched.pt",
+      "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+      "generation_config": {
+        "temperature": 0.2,
+        "top_k": 50,
+        "max_new_tokens": 180
+      },
+      "contaminated": false,
+      "verdict": {
+        "passed": false,
+        "executed": false,
+        "exit_code": null,
+        "exec_stderr_tail": "  File \"<string>\", line 3\n    \"\"\"Returns True if the operand is a otherwise return False.\n    ^\nSyntaxError: unterminated triple-quoted string literal (detected at line 22)\n",
+        "doctest_failures": 0,
+        "doctests_total": 0
+      },
+      "error_class": "syntax_failure",
+      "failure_category": "syntax_failure"
+    }
+  ],
+  "candidate_error_class_distribution": {
+    "syntax_failure": 11,
+    "success": 1
+  },
+  "success_count": 1,
+  "contaminated_candidates": 0,
+  "feedback_rows": [
+    {
+      "name": "fb15-JsonPointer.contains",
+      "instruction": "# Task: Implement the Python function `JsonPointer.contains` (originally part of the CPython standard library module `jsonpointer`).\n\nDocumentation:\nReturns True if ptr's parts are a prefix of this pointer's parts.\n\nEqual pointers and the root pointer are also prefixes. For example,\nthe longer pointer calls contains() with its parent:\n\n>>> child = JsonPointer('/foo/bar')\n>>> parent = JsonPointer('/foo')\n>>> child.contains(parent)\nTrue\n>>> parent.contains(child)\nFalse\n>>> child.contains(child)\nTrue\n>>> child.contains(JsonPointer(''))\nTrue\n>>> child.contains(JsonPointer('/foo/b'))\nFalse\n\nExecutable form to match:\ndef contains(self, ptr):\n# Attempt failed with syntax_failure: SyntaxError: unterminated triple-quoted string literal (detected at line 24)\n",
+      "code": "def contains(self, ptr):\n        \"\"\"Returns True if ptr's parts are a prefix of this pointer's parts.\n\n        Equal pointers and the root pointer are also prefixes. For example,\n        the longer pointer calls contains() with its parent:\n\n        >>> child = JsonPointer('/foo/bar')\n        >>> parent = JsonPointer('/foo')\n        >>> child.contains(parent)\n        True\n        >>> parent.contains(child)\n        False\n        >>> child.contains(child)\n        True\n        >>> child.contains(JsonPointer(''))\n        True\n        >>> child.contains(JsonPointer('/foo/b'))\n        False\n        \"\"\"\n        return self.parts[:len(ptr.parts)] == ptr.parts",
+      "split": "train",
+      "provenance": {
+        "kind": "stage15-compacted-execution-feedback",
+        "error_class": "syntax_failure",
+        "original_stderr_preserved_in_record": true,
+        "parent": {
+          "source_uri": "file:///usr/local/lib/python3.12/site-packages/jsonpointer.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        }
+      },
+      "original_stderr_tail": "",
+      "lineage": {
+        "task_rec_name": "JsonPointer.contains",
+        "task_instruction_sha256": "dea6a8d778e27c5e1a7223c6cea5b7e312685216117ff4dd3c166fe78166985c",
+        "generated_source_sha256": "c876e6d3b3e52dab867fcbc32f52a3c34d276659bc675453953c5bc8c884cd8d",
+        "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+        "execution_error_class": "syntax_failure",
+        "compact_evidence": "syntax_failure: SyntaxError: unterminated triple-quoted string literal (detected at line 24)",
+        "corrected_source_is_record_reference": true,
+        "corrected_source_provenance": {
+          "source_uri": "file:///usr/local/lib/python3.12/site-packages/jsonpointer.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        },
+        "contaminated": false
+      },
+      "coverage_audit": {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 162,
+        "exact_match": false
+      }
+    },
+    {
+      "name": "fb15-ExceptionTrap.passes",
+      "instruction": "# Task: Implement the Python function `ExceptionTrap.passes` (originally part of the CPython standard library module `context`).\n\nDocumentation:\nWrap func and replace the result with the truth\nvalue of the trap (True if no exception).\n\nDecorate a function that always fails.\n\n>>> @ExceptionTrap(ValueError).passes\n... def fail():\n...     raise ValueError('failed')\n\n>>> fail()\nFalse\n\nExecutable form to match:\ndef passes(self, func: Callable[_P, _R]) -> functools._Wrapped[_P, _R, _P, bool]:\n# Attempt failed with syntax_failure: SyntaxError: unterminated triple-quoted string literal (detected at line 7)\n",
+      "code": "def passes(self, func: Callable[_P, _R]) -> functools._Wrapped[_P, _R, _P, bool]:\n        \"\"\"\n        Wrap func and replace the result with the truth\n        value of the trap (True if no exception).\n\n        Decorate a function that always fails.\n\n        >>> @ExceptionTrap(ValueError).passes\n        ... def fail():\n        ...     raise ValueError('failed')\n\n        >>> fail()\n        False\n        \"\"\"\n        return self.raises(func, _test=operator.not_)",
+      "split": "train",
+      "provenance": {
+        "kind": "stage15-compacted-execution-feedback",
+        "error_class": "syntax_failure",
+        "original_stderr_preserved_in_record": true,
+        "parent": {
+          "source_uri": "file:///usr/local/lib/python3.12/site-packages/jaraco/context/__init__.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        }
+      },
+      "original_stderr_tail": "",
+      "lineage": {
+        "task_rec_name": "ExceptionTrap.passes",
+        "task_instruction_sha256": "95801ba2084a95f85b617a09fc44940aa8f8439808d02170217b403c1efbbc63",
+        "generated_source_sha256": "38a7203fc2efd0c73d76ed9bdbb698df0dbea52cefee551433a1a376d29619f1",
+        "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+        "execution_error_class": "syntax_failure",
+        "compact_evidence": "syntax_failure: SyntaxError: unterminated triple-quoted string literal (detected at line 7)",
+        "corrected_source_is_record_reference": true,
+        "corrected_source_provenance": {
+          "source_uri": "file:///usr/local/lib/python3.12/site-packages/jaraco/context/__init__.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        },
+        "contaminated": false
+      },
+      "coverage_audit": {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 126,
+        "exact_match": false
+      }
+    },
+    {
+      "name": "fb15-filename_component",
+      "instruction": "# Task: Implement the Python function `filename_component` (originally part of the CPython standard library module `_normalization`).\n\nDocumentation:\nNormalize each component of a filename (e.g. distribution/version part of wheel)\nNote: ``value`` needs to be already normalized.\n>>> filename_component(\"my-pkg\")\n'my_pkg'\n\nExecutable form to match:\ndef filename_component(value: str) -> str:\n# Attempt failed with syntax_failure: SyntaxError: unterminated triple-quoted string literal (detected at line 4)\n",
+      "code": "def filename_component(value: str) -> str:\n    \"\"\"Normalize each component of a filename (e.g. distribution/version part of wheel)\n    Note: ``value`` needs to be already normalized.\n    >>> filename_component(\"my-pkg\")\n    'my_pkg'\n    \"\"\"\n    return value.replace(\"-\", \"_\").strip(\"_\")",
+      "split": "train",
+      "provenance": {
+        "kind": "stage15-compacted-execution-feedback",
+        "error_class": "syntax_failure",
+        "original_stderr_preserved_in_record": true,
+        "parent": {
+          "source_uri": "file:///usr/local/lib/python3.12/site-packages/setuptools/_normalization.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        }
+      },
+      "original_stderr_tail": "",
+      "lineage": {
+        "task_rec_name": "filename_component",
+        "task_instruction_sha256": "19f40a6d6551cab7a928aa629ea16241df7b3182f2bf7188f0195c0d9d0cc60c",
+        "generated_source_sha256": "baee4d455db4f7af6225c71f38b20d6bce1bc9ca8be67d07b17b30a1cc6437f9",
+        "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+        "execution_error_class": "syntax_failure",
+        "compact_evidence": "syntax_failure: SyntaxError: unterminated triple-quoted string literal (detected at line 4)",
+        "corrected_source_is_record_reference": true,
+        "corrected_source_provenance": {
+          "source_uri": "file:///usr/local/lib/python3.12/site-packages/setuptools/_normalization.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        },
+        "contaminated": false
+      },
+      "coverage_audit": {
+        "fits": true,
+        "n_supervised": 81,
+        "len_completion": 81,
+        "exact_match": true
+      }
+    },
+    {
+      "name": "fb15-method_cache",
+      "instruction": "# Task: Implement the Python function `method_cache` (originally part of the CPython standard library module `_functools`).\n\nDocumentation:\nWrap lru_cache to support storing the cache data in the object instances.\n\nAbstracts the common paradigm where the method explicitly saves an\nunderscore-prefixed protected property on first call and returns that\nsubsequently.\n\n>>> class MyClass:\n...     calls = 0\n...\n...     @method_cache\n...     def method(self, value):\n...         self.calls += 1\n...         return value\n\n>>> a = MyClass()\n>>> a.method(3)\n3\n>>> for x in range(75):\n...     res = a.method(x)\n>>> a.calls\n75\n\nNote that the apparent behavior will be exactly like that of lru_cache\nexcept that the cache is stored on each instance, so values in one\ninstance will not flush values from another, and when an instance is\ndeleted, so are the cached values for that instance.\n\n>>> b = MyClass()\n>>> for x in range(35):\n...     res = b.method(x)\n>>> b.calls\n35\n>>> a.method(0)\n0\n>>> a.calls\n75\n\nNote that if method had been decorated with ``functools.lru_cache()``,\na.calls would have been 76 (due to the cached value of 0 having been\nflushed by the 'b' instance).\n\nClear the cache with ``.cache_clear()``\n\n>>> a.method.cache_clear()\n\nSame for a method that hasn't yet been called.\n\n>>> c = MyClass()\n>>> c.method.cache_clear()\n\nAnother cache wrapper may be supplied:\n\n>>> cache = functools.lru_cache(maxsize=2)\n>>> MyClass.method2 = method_cache(lambda self: 3, cache_wrapper=cache)\n>>> a = MyClass()\n>>> a.method2()\n3\n\nCaution - do not subsequently wrap the method with another decorator, such\nas ``@property``, which changes the semantics of the function.\n\nSee also\nhttp://code.activestate.com/recipes/577452-a-memoize-decorator-for-instance-methods/\nfor another implementation and additional justification.\n\nExecutable form to match:\ndef method_cache(method, cache_wrapper=None):\n# Attempt failed with syntax_failure: SyntaxError: unterminated string literal (detected at line 2)\n",
+      "code": "def method_cache(method, cache_wrapper=None):\n    \"\"\"\n    Wrap lru_cache to support storing the cache data in the object instances.\n\n    Abstracts the common paradigm where the method explicitly saves an\n    underscore-prefixed protected property on first call and returns that\n    subsequently.\n\n    >>> class MyClass:\n    ...     calls = 0\n    ...\n    ...     @method_cache\n    ...     def method(self, value):\n    ...         self.calls += 1\n    ...         return value\n\n    >>> a = MyClass()\n    >>> a.method(3)\n    3\n    >>> for x in range(75):\n    ...     res = a.method(x)\n    >>> a.calls\n    75\n\n    Note that the apparent behavior will be exactly like that of lru_cache\n    except that the cache is stored on each instance, so values in one\n    instance will not flush values from another, and when an instance is\n    deleted, so are the cached values for that instance.\n\n    >>> b = MyClass()\n    >>> for x in range(35):\n    ...     res = b.method(x)\n    >>> b.calls\n    35\n    >>> a.method(0)\n    0\n    >>> a.calls\n    75\n\n    Note that if method had been decorated with ``functools.lru_cache()``,\n    a.calls would have been 76 (due to the cached value of 0 having been\n    flushed by the 'b' instance).\n\n    Clear the cache with ``.cache_clear()``\n\n    >>> a.method.cache_clear()\n\n    Same for a method that hasn't yet been called.\n\n    >>> c = MyClass()\n    >>> c.method.cache_clear()\n\n    Another cache wrapper may be supplied:\n\n    >>> cache = functools.lru_cache(maxsize=2)\n    >>> MyClass.method2 = method_cache(lambda self: 3, cache_wrapper=cache)\n    >>> a = MyClass()\n    >>> a.method2()\n    3\n\n    Caution - do not subsequently wrap the method with another decorator, such\n    as ``@property``, which changes the semantics of the function.\n\n    See also\n    http://code.activestate.com/recipes/577452-a-memoize-decorator-for-instance-methods/\n    for another implementation and additional justification.\n    \"\"\"\n    cache_wrapper = cache_wrapper or functools.lru_cache()\n\n    def wrapper(self, *args, **kwargs):\n        # it's the first call, replace the method with a cached, bound method\n        bound_method = types.MethodType(method, self)\n        cached_method = cache_wrapper(bound_method)\n        setattr(self, method.__name__, cached_method)\n        return cached_method(*args, **kwargs)\n\n    # Support cache clear even before cache has been created.\n    wrapper.cache_clear = lambda: None\n\n    return wrapper",
+      "split": "train",
+      "provenance": {
+        "kind": "stage15-compacted-execution-feedback",
+        "error_class": "syntax_failure",
+        "original_stderr_preserved_in_record": true,
+        "parent": {
+          "source_uri": "file:///usr/local/lib/python3.12/importlib/metadata/_functools.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        }
+      },
+      "original_stderr_tail": "",
+      "lineage": {
+        "task_rec_name": "method_cache",
+        "task_instruction_sha256": "693567eda86ef207677cac18a20669027ed887be5cafb7e3ba9c81f4ee144154",
+        "generated_source_sha256": "5c657fcc663c2cbcddb8b4fb6ea88d327ea2e398a5b83c42c635a8d672e2afc3",
+        "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+        "execution_error_class": "syntax_failure",
+        "compact_evidence": "syntax_failure: SyntaxError: unterminated string literal (detected at line 2)",
+        "corrected_source_is_record_reference": true,
+        "corrected_source_provenance": {
+          "source_uri": "file:///usr/local/lib/python3.12/importlib/metadata/_functools.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        },
+        "contaminated": false
+      },
+      "coverage_audit": {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 687,
+        "exact_match": false
+      }
+    },
+    {
+      "name": "fb15-replace",
+      "instruction": "# Task: Implement the Python function `replace` (originally part of the CPython standard library module `py313`).\n\nDocumentation:\n>>> replace(r'foo\\z')\n'foo\\\\Z'\n\nExecutable form to match:\ndef replace(pattern):\n# Attempt failed with syntax_failure: SyntaxError: unmatched ')'\n",
+      "code": "def replace(pattern):\n    r\"\"\"\n    >>> replace(r'foo\\z')\n    'foo\\\\Z'\n    \"\"\"\n    return pattern[:-2] + pattern[-2:].replace(r'\\z', r'\\Z')",
+      "split": "train",
+      "provenance": {
+        "kind": "stage15-compacted-execution-feedback",
+        "error_class": "syntax_failure",
+        "original_stderr_preserved_in_record": true,
+        "parent": {
+          "source_uri": "file:///usr/local/lib/python3.12/site-packages/setuptools/_vendor/zipp/compat/py313.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        }
+      },
+      "original_stderr_tail": "",
+      "lineage": {
+        "task_rec_name": "replace",
+        "task_instruction_sha256": "835d9477e59a83dcfbfebcf42b77ccf8339df3661a872210815feb9c159a099e",
+        "generated_source_sha256": "2dc204e2987e8a5a2218a1a9e7a65c740ad4d6e0f708a022d3849be4d2b2e191",
+        "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+        "execution_error_class": "syntax_failure",
+        "compact_evidence": "syntax_failure: SyntaxError: unmatched ')'",
+        "corrected_source_is_record_reference": true,
+        "corrected_source_provenance": {
+          "source_uri": "file:///usr/local/lib/python3.12/site-packages/setuptools/_vendor/zipp/compat/py313.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        },
+        "contaminated": false
+      },
+      "coverage_audit": {
+        "fits": true,
+        "n_supervised": 54,
+        "len_completion": 54,
+        "exact_match": true
+      }
+    },
+    {
+      "name": "fb15-_rank",
+      "instruction": "# Task: Implement the Python function `_rank` (originally part of the CPython standard library module `statistics`).\n\nDocumentation:\nRank order a dataset. The lowest value has rank 1.\n\nTies are averaged so that equal values receive the same rank:\n\n    >>> data = [31, 56, 31, 25, 75, 18]\n    >>> _rank(data)\n    [3.5, 5.0, 3.5, 2.0, 6.0, 1.0]\n\nThe operation is idempotent:\n\n    >>> _rank([3.5, 5.0, 3.5, 2.0, 6.0, 1.0])\n    [3.5, 5.0, 3.5, 2.0, 6.0, 1.0]\n\nIt is possible to rank the data in reverse order so that the\nhighest value has rank 1.  Also, a key-function can extract\nthe field to be ranked:\n\n    >>> goals = [('eagles', 45), ('bears', 48), ('lions', 44)]\n    >>> _rank(goals, key=itemgetter(1), reverse=True)\n    [2.0, 1.0, 3.0]\n\nRanks are conventionally numbered starting from one; however,\nsetting *start* to zero allows the ranks to be used as array indices:\n\n    >>> prize = ['Gold', 'Silver', 'Bronze', 'Certificate']\n    >>> scores = [8.1, 7.3, 9.4, 8.3]\n    >>> [prize[int(i)] for i in _rank(scores, start=0, reverse=True)]\n    ['Bronze', 'Certificate', 'Gold', 'Silver']\n\nExecutable form to match:\ndef _rank(data, /, *, key=None, reverse=False, ties='average', start=1) -> list[float]:\n# Attempt failed with syntax_failure: SyntaxError: unterminated triple-quoted string literal (detected at line 4)\n",
+      "code": "def _rank(data, /, *, key=None, reverse=False, ties='average', start=1) -> list[float]:\n    \"\"\"Rank order a dataset. The lowest value has rank 1.\n\n    Ties are averaged so that equal values receive the same rank:\n\n        >>> data = [31, 56, 31, 25, 75, 18]\n        >>> _rank(data)\n        [3.5, 5.0, 3.5, 2.0, 6.0, 1.0]\n\n    The operation is idempotent:\n\n        >>> _rank([3.5, 5.0, 3.5, 2.0, 6.0, 1.0])\n        [3.5, 5.0, 3.5, 2.0, 6.0, 1.0]\n\n    It is possible to rank the data in reverse order so that the\n    highest value has rank 1.  Also, a key-function can extract\n    the field to be ranked:\n\n        >>> goals = [('eagles', 45), ('bears', 48), ('lions', 44)]\n        >>> _rank(goals, key=itemgetter(1), reverse=True)\n        [2.0, 1.0, 3.0]\n\n    Ranks are conventionally numbered starting from one; however,\n    setting *start* to zero allows the ranks to be used as array indices:\n\n        >>> prize = ['Gold', 'Silver', 'Bronze', 'Certificate']\n        >>> scores = [8.1, 7.3, 9.4, 8.3]\n        >>> [prize[int(i)] for i in _rank(scores, start=0, reverse=True)]\n        ['Bronze', 'Certificate', 'Gold', 'Silver']\n\n    \"\"\"\n    # If this function becomes public at some point, more thought\n    # needs to be given to the signature.  A list of ints is\n    # plausible when ties is \"min\" or \"max\".  When ties is \"average\",\n    # either list[float] or list[Fraction] is plausible.\n\n    # Default handling of ties matches scipy.stats.mstats.spearmanr.\n    if ties != 'average':\n        raise ValueError(f'Unknown tie resolution method: {ties!r}')\n    if key is not None:\n        data = map(key, data)\n    val_pos = sorted(zip(data, count()), reverse=reverse)\n    i = start - 1\n    result = [0] * len(val_pos)\n    for _, g in groupby(val_pos, key=itemgetter(0)):\n        group = list(g)\n        size = len(group)\n        rank = i + (size + 1) / 2\n        for value, orig_pos in group:\n            result[orig_pos] = rank\n        i += size\n    return result",
+      "split": "train",
+      "provenance": {
+        "kind": "stage15-compacted-execution-feedback",
+        "error_class": "syntax_failure",
+        "original_stderr_preserved_in_record": true,
+        "parent": {
+          "source_uri": "file:///usr/local/lib/python3.12/statistics.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        }
+      },
+      "original_stderr_tail": "",
+      "lineage": {
+        "task_rec_name": "_rank",
+        "task_instruction_sha256": "24592315d79223001be3cfc76fb1c622417f353df3e0e247cdef87e461b32a09",
+        "generated_source_sha256": "420e0d080b4471d5ec4184701839111cc3b100265324838858a10f734600b837",
+        "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+        "execution_error_class": "syntax_failure",
+        "compact_evidence": "syntax_failure: SyntaxError: unterminated triple-quoted string literal (detected at line 4)",
+        "corrected_source_is_record_reference": true,
+        "corrected_source_provenance": {
+          "source_uri": "file:///usr/local/lib/python3.12/statistics.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        },
+        "contaminated": false
+      },
+      "coverage_audit": {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 692,
+        "exact_match": false
+      }
+    },
+    {
+      "name": "fb15-format_timestamp",
+      "instruction": "# Task: Implement the Python function `format_timestamp` (originally part of the CPython standard library module `httputil`).\n\nDocumentation:\nFormats a timestamp in the format used by HTTP.\n\nThe argument may be a numeric timestamp as returned by `time.time`,\na time tuple as returned by `time.gmtime`, or a `datetime.datetime`\nobject. Naive `datetime.datetime` objects are assumed to represent\nUTC; aware objects are converted to UTC before formatting.\n\n>>> format_timestamp(1359312200)\n'Sun, 27 Jan 2013 18:43:20 GMT'\n\nExecutable form to match:\ndef format_timestamp(\n# Attempt failed with syntax_failure: SyntaxError: invalid syntax\n",
+      "code": "def format_timestamp(\n    ts: int | float | tuple | time.struct_time | datetime.datetime,\n) -> str:\n    \"\"\"Formats a timestamp in the format used by HTTP.\n\n    The argument may be a numeric timestamp as returned by `time.time`,\n    a time tuple as returned by `time.gmtime`, or a `datetime.datetime`\n    object. Naive `datetime.datetime` objects are assumed to represent\n    UTC; aware objects are converted to UTC before formatting.\n\n    >>> format_timestamp(1359312200)\n    'Sun, 27 Jan 2013 18:43:20 GMT'\n    \"\"\"\n    if isinstance(ts, (int, float)):\n        time_num = ts\n    elif isinstance(ts, (tuple, time.struct_time)):\n        time_num = calendar.timegm(ts)\n    elif isinstance(ts, datetime.datetime):\n        time_num = calendar.timegm(ts.utctimetuple())\n    else:\n        raise TypeError(\"unknown timestamp type: %r\" % ts)\n    return email.utils.formatdate(time_num, usegmt=True)",
+      "split": "train",
+      "provenance": {
+        "kind": "stage15-compacted-execution-feedback",
+        "error_class": "syntax_failure",
+        "original_stderr_preserved_in_record": true,
+        "parent": {
+          "source_uri": "file:///usr/local/lib/python3.12/site-packages/tornado/httputil.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        }
+      },
+      "original_stderr_tail": "",
+      "lineage": {
+        "task_rec_name": "format_timestamp",
+        "task_instruction_sha256": "779b50b2f9a0f1b054e1a5bc8aafac68ceff7b57cc38f2bb6f7f66161c3a7924",
+        "generated_source_sha256": "8df9a36b1e351125a1c572518b4f292d08153ed44b3d0193f88b1faf2b38dff2",
+        "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+        "execution_error_class": "syntax_failure",
+        "compact_evidence": "syntax_failure: SyntaxError: invalid syntax",
+        "corrected_source_is_record_reference": true,
+        "corrected_source_provenance": {
+          "source_uri": "file:///usr/local/lib/python3.12/site-packages/tornado/httputil.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        },
+        "contaminated": false
+      },
+      "coverage_audit": {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 257,
+        "exact_match": false
+      }
+    },
+    {
+      "name": "fb15-mode",
+      "instruction": "# Task: Implement the Python function `mode` (originally part of the CPython standard library module `statistics`).\n\nDocumentation:\nReturn the most common data point from discrete or nominal data.\n\n``mode`` assumes discrete data, and returns a single value. This is the\nstandard treatment of the mode as commonly taught in schools:\n\n    >>> mode([1, 1, 2, 3, 3, 3, 3, 4])\n    3\n\nThis also works with nominal (non-numeric) data:\n\n    >>> mode([\"red\", \"blue\", \"blue\", \"red\", \"green\", \"red\", \"red\"])\n    'red'\n\nIf there are multiple modes with same frequency, return the first one\nencountered:\n\n    >>> mode(['red', 'red', 'green', 'blue', 'blue'])\n    'red'\n\nIf *data* is empty, ``mode``, raises StatisticsError.\n\nExecutable form to match:\ndef mode(data):\n# Attempt failed with syntax_failure: SyntaxError: unmatched ')'\n",
+      "code": "def mode(data):\n    \"\"\"Return the most common data point from discrete or nominal data.\n\n    ``mode`` assumes discrete data, and returns a single value. This is the\n    standard treatment of the mode as commonly taught in schools:\n\n        >>> mode([1, 1, 2, 3, 3, 3, 3, 4])\n        3\n\n    This also works with nominal (non-numeric) data:\n\n        >>> mode([\"red\", \"blue\", \"blue\", \"red\", \"green\", \"red\", \"red\"])\n        'red'\n\n    If there are multiple modes with same frequency, return the first one\n    encountered:\n\n        >>> mode(['red', 'red', 'green', 'blue', 'blue'])\n        'red'\n\n    If *data* is empty, ``mode``, raises StatisticsError.\n\n    \"\"\"\n    pairs = Counter(iter(data)).most_common(1)\n    try:\n        return pairs[0][0]\n    except IndexError:\n        raise StatisticsError('no mode for empty data') from None",
+      "split": "train",
+      "provenance": {
+        "kind": "stage15-compacted-execution-feedback",
+        "error_class": "syntax_failure",
+        "original_stderr_preserved_in_record": true,
+        "parent": {
+          "source_uri": "file:///usr/local/lib/python3.12/statistics.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        }
+      },
+      "original_stderr_tail": "",
+      "lineage": {
+        "task_rec_name": "mode",
+        "task_instruction_sha256": "c0c788619b1923d028e42ed37e94285ba286a380c27f000c0c1cf0327c8fe51c",
+        "generated_source_sha256": "d5eb28f21ce6d69dec3dd98fb86a9db81bc9b164e4529385d28d9c0848810a40",
+        "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+        "execution_error_class": "syntax_failure",
+        "compact_evidence": "syntax_failure: SyntaxError: unmatched ')'",
+        "corrected_source_is_record_reference": true,
+        "corrected_source_provenance": {
+          "source_uri": "file:///usr/local/lib/python3.12/statistics.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        },
+        "contaminated": false
+      },
+      "coverage_audit": {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 250,
+        "exact_match": false
+      }
+    },
+    {
+      "name": "fb15-import_object",
+      "instruction": "# Task: Implement the Python function `import_object` (originally part of the CPython standard library module `util`).\n\nDocumentation:\nImports an object by name.\n\n``import_object('x')`` is equivalent to ``import x``.\n``import_object('x.y.z')`` is equivalent to ``from x.y import z``.\n\n>>> import tornado.escape\n>>> import_object('tornado.escape') is tornado.escape\nTrue\n>>> import_object('tornado.escape.utf8') is tornado.escape.utf8\nTrue\n>>> import_object('tornado') is tornado\nTrue\n>>> import_object('tornado.missing_module')\nTraceback (most recent call last):\n    ...\nImportError: No module named missing_module\n\nExecutable form to match:\ndef import_object(name: str) -> Any:\n# Attempt failed with syntax_failure: SyntaxError: '(' was never closed\n",
+      "code": "def import_object(name: str) -> Any:\n    \"\"\"Imports an object by name.\n\n    ``import_object('x')`` is equivalent to ``import x``.\n    ``import_object('x.y.z')`` is equivalent to ``from x.y import z``.\n\n    >>> import tornado.escape\n    >>> import_object('tornado.escape') is tornado.escape\n    True\n    >>> import_object('tornado.escape.utf8') is tornado.escape.utf8\n    True\n    >>> import_object('tornado') is tornado\n    True\n    >>> import_object('tornado.missing_module')\n    Traceback (most recent call last):\n        ...\n    ImportError: No module named missing_module\n    \"\"\"\n    if name.count(\".\") == 0:\n        return __import__(name)\n\n    parts = name.split(\".\")\n    obj = __import__(\".\".join(parts[:-1]), fromlist=[parts[-1]])\n    try:\n        return getattr(obj, parts[-1])\n    except AttributeError:\n        raise ImportError(\"No module named %s\" % parts[-1])",
+      "split": "train",
+      "provenance": {
+        "kind": "stage15-compacted-execution-feedback",
+        "error_class": "syntax_failure",
+        "original_stderr_preserved_in_record": true,
+        "parent": {
+          "source_uri": "file:///usr/local/lib/python3.12/site-packages/tornado/util.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        }
+      },
+      "original_stderr_tail": "",
+      "lineage": {
+        "task_rec_name": "import_object",
+        "task_instruction_sha256": "f06528c5a7543f694f74c7398294c59635cc7106d60e9a4fa30eb8ef84cae03e",
+        "generated_source_sha256": "bbf4564e669e3746ab9267b971f59a258855f7ac947eb375fa16b153728d85e8",
+        "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+        "execution_error_class": "syntax_failure",
+        "compact_evidence": "syntax_failure: SyntaxError: '(' was never closed",
+        "corrected_source_is_record_reference": true,
+        "corrected_source_provenance": {
+          "source_uri": "file:///usr/local/lib/python3.12/site-packages/tornado/util.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        },
+        "contaminated": false
+      },
+      "coverage_audit": {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 253,
+        "exact_match": false
+      }
+    },
+    {
+      "name": "fb15-Decimal.__new__",
+      "instruction": "# Task: Implement the Python function `Decimal.__new__` (originally part of the CPython standard library module `_pydecimal`).\n\nDocumentation:\nCreate a decimal point instance.\n\n>>> Decimal('3.14')              # string input\nDecimal('3.14')\n>>> Decimal((0, (3, 1, 4), -2))  # tuple (sign, digit_tuple, exponent)\nDecimal('3.14')\n>>> Decimal(314)                 # int\nDecimal('314')\n>>> Decimal(Decimal(314))        # another decimal instance\nDecimal('314')\n>>> Decimal('  3.14  \\n')        # leading and trailing whitespace okay\nDecimal('3.14')\n\nExecutable form to match:\ndef __new__(cls, value=\"0\", context=None):\n# Attempt failed with syntax_failure: SyntaxError: unterminated triple-quoted string literal (detected at line 19)\n",
+      "code": "def __new__(cls, value=\"0\", context=None):\n        \"\"\"Create a decimal point instance.\n\n        >>> Decimal('3.14')              # string input\n        Decimal('3.14')\n        >>> Decimal((0, (3, 1, 4), -2))  # tuple (sign, digit_tuple, exponent)\n        Decimal('3.14')\n        >>> Decimal(314)                 # int\n        Decimal('314')\n        >>> Decimal(Decimal(314))        # another decimal instance\n        Decimal('314')\n        >>> Decimal('  3.14  \\\\n')        # leading and trailing whitespace okay\n        Decimal('3.14')\n        \"\"\"\n\n        # Note that the coefficient, self._int, is actually stored as\n        # a string rather than as a tuple of digits.  This speeds up\n        # the \"digits to integer\" and \"integer to digits\" conversions\n        # that are used in almost every arithmetic operation on\n        # Decimals.  This is an internal detail: the as_tuple function\n        # and the Decimal constructor still deal with tuples of\n        # digits.\n\n        self = object.__new__(cls)\n\n        # From a string\n        # REs insist on real strings, so we can too.\n        if isinstance(value, str):\n            m = _parser(value.strip().replace(\"_\", \"\"))\n            if m is None:\n                if context is None:\n                    context = getcontext()\n                return context._raise_error(ConversionSyntax,\n                                \"Invalid literal for Decimal: %r\" % value)\n\n            if m.group('sign') == \"-\":\n                self._sign = 1\n            else:\n                self._sign = 0\n            intpart = m.group('int')\n            if intpart is not None:\n                # finite number\n                fracpart = m.group('frac') or ''\n                exp = int(m.group('exp') or '0')\n                self._int = str(int(intpart+fracpart))\n                self._exp = exp - len(fracpart)\n                self._is_special = False\n            else:\n                diag = m.group('diag')\n                if diag is not None:\n                    # NaN\n                    self._int = str(int(diag or '0')).lstrip('0')\n                    if m.group('signal'):\n                        self._exp = 'N'\n                    else:\n                        self._exp = 'n'\n                else:\n                    # infinity\n                    self._int = '0'\n                    self._exp = 'F'\n                self._is_special = True\n            return self\n\n        # From an integer\n        if isinstance(value, int):\n            if value >= 0:\n                self._sign = 0\n            else:\n                self._sign = 1\n            self._exp = 0\n            self._int = str(abs(value))\n            self._is_special = False\n            return self\n\n        # From another decimal\n        if isinstance(value, Decimal):\n            self._exp  = value._exp\n            self._sign = value._sign\n            self._int  = value._int\n            self._is_special  = value._is_special\n            return self\n\n        # From an internal working value\n        if isinstance(value, _WorkRep):\n            self._sign = value.sign\n            self._int = str(value.int)\n            self._exp = int(value.exp)\n            self._is_special = False\n            return self\n\n        # tuple/list conversion (possibly from as_tuple())\n        if isinstance(value, (list,tuple)):\n            if len(value) != 3:\n                raise ValueError('Invalid tuple size in creation of Decimal '\n                                 'from list or tuple.  The list or tuple '\n                                 'should have exactly three elements.')\n            # process sign.  The isinstance test rejects floats\n            if not (isinstance(value[0], int) and value[0] in (0,1)):\n                raise ValueError(\"Invalid sign.  The first value in the tuple \"\n                                 \"should be an integer; either 0 for a \"\n                                 \"positive number or 1 for a negative number.\")\n            self._sign = value[0]\n            if value[2] == 'F':\n                # infinity: value[1] is ignored\n                self._int = '0'\n                self._exp = value[2]\n                self._is_special = True\n            else:\n                # process and validate the digits in value[1]\n                digits = []\n                for digit in value[1]:\n                    if isinstance(digit, int) and 0 <= digit <= 9:\n                        # skip leading zeros\n                        if digits or digit != 0:\n                            digits.append(digit)\n                    else:\n                        raise ValueError(\"The second value in the tuple must \"\n                                         \"be composed of integers in the range \"\n                                         \"0 through 9.\")\n                if value[2] in ('n', 'N'):\n                    # NaN: digits form the diagnostic\n                    self._int = ''.join(map(str, digits))\n                    self._exp = value[2]\n                    self._is_special = True\n                elif isinstance(value[2], int):\n                    # finite number: digits give the coefficient\n                    self._int = ''.join(map(str, digits or [0]))\n                    self._exp = value[2]\n                    self._is_special = False\n                else:\n                    raise ValueError(\"The third value in the tuple must \"\n                                     \"be an integer, or one of the \"\n                                     \"strings 'F', 'n', 'N'.\")\n            return self\n\n        if isinstance(value, float):\n            if context is None:\n                context = getcontext()\n            context._raise_error(FloatOperation,\n                \"strict semantics for mixing floats and Decimals are \"\n                \"enabled\")\n            value = Decimal.from_float(value)\n            self._exp  = value._exp\n            self._sign = value._sign\n            self._int  = value._int\n            self._is_special  = value._is_special\n            return self\n\n        raise TypeError(\"Cannot convert %r to Decimal\" % value)",
+      "split": "train",
+      "provenance": {
+        "kind": "stage15-compacted-execution-feedback",
+        "error_class": "syntax_failure",
+        "original_stderr_preserved_in_record": true,
+        "parent": {
+          "source_uri": "file:///usr/local/lib/python3.12/_pydecimal.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        }
+      },
+      "original_stderr_tail": "",
+      "lineage": {
+        "task_rec_name": "Decimal.__new__",
+        "task_instruction_sha256": "09d74edbf55ed2beb267cfbb7f30ce57571f4e8c925c30c5476efc8502db70dc",
+        "generated_source_sha256": "098d392770ddd9ff907020981cac4fd64bfb781ed55afe7f252c52d5c9e6469f",
+        "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+        "execution_error_class": "syntax_failure",
+        "compact_evidence": "syntax_failure: SyntaxError: unterminated triple-quoted string literal (detected at line 19)",
+        "corrected_source_is_record_reference": true,
+        "corrected_source_provenance": {
+          "source_uri": "file:///usr/local/lib/python3.12/_pydecimal.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        },
+        "contaminated": false
+      },
+      "coverage_audit": {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 1387,
+        "exact_match": false
+      }
+    },
+    {
+      "name": "fb15-Context.is_snan",
+      "instruction": "# Task: Implement the Python function `Context.is_snan` (originally part of the CPython standard library module `_pydecimal`).\n\nDocumentation:\nReturn True if the operand is a signaling NaN;\notherwise return False.\n\n>>> ExtendedContext.is_snan(Decimal('2.50'))\nFalse\n>>> ExtendedContext.is_snan(Decimal('NaN'))\nFalse\n>>> ExtendedContext.is_snan(Decimal('sNaN'))\nTrue\n>>> ExtendedContext.is_snan(1)\nFalse\n\nExecutable form to match:\ndef is_snan(self, a):\n# Attempt failed with syntax_failure: SyntaxError: unterminated triple-quoted string literal (detected at line 22)\n",
+      "code": "def is_snan(self, a):\n        \"\"\"Return True if the operand is a signaling NaN;\n        otherwise return False.\n\n        >>> ExtendedContext.is_snan(Decimal('2.50'))\n        False\n        >>> ExtendedContext.is_snan(Decimal('NaN'))\n        False\n        >>> ExtendedContext.is_snan(Decimal('sNaN'))\n        True\n        >>> ExtendedContext.is_snan(1)\n        False\n        \"\"\"\n        a = _convert_other(a, raiseit=True)\n        return a.is_snan()",
+      "split": "train",
+      "provenance": {
+        "kind": "stage15-compacted-execution-feedback",
+        "error_class": "syntax_failure",
+        "original_stderr_preserved_in_record": true,
+        "parent": {
+          "source_uri": "file:///usr/local/lib/python3.12/_pydecimal.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        }
+      },
+      "original_stderr_tail": "",
+      "lineage": {
+        "task_rec_name": "Context.is_snan",
+        "task_instruction_sha256": "8caf89e97f55df033eb4026dd8566c8e32019aca5d4d60edea41fb3186eaf0e2",
+        "generated_source_sha256": "c9fe47872202b79484f078f38d5d33358fb8f59d4b69d43da374be26e871d423",
+        "source_checkpoint_sha256": "04f2f38add2ed3057d904cbaa5a7652ec31f73dee02ac88d2e234b9f73a057f5",
+        "execution_error_class": "syntax_failure",
+        "compact_evidence": "syntax_failure: SyntaxError: unterminated triple-quoted string literal (detected at line 22)",
+        "corrected_source_is_record_reference": true,
+        "corrected_source_provenance": {
+          "source_uri": "file:///usr/local/lib/python3.12/_pydecimal.py",
+          "license": "Python-2.0 / PSF",
+          "version": "cpython-3.12.14"
+        },
+        "contaminated": false
+      },
+      "coverage_audit": {
+        "fits": false,
+        "n_supervised": 0,
+        "len_completion": 122,
+        "exact_match": false
+      }
+    }
+  ],
+  "coverage_audit_all_rows_target_bearing": true,
+  "feedback_arm": {
+    "arm": "feedback_grounded",
+    "config": {
+      "rate": "zero",
+      "init_from": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-exposure_sched.pt",
+      "data_pool": "stage16_compacted_execution_feedback_rows"
+    },
+    "seed": 20261821,
+    "steps": 600,
+    "lr": 5e-05,
+    "batch": 4,
+    "heldout_native_initial": 2.8998,
+    "heldout_eval_aligned_initial": 2.9038,
+    "curve": [
+      {
+        "step": 0,
+        "heldout_native": 2.8998,
+        "heldout_eval_aligned": 2.9038
+      },
+      {
+        "step": 100,
+        "heldout_native": 3.1848,
+        "heldout_eval_aligned": 3.212
+      },
+      {
+        "step": 200,
+        "heldout_native": 3.3442,
+        "heldout_eval_aligned": 3.3849
+      },
+      {
+        "step": 300,
+        "heldout_native": 3.4626,
+        "heldout_eval_aligned": 3.5113
+      },
+      {
+        "step": 400,
+        "heldout_native": 3.6065,
+        "heldout_eval_aligned": 3.6651
+      },
+      {
+        "step": 500,
+        "heldout_native": 3.7251,
+        "heldout_eval_aligned": 3.784
+      },
+      {
+        "step": 600,
+        "heldout_native": 3.8367,
+        "heldout_eval_aligned": 3.8992
+      }
+    ],
+    "heldout_native_final": 3.8367,
+    "heldout_eval_aligned_final": 3.8992,
+    "loss_first": 2.0102,
+    "loss_last": 0.2427,
+    "target_bearing_steps": 600,
+    "exposure_step_frac": 0.0,
+    "supervised_tokens_per_step_mean": 911.8,
+    "grad_norm_samples": [
+      10.7161,
+      2.5074,
+      2.0589,
+      2.1189,
+      2.0145,
+      2.0963
+    ],
+    "grad_norm_mean": 3.5854,
+    "capability": {
+      "n_tasks": 15,
+      "pass_at_1": 0.0,
+      "v1_pass_at_1": 0.0,
+      "v3_pass_at_1": 0.0,
+      "syntax_valid_rate": 0.0,
+      "complete_program_rate": 0.0,
+      "execution_attempted_rate": 1.0
+    },
+    "structural_token_accuracy": {
+      "n_batches": 6,
+      "accuracy_overall": 0.4453,
+      "accuracy_whitespace": 0.8386,
+      "accuracy_structure_keyword": 0.4915,
+      "accuracy_delimiter": 0.599,
+      "accuracy_other": 0.2748,
+      "token_counts": {
+        "whitespace": 254,
+        "structure_keyword": 59,
+        "delimiter": 192,
+        "other": 775,
+        "overall": 1280
+      }
+    },
+    "free_running_probes": {
+      "n_probes": 8,
+      "parse_rate": 0.0,
+      "complete_program_rate": 0.0,
+      "per_probe": [
+        {
+          "probe": "nested_function",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "unexpected_indentation_transition",
+          "stopped": "eot",
+          "eot_step": 97,
+          "n_generated_tokens": 97,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 4
+          }
+        },
+        {
+          "probe": "nested_control",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "repetition_degeneration_truncation",
+          "stopped": "repetition_degeneracy_at_step_58",
+          "eot_step": null,
+          "n_generated_tokens": 58,
+          "first_invalid": {
+            "first_invalid_index": null,
+            "position": null,
+            "directly_introduced_by_newest_token": null,
+            "failure_class": "incomplete_only_never_invalid",
+            "category": "premature_stop_open_construct",
+            "parser_message": "unterminated string literal (detected at line 4)",
+            "error_line": 4,
+            "error_column": 20
+          }
+        },
+        {
+          "probe": "class_with_methods",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "other_parser_confirmed_syntax_error",
+          "stopped": "max_new_tokens",
+          "eot_step": null,
+          "n_generated_tokens": 180,
+          "first_invalid": {
+            "first_invalid_index": 13,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": false,
+            "failure_class": "structural_inconsistency",
+            "category": "other_parser_confirmed_syntax_error",
+            "parser_message": "closing parenthesis ']' does not match opening parenthesis '('",
+            "error_line": 1,
+            "error_column": 19
+          }
+        },
+        {
+          "probe": "exception_handling",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "unexpected_indentation_transition",
+          "stopped": "eot",
+          "eot_step": 29,
+          "n_generated_tokens": 29,
+          "first_invalid": {
+            "first_invalid_index": 3,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 2,
+            "error_column": 8
+          }
+        },
+        {
+          "probe": "imports_and_module",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "missing_opening_delimiter",
+          "stopped": "eot",
+          "eot_step": 44,
+          "n_generated_tokens": 44,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "missing_opening_delimiter",
+            "parser_message": "unmatched ')'",
+            "error_line": 1,
+            "error_column": 4
+          }
+        },
+        {
+          "probe": "multi_function",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "missing_opening_delimiter",
+          "stopped": "max_new_tokens",
+          "eot_step": null,
+          "n_generated_tokens": 180,
+          "first_invalid": {
+            "first_invalid_index": 2,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "missing_opening_delimiter",
+            "parser_message": "unmatched ')'",
+            "error_line": 1,
+            "error_column": 4
+          }
+        },
+        {
+          "probe": "docstring_program",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "other_parser_confirmed_syntax_error",
+          "stopped": "eot",
+          "eot_step": 180,
+          "n_generated_tokens": 180,
+          "first_invalid": {
+            "first_invalid_index": 6,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "other_parser_confirmed_syntax_error",
+            "parser_message": "invalid syntax",
+            "error_line": 2,
+            "error_column": 4
+          }
+        },
+        {
+          "probe": "longer_program",
+          "parse": false,
+          "complete_program": false,
+          "taxonomy": "unexpected_indentation_transition",
+          "stopped": "eot",
+          "eot_step": 92,
+          "n_generated_tokens": 92,
+          "first_invalid": {
+            "first_invalid_index": 4,
+            "position": "beginning",
+            "directly_introduced_by_newest_token": true,
+            "failure_class": "invalid_token_direct",
+            "category": "incorrect_indentation",
+            "parser_message": "unexpected indent",
+            "error_line": 3,
+            "error_column": 4
+          }
+        }
+      ]
+    },
+    "seconds": 214.0,
+    "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-feedback_grounded.pt"
+  },
+  "stage15_negative_reference": {
+    "stage15_feedback_arm_heldout_eval_aligned": 3.5957,
+    "stage15_target_bearing_steps": "600/600 after compaction"
+  },
+  "findings": {
+    "regression_vs_stage15_reference": 0.3035,
+    "target_bearing_steps": 600
+  },
+  "experiment": {
+    "experiment_id": "stage16-6-execution-grounded-training",
+    "parent_commit": "799a217",
+    "source_commit": "799a21758b1a",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "execution-grounded training with full Task->Generated->Execution->Evidence->Diagnosis->Verified-correction lineage and guaranteed target coverage improves held-out over the stage-15 feedback-SFT regression reference (3.5957) when warm-started from the exposure-trained base instead of the stage-12 champion",
+    "acceptance_criteria": "12 train records x fixed decoding from the pre-registered primary arm; every verdict carries REAL sandbox evidence; failing candidates become compact-evidence rows (stage-15 compaction reused) whose corrected source is the record's own CPython-harvested solution (provenance-verified, contamination-checked); per-row coverage audit; ONE 600-step optimizer arm warm-started from stage16-exposure_sched (seed 20261821); no synthetic successes; the stage-15 negative result remains in the experiment history",
+    "started": "2026-11-20T21:09:52+0000",
+    "finished": "2026-11-20T21:14:24+0000",
+    "decision": "EXECUTED"
+  }
+}

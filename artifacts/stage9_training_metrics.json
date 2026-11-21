@@ -1,0 +1,40 @@
+{
+  "kind": "cortex-stage9-training-metrics",
+  "owned_by": "Fibonera",
+  "physical_architecture": {
+    "name": "cortex-2b",
+    "theoretical_param_count": 2056012800,
+    "param_count_is_2_056_012_800": true,
+    "meta_instantiation_counts_match": true,
+    "breakdown": {
+      "tok_emb": 83886080,
+      "head": 83886080,
+      "final_ln": 5120,
+      "blocks": 1888235520
+    }
+  },
+  "two_b_training_status": {
+    "status": "BLOCKED-BY-INFRASTRUCTURE",
+    "trained": false,
+    "reason": "needs ~46.0 GB RAM (16 B/param x1.5 activations headroom), available 5.2 GB",
+    "training_tokens_processed": 0,
+    "training_loss": null,
+    "note": "No fabricated metrics. The 2B physical model remains architecture-verified; zero training steps executed."
+  },
+  "demo_scale_baseline_metrics": {
+    "dense_control_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage6/stage6-epoch-002.pt",
+    "dataset": "/workspace/github__Alex10007__cortex-codegen/artifacts/sft/dataset_v3.jsonl",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "n_train_records": 241,
+    "n_heldout_records": 65,
+    "tokenizer_sha256": "ae6a01d800bce3de490c098667889447c403e2b2da690ba1c3bec75fab907c73",
+    "dense_heldout_loss": 3.3015
+  },
+  "lineage": {
+    "stage8_report_sha256": "13c7aff062112d38858bcfa094afb1cf5927d2e00d960d2f112be2de8761eb64",
+    "stage8_expansion_lineage_step": 1875,
+    "warm_start": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage6/stage6-epoch-002.pt"
+  },
+  "gpu_time_consumed_hours": 0.0,
+  "spend_usd": 0.0
+}

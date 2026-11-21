@@ -1,0 +1,267 @@
+{
+  "kind": "cortex-stage11-diagnosis",
+  "owned_by": "Fibonera",
+  "workstream": "D-diagnosis",
+  "protocol": "2 arms x (v1 + v3) = 30 diagnostics, matching the stage-10 C1 baseline protocol",
+  "stage10_baseline_mix": {
+    "syntax_error": 27,
+    "truncation": 3
+  },
+  "per_arm": {
+    "legacy_stream_control": {
+      "n": 15,
+      "mix": {
+        "syntax_error": 15
+      },
+      "ranked": [
+        [
+          "syntax_error",
+          15
+        ]
+      ],
+      "syntax_error_share": 1.0,
+      "per_task": [
+        {
+          "suite": "v1",
+          "task_id": "t-palindrome",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 3) (<unknown>, line 1)"
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-fizzbuzz",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 3) (<unknown>, line 1)"
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-wordcount",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 3) (<unknown>, line 1)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-run-length-encode",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 5) (<unknown>, line 3)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-interval-merge",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unmatched ')' (<unknown>, line 1)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-aggregate",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unmatched ')' (<unknown>, line 1)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-window-free",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 6) (<unknown>, line 4)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-off-by-one",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unmatched ')' (<unknown>, line 1)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-mutation",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 3) (<unknown>, line 1)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-testgen-cases",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unexpected indent (<unknown>, line 2)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-refactor-fluent",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated string literal (detected at line 3) (<unknown>, line 3)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-api-handler",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unexpected indent (<unknown>, line 2)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-security-safe-substitute",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 3) (<unknown>, line 1)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-performance-sort-k",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unexpected indent (<unknown>, line 2)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-multi-call-node",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated string literal (detected at line 2) (<unknown>, line 2)"
+        }
+      ]
+    },
+    "chunked_stream": {
+      "n": 15,
+      "mix": {
+        "syntax_error": 15
+      },
+      "ranked": [
+        [
+          "syntax_error",
+          15
+        ]
+      ],
+      "syntax_error_share": 1.0,
+      "per_task": [
+        {
+          "suite": "v1",
+          "task_id": "t-palindrome",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 12) (<unknown>, line 1)"
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-fizzbuzz",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 11) (<unknown>, line 9)"
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-wordcount",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "invalid syntax (<unknown>, line 1)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-run-length-encode",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 6) (<unknown>, line 1)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-interval-merge",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated triple-quoted string literal (detected at line 12) (<unknown>, line 3)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-aggregate",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "closing parenthesis ')' does not match opening parenthesis '[' (<unknown>, line 1)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-window-free",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "invalid syntax (<unknown>, line 1)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-off-by-one",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unmatched ')' (<unknown>, line 1)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-mutation",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated string literal (detected at line 1) (<unknown>, line 1)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-testgen-cases",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated string literal (detected at line 1) (<unknown>, line 1)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-refactor-fluent",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated string literal (detected at line 1) (<unknown>, line 1)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-api-handler",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unterminated string literal (detected at line 3) (<unknown>, line 3)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-security-safe-substitute",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "invalid syntax (<unknown>, line 1)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-performance-sort-k",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "closing parenthesis ']' does not match opening parenthesis '(' (<unknown>, line 1)"
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-multi-call-node",
+          "passed": false,
+          "diagnosis": "syntax_error",
+          "evidence": "unexpected indent (<unknown>, line 2)"
+        }
+      ]
+    }
+  },
+  "syntax_error_share": 1.0,
+  "syntax_error_share_legacy_control": 1.0,
+  "syntax_error_share_delta_vs_control": 0.0,
+  "experiment": {
+    "experiment_id": "stage11-D-diagnosis-drift",
+    "parent_commit": "a8c4e98",
+    "source_commit": "8eba46c2c620",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "the stage-10 failure mix was dominated by syntax_error (27/30 across 2 subjects x v1+v3); the chunked-stream arm should reduce syntax errors if the data stream was the binding constraint",
+    "acceptance_criteria": "same fixed decoding; no benchmark modifications; same 2-suite protocol as the stage-10 baseline (30 diagnostics)",
+    "started": "2026-11-20T03:04:16+0000",
+    "finished": "2026-11-20T03:05:03+0000",
+    "decision": "EXECUTED"
+  }
+}

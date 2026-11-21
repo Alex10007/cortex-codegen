@@ -1,0 +1,25 @@
+{
+  "kind": "cortex-stage10-report",
+  "owned_by": "Fibonera",
+  "stage": 10,
+  "summary": {
+    "classifications": {
+      "A_infrastructure": "BLOCKED",
+      "B_2b_training": "BLOCKED-BY-INFRASTRUCTURE",
+      "C_pass1_root_cause": "EXECUTED",
+      "D_virtual_strategies": "EXECUTED",
+      "E_moe_specialization": "EXECUTED (routing differs; quality evidence not established)",
+      "F_reasoning_ablation": "EXECUTED",
+      "G_dense_vs_unified": "Executed",
+      "H_recovery": "PASS",
+      "I_readiness": "EXECUTED"
+    },
+    "authoritative_store_untouched": true,
+    "stage9_baseline_unique_trained_scalars": 216834048,
+    "fingerprint_v1": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177",
+    "fingerprint_v2": "64ea2c020004af92854aebdde0557678293313b06881fdf5b5abb54e8729c8a3",
+    "fingerprint_v3": "c70feb13b061a35b9b3940296c40ea8365aa57089b325050ef238dc93774ccbb",
+    "spend_usd": 0.0,
+    "gpu_hours": 0.0
+  }
+}

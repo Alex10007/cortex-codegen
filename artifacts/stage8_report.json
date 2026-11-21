@@ -1,0 +1,311 @@
+{
+  "kind": "cortex-stage8-expansion-report",
+  "owned_by": "Fibonera",
+  "A": {
+    "stage": "A-stage7-audit",
+    "stage7_lineage_step": 655,
+    "stage7_lineage_matches_commit": true,
+    "store_committed_step": 2559,
+    "v1_fingerprint_value": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177",
+    "v1_fingerprint_ok": true,
+    "v2_fingerprint_value": "64ea2c020004af92854aebdde0557678293313b06881fdf5b5abb54e8729c8a3",
+    "v2_fingerprint_ok": true,
+    "stage7_report_present": true,
+    "hardware": {
+      "cuda": false,
+      "gpus": 0,
+      "platform": "Linux-6.18.35-x86_64-with-glibc2.41"
+    },
+    "preserved": true
+  },
+  "A_lineage_repair": {
+    "checked": true,
+    "repaired": false,
+    "manifest_committed_step": 2559,
+    "lineage_step": 1875
+  },
+  "B": {
+    "stage": "B-storage-semantics",
+    "logical_bytes_per_bank_file": 400000000,
+    "bytes_per_committed_row_on_disk": 200000,
+    "bank_files": 5000,
+    "logical_total_bytes": 2000000000000,
+    "physical_total_bytes": 2000000000000,
+    "physical_blocks_total_bytes": 580341760,
+    "sparse_file_ratio": 0.99971,
+    "persisted_value_semantics": "whole row persisted on first commit; sparse allocation means physical blocks are only materialized for initialized rows",
+    "committed_rows": 20236,
+    "banks_with_committed_rows": 5000,
+    "allocated_scalars": 500000000000,
+    "initialized_scalars": 1011800000,
+    "uninitialized_scalars": 498988200000,
+    "digest_sample_ok": true,
+    "digests_checked": 2242,
+    "digests_bad": []
+  },
+  "C": {
+    "stage": "C-expanded-coverage",
+    "resumed_from_marker": true,
+    "rows_per_bank": 3,
+    "marker": {
+      "rows_per_bank": 3,
+      "groups": 1875,
+      "steps": 1875,
+      "transaction_id": "tx-stage8-expansion",
+      "lineage_sha256": "ce5f130fefde6cead84f007972a857807521520811e70e1e2ea2bb8cd58eb49c"
+    },
+    "loss_trend_last_500_steps": {
+      "first": 6.746399,
+      "last": 6.279727
+    },
+    "heldout_after": 3.680955692994849,
+    "coverage": {
+      "identity": "cortex-virtual-scalar-coverage",
+      "scalars": {
+        "allocated": 500000000000,
+        "initialized": 1011800000,
+        "activated": 124329984,
+        "received_gradients": 124329984,
+        "received_gradients_scalars": 0,
+        "optimizer_updated": 124329984,
+        "demonstrably_trained": 124329984
+      },
+      "persisted_optimizer_scan": {
+        "slots_updated": 20236,
+        "params_per_slot": 6144,
+        "optimizer_steps_per_slot": {
+          "n": 20236,
+          "mean": 5.16,
+          "p50": 4.0,
+          "max": 220,
+          "total": 104485
+        }
+      },
+      "note": "received_gradients is the union of persisted optimizer state (npz step_count>0), participation-log recipients and live session gradients; optimizer_updated/demonstrably_trained come strictly from persisted optimizer state on disk",
+      "scalar_level": {
+        "rows_committed": 20236,
+        "rows_sampled": 386,
+        "sampled_rows_nonzero": 386,
+        "persisted_nonzero_scalars_sampled": 2371584,
+        "fraction_of_sampled_rows_with_nonzero_values": 1.0
+      },
+      "partition_level": {
+        "partitions_with_committed_row": 5000,
+        "partitions_total": 5000,
+        "rows_per_bank_max": 7,
+        "coverage_fraction_of_partitions": 1.0
+      },
+      "update_distribution": {
+        "steps_with_data": 0
+      },
+      "invariants_hold": true
+    },
+    "trainer_accounting": {
+      "allocated": 500000000000,
+      "initialized": 1011800000,
+      "activated": 49152,
+      "received_gradients": 0,
+      "optimizer_updated": 49152,
+      "demonstrably_trained": 49152,
+      "updates_applied_total": 2559,
+      "partitions_touched": 5000,
+      "partitions_total": 5000,
+      "virtual_rank": 16,
+      "physical_trainable_parameters": 11630976,
+      "distinct_activated_slots": 8
+    },
+    "note": "coverage measured on restarted trainer plus persisted progress log (last 500 steps)"
+  },
+  "D": {
+    "stage": "D-optimizer-consistency",
+    "per_slot_restore": [
+      {
+        "bank": 1,
+        "row": 0,
+        "steps_before": 72,
+        "steps_after": 72,
+        "steps_match": true,
+        "m_restored_present": true,
+        "v_abs_sum": 1.37568,
+        "v_abs_sum_match": true
+      },
+      {
+        "bank": 2,
+        "row": 0,
+        "steps_before": 72,
+        "steps_after": 72,
+        "steps_match": true,
+        "m_restored_present": true,
+        "v_abs_sum": 1.797726,
+        "v_abs_sum_match": true
+      },
+      {
+        "bank": 3,
+        "row": 0,
+        "steps_before": 72,
+        "steps_after": 72,
+        "steps_match": true,
+        "m_restored_present": true,
+        "v_abs_sum": 5.203227,
+        "v_abs_sum_match": true
+      }
+    ],
+    "optimizer_state_consistency_ok": true,
+    "npz_optimizer_state_files": 20236,
+    "restart_parity": {
+      "resumed_step": 1875,
+      "physical_digest_ok": true,
+      "lineage_steps_match": true,
+      "ref_batch_loss_after_restart": 0.09663676470518112,
+      "ref_batch_loss_before_checkpoint": 0.09663676470518112,
+      "virtual_ahead_of_checkpoint": 684,
+      "parity_ok": true
+    },
+    "restart_integrity": true,
+    "recovery_verified_at_expanded_coverage": true
+  },
+  "E": {
+    "stage": "E-training-experiments",
+    "steps_per_arm": 120,
+    "identical_batches": true,
+    "dense_control": {
+      "loss_first": 2.6055,
+      "loss_last": 1.6062,
+      "heldout": 3.280199746224394
+    },
+    "joint_random_init_row4": {
+      "loss_first": 7.2868,
+      "loss_last": 1.9462,
+      "heldout": 3.4421916438584343,
+      "distinct_slots_trained": 120,
+      "attached_slot_instances": 120,
+      "slots_started_fresh": 120,
+      "slots_fresh_fraction": 1.0
+    },
+    "joint_svd_init_row5": {
+      "loss_first": 7.6258,
+      "loss_last": 1.9746,
+      "heldout": 3.3975008451021633,
+      "distinct_slots_trained": 120,
+      "attached_slot_instances": 120,
+      "slots_started_fresh": 120,
+      "slots_fresh_fraction": 1.0
+    },
+    "fresh_expert_cost": {
+      "dense_vs_joint_random_final_gap": 0.34,
+      "svd_vs_random_final_gain": -0.0284,
+      "svd_vs_random_heldout_gain": 0.0447
+    },
+    "note": "dense control = CortexTransformer (untouched class); joint arms = CortexMoETransformer + 8 fresh virtual slots per group; identical batch order and optimizer settings"
+  },
+  "F": {
+    "stage": "F-moe-specialization",
+    "moe_layers": 4,
+    "js_divergence_algo_vs_text_per_layer": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "input_conditional_routing": false,
+    "physical_expert_grad_means": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "utilization_per_layer": [
+      1.0,
+      0.8333,
+      0.5,
+      0.5833
+    ],
+    "any_layer_collapsed": false
+  },
+  "G": {
+    "kind": "cortex-divergent-reasoning-eval",
+    "n_tasks": 3,
+    "n_hypotheses_per_task": 3,
+    "temperatures": [
+      0.2,
+      0.7,
+      1.0
+    ],
+    "repair_round": true,
+    "pass_at_1_index0": 0.0,
+    "pass_at_n": 0.0,
+    "pass_via_repair": 0.0,
+    "contradiction_rate": 0.0,
+    "mean_convergence": 1.0,
+    "distinct_candidate_rate": 0.9167,
+    "grading": "each hypothesis graded by sandboxed pytest execution",
+    "stage": "G-divergent-reasoning-v2",
+    "tasks_with_repair_stderr_conditioned": 0
+  },
+  "H": {
+    "stage": "H-gpu-qualification",
+    "hardware": {
+      "cuda": false,
+      "gpus": 0
+    },
+    "storage_benchmark": {
+      "rows_benchmarked": 40,
+      "row_kb": 195,
+      "write_mbps": 274.76,
+      "read_mbps": 15723.73
+    },
+    "bytes_per_2b_optimizer_step_checkpoint": 131584819200,
+    "seconds_per_2b_step_at_measured_write_bw": 478.908,
+    "fsdp2_validation": "not executed: no GPU on this host (from-measured, not assumed)",
+    "ddp_optimizer_sharding_validation": "not executed: no GPU on this host",
+    "decision": "REFUSED-CPU-ONLY",
+    "reason": "measured cuda=False, gpus=0; full-scale 2B+502B training starts only after >=4 GPU-class devices pass FSDP2 + sharded-optimizer + recovery qualification on real hardware",
+    "full_scale_training_executed": false
+  },
+  "I": {
+    "stage": "I-strict-accounting-and-summary",
+    "virtual_scalars": {
+      "allocated": 500000000000,
+      "initialized": 1011800000,
+      "activated": 124329984,
+      "received_gradients": 124329984,
+      "received_gradients_scalars": 0,
+      "optimizer_updated": 124329984,
+      "demonstrably_trained": 124329984
+    },
+    "scalar_level": {
+      "rows_committed": 20236,
+      "rows_sampled": 386,
+      "sampled_rows_nonzero": 386,
+      "persisted_nonzero_scalars_sampled": 2371584,
+      "fraction_of_sampled_rows_with_nonzero_values": 1.0
+    },
+    "partition_level": {
+      "partitions_with_committed_row": 5000,
+      "partitions_total": 5000,
+      "rows_per_bank_max": 7,
+      "coverage_fraction_of_partitions": 1.0
+    },
+    "invariants_hold": true,
+    "physical_model_status": {
+      "architecture": "CortexMoETransformer over CORTEX_DEMO (demo-scale joint prototype; the CORTEX_2B architecture remains DECLARED)",
+      "2b_trained": false,
+      "reason": "GPU qualification gate not satisfied on this host"
+    },
+    "gpu_gate": "REFUSED-CPU-ONLY",
+    "optimizer_recovery_at_expanded_coverage": true,
+    "dense_control_comparison": {
+      "dense_final_loss": 1.6062,
+      "joint_random_final_loss": 1.9462,
+      "joint_svd_final_loss": 1.9746,
+      "fresh_expert_cost": {
+        "dense_vs_joint_random_final_gap": 0.34,
+        "svd_vs_random_final_gain": -0.0284,
+        "svd_vs_random_heldout_gain": 0.0447
+      }
+    },
+    "v1_fingerprint_ok": true,
+    "v2_fingerprint_ok": true,
+    "owned_by": "Fibonera"
+  }
+}

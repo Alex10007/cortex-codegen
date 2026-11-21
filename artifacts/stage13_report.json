@@ -1,0 +1,115 @@
+{
+  "kind": "cortex-stage13-report",
+  "owned_by": "Fibonera",
+  "stage": 13,
+  "summary": {
+    "parent_commit": "402de46",
+    "A_indentation_related_share": {
+      "dense-warm6-parent": 0.8,
+      "stage12-chunked_control": 0.6
+    },
+    "A_taxonomy": {
+      "dense-warm6-parent": {
+        "unexpected_indentation_transition": 12,
+        "other_parser_confirmed_syntax_error": 2,
+        "premature_eot_open_construct": 1
+      },
+      "stage12-chunked_control": {
+        "unexpected_indentation_transition": 9,
+        "other_parser_confirmed_syntax_error": 4,
+        "missing_opening_delimiter": 1,
+        "complete_program": 1
+      }
+    },
+    "B_complete_program_rate": 0.9834,
+    "C_coverage_guarantee_holds": true,
+    "C_boundary_clean_rates": {
+      "fixed": 0.5016,
+      "structural": 0.9562
+    },
+    "E_stop_classification": {
+      "dense-warm6-parent": {
+        "stopped_by_eot": 10,
+        "stopped_by_eot_with_complete_program": 0,
+        "premature_or_truncated": 5,
+        "n_tasks": 15,
+        "stopped_distribution": {
+          "eot": 10,
+          "max_new_tokens": 5
+        }
+      },
+      "stage12-chunked_control": {
+        "stopped_by_eot": 9,
+        "stopped_by_eot_with_complete_program": 0,
+        "premature_or_truncated": 6,
+        "n_tasks": 15,
+        "stopped_distribution": {
+          "eot": 9,
+          "max_new_tokens": 6
+        }
+      }
+    },
+    "G_perturbed_pass_at_1": 0.0,
+    "G_teacher_forced": {
+      "heldout_subset": 0.5736,
+      "train_subset": 0.6816,
+      "n_heldout_records": 16,
+      "gap_note": "train vs held-out teacher-forced accuracy gap on identical eval protocol (stage-12 measured 0.9322 vs 0.6214)"
+    },
+    "H_findings": {
+      "structural_segmentation": {
+        "heldout_eval_aligned_delta_vs_control_recheck": 0.0256,
+        "structural_acc_whitespace_delta": -0.0040000000000000036,
+        "v1_pass_at_1": 0.0,
+        "v3_pass_at_1": 0.0,
+        "syntax_valid_rate_triangle": {
+          "structural_segmentation": 0.0667,
+          "control_recheck": 0.0
+        },
+        "complete_program_rate": 0.0,
+        "control_complete_program_rate": 0.0
+      },
+      "indent_weighted": {
+        "heldout_eval_aligned_delta_vs_control_recheck": 0.0751,
+        "structural_acc_whitespace_delta": 0.0039000000000000146,
+        "v1_pass_at_1": 0.0,
+        "v3_pass_at_1": 0.0,
+        "syntax_valid_rate_triangle": {
+          "indent_weighted": 0.0,
+          "control_recheck": 0.0
+        },
+        "complete_program_rate": 0.0,
+        "control_complete_program_rate": 0.0
+      },
+      "structural_indent_combined": {
+        "heldout_eval_aligned_delta_vs_control_recheck": 0.0452,
+        "structural_acc_whitespace_delta": 0.007800000000000029,
+        "v1_pass_at_1": 0.0,
+        "v3_pass_at_1": 0.0,
+        "syntax_valid_rate_triangle": {
+          "structural_indent_combined": 0.0667,
+          "control_recheck": 0.0
+        },
+        "complete_program_rate": 0.0,
+        "control_complete_program_rate": 0.0
+      }
+    },
+    "H_heldout_final": {
+      "control_recheck": 2.9498,
+      "structural_segmentation": 2.9754,
+      "indent_weighted": 3.0249,
+      "structural_indent_combined": 2.995
+    },
+    "H_champion": "control_recheck",
+    "I_two_b_training": "BLOCKED - 0 CUDA devices; ~46 GB RAM required vs measured available; no paid procurement authorized ($0.00 spent)",
+    "J_moe_probe_available": true,
+    "K_decision": "NOT PROMOTED",
+    "K_gates_passed": 0,
+    "fingerprint_v1": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177",
+    "fingerprint_v2": "64ea2c020004af92854aebdde0557678293313b06881fdf5b5abb54e8729c8a3",
+    "fingerprint_v3": "c70feb13b061a35b9b3940296c40ea8365aa57089b325050ef238dc93774ccbb",
+    "spend_usd": 0.0,
+    "gpu_hours": 0.0,
+    "authoritative_store_untouched": true
+  }
+}

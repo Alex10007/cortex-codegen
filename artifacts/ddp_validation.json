@@ -1,0 +1,30 @@
+{
+  "backend": "gloo",
+  "world_size": 2,
+  "steps": 8,
+  "per_rank": [
+    {
+      "rank": 0,
+      "steps": 8,
+      "loss_first": 10.474194526672363,
+      "loss_last": 9.840510368347168,
+      "losses_finite": true,
+      "param_spread_across_ranks": 0.0
+    },
+    {
+      "rank": 1,
+      "steps": 8,
+      "loss_first": 10.462141036987305,
+      "loss_last": 9.922999382019043,
+      "losses_finite": true,
+      "param_spread_across_ranks": 0.0
+    }
+  ],
+  "loss_first": 10.474194526672363,
+  "loss_last": 9.840510368347168,
+  "rank0_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/ddp-validation/ddp-final-rank0.pt",
+  "checkpoint_reloaded": true,
+  "max_param_spread_across_ranks": 0.0,
+  "wall_time_s": 37.17,
+  "note": "executed distributed mechanics (gradient all-reduce, sharded data, single-writer checkpoint) in real OS processes; 2B-scale execution still requires the measured GPU infrastructure"
+}

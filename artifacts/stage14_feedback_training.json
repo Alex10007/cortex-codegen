@@ -1,0 +1,1043 @@
+{
+  "kind": "cortex-stage14-execution-feedback-training",
+  "owned_by": "Fibonera",
+  "workstream": "B-feedback",
+  "champion_parent": "stage12-chunked_control",
+  "sampled_records": 48,
+  "benchmark_instruction_contamination_hits": 0,
+  "candidate_outcomes": {
+    "n": 48,
+    "passed_reference_doctests": 1,
+    "parse_rate": 0.0208,
+    "executed_rate": 0.0208,
+    "doctest_failure_distribution": {
+      "0": 48
+    },
+    "per_record": [
+      {
+        "rec_name": "shebang_matches",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 59
+      },
+      {
+        "rec_name": "Context.compare_total",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "separate",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "bypass_when",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 34
+      },
+      {
+        "rec_name": "read_stringnl_noescape_pair",
+        "executed": true,
+        "exec_failure": null,
+        "parse": true,
+        "complete_program": true,
+        "doctests_total": 2,
+        "doctest_failures": 0,
+        "passed": true,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "read_uint8",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "UriTemplate.is_template",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 119
+      },
+      {
+        "rec_name": "Version.__str__",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 36
+      },
+      {
+        "rec_name": "edit_distance",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 179
+      },
+      {
+        "rec_name": "apply",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 92
+      },
+      {
+        "rec_name": "repeatfunc",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 78
+      },
+      {
+        "rec_name": "_missing_canonicalize_license_expression",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 61
+      },
+      {
+        "rec_name": "read_bytes1",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "_parse_header",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "_sum",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "grouper",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 177
+      },
+      {
+        "rec_name": "Version.public",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 53
+      },
+      {
+        "rec_name": "sieve",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 108
+      },
+      {
+        "rec_name": "url_concat",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "SequenceMatcher.set_seq1",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 114
+      },
+      {
+        "rec_name": "iter_subclasses",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 58
+      },
+      {
+        "rec_name": "ExceptionTrap.raises",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 178
+      },
+      {
+        "rec_name": "repeatfunc",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 179
+      },
+      {
+        "rec_name": "ncycles",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "default_tzinfo",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "replace",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 104
+      },
+      {
+        "rec_name": "factor",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 179
+      },
+      {
+        "rec_name": "read_uint4",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "Context.max_mag",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 128
+      },
+      {
+        "rec_name": "decode_long",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "word_ladder_length",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "before_and_after",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 81
+      },
+      {
+        "rec_name": "yield_lines",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "except_",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 54
+      },
+      {
+        "rec_name": "unique_everseen",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 83
+      },
+      {
+        "rec_name": "Context.add",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "matmul",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 114
+      },
+      {
+        "rec_name": "SequenceMatcher.find_longest_match",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "filename_component_broken",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "Version.micro",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "safe_name",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "median_grouped",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "_simple_enum",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 53
+      },
+      {
+        "rec_name": "encode_long",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "stdev",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 72
+      },
+      {
+        "rec_name": "read_decimalnl_short",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 103
+      },
+      {
+        "rec_name": "Context.abs",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 180
+      },
+      {
+        "rec_name": "contains_path_traversal",
+        "executed": false,
+        "exec_failure": "sandbox_exec_failed",
+        "parse": false,
+        "complete_program": false,
+        "doctests_total": 0,
+        "doctest_failures": 0,
+        "passed": false,
+        "n_tokens": 59
+      }
+    ]
+  },
+  "feedback_rows_built": 47,
+  "feedback_row_evidence_source": {
+    "shebang_matches": "exec_stderr",
+    "Context.compare_total": "exec_stderr",
+    "separate": "exec_stderr",
+    "bypass_when": "exec_stderr",
+    "read_uint8": "exec_stderr",
+    "UriTemplate.is_template": "exec_stderr",
+    "Version.__str__": "exec_stderr",
+    "edit_distance": "exec_stderr",
+    "apply": "exec_stderr",
+    "repeatfunc": "exec_stderr",
+    "_missing_canonicalize_license_expression": "exec_stderr",
+    "read_bytes1": "exec_stderr",
+    "_parse_header": "exec_stderr",
+    "_sum": "exec_stderr",
+    "grouper": "exec_stderr",
+    "Version.public": "exec_stderr",
+    "sieve": "exec_stderr",
+    "url_concat": "exec_stderr",
+    "SequenceMatcher.set_seq1": "exec_stderr",
+    "iter_subclasses": "exec_stderr",
+    "ExceptionTrap.raises": "exec_stderr",
+    "ncycles": "exec_stderr",
+    "default_tzinfo": "exec_stderr",
+    "replace": "exec_stderr",
+    "factor": "exec_stderr",
+    "read_uint4": "exec_stderr",
+    "Context.max_mag": "exec_stderr",
+    "decode_long": "exec_stderr",
+    "word_ladder_length": "exec_stderr",
+    "before_and_after": "exec_stderr",
+    "yield_lines": "exec_stderr",
+    "except_": "exec_stderr",
+    "unique_everseen": "exec_stderr",
+    "Context.add": "exec_stderr",
+    "matmul": "exec_stderr",
+    "SequenceMatcher.find_longest_match": "exec_stderr",
+    "filename_component_broken": "exec_stderr",
+    "Version.micro": "exec_stderr",
+    "safe_name": "exec_stderr",
+    "median_grouped": "exec_stderr",
+    "_simple_enum": "exec_stderr",
+    "encode_long": "exec_stderr",
+    "stdev": "exec_stderr",
+    "read_decimalnl_short": "exec_stderr",
+    "Context.abs": "exec_stderr",
+    "contains_path_traversal": "exec_stderr"
+  },
+  "training": {
+    "steps": 600,
+    "steps_with_targets": 102,
+    "loss_first": 2.3496,
+    "loss_last": 0.1084,
+    "lr": 5e-05,
+    "batch": 4,
+    "seed": 20261201,
+    "seconds": 8.9,
+    "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage14-feedback.pt",
+    "checkpoint_sha256": "b8d4eded773c014882aa542046a3b0d86837db52446917712a7ea5179b0e99e4"
+  },
+  "evaluation_unconditional": {
+    "capability": {
+      "n_tasks": 15,
+      "pass_at_1": 0.0,
+      "syntax_valid_rate": 0.0,
+      "complete_program_rate": 0.0,
+      "execution_attempted_rate": 1.0,
+      "per_task": [
+        {
+          "suite": "v1",
+          "task_id": "t-palindrome",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-fizzbuzz",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-wordcount",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-run-length-encode",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-interval-merge",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-aggregate",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-window-free",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-off-by-one",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-mutation",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-testgen-cases",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-refactor-fluent",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-api-handler",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-security-safe-substitute",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-performance-sort-k",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-multi-call-node",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        }
+      ],
+      "v1_pass_at_1": 0.0,
+      "v1_n_tasks": 3,
+      "v1_per_task": [
+        {
+          "suite": "v1",
+          "task_id": "t-palindrome",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-fizzbuzz",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-wordcount",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        }
+      ],
+      "v3_pass_at_1": 0.0,
+      "v3_n_tasks": 12,
+      "v3_per_task": [
+        {
+          "suite": "v3",
+          "task_id": "t3-run-length-encode",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-interval-merge",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-aggregate",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-window-free",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-off-by-one",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-mutation",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-testgen-cases",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-refactor-fluent",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-api-handler",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-security-safe-substitute",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-performance-sort-k",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-multi-call-node",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        }
+      ]
+    },
+    "heldout_native_final": 3.2048,
+    "heldout_eval_aligned_final": 3.2174,
+    "structural_token_accuracy": {
+      "n_batches": 6,
+      "accuracy_overall": 0.5133,
+      "accuracy_whitespace": 0.878,
+      "accuracy_structure_keyword": 0.5593,
+      "accuracy_delimiter": 0.625,
+      "accuracy_other": 0.3626,
+      "token_counts": {
+        "whitespace": 254,
+        "structure_keyword": 59,
+        "delimiter": 192,
+        "other": 775,
+        "overall": 1280
+      }
+    },
+    "heldout_delta_vs_stage13_champion": 0.2676
+  },
+  "repair_conditioned_diagnostics": {
+    "n": 15,
+    "repair_successes": 0,
+    "success_rate": 0.0,
+    "per_record": [
+      {
+        "rec_name": "shebang_matches",
+        "first_passed": false,
+        "repair_passed": false,
+        "first_doctest_failures": 0,
+        "repair_doctest_failures": 0
+      },
+      {
+        "rec_name": "Context.compare_total",
+        "first_passed": false,
+        "repair_passed": false,
+        "first_doctest_failures": 0,
+        "repair_doctest_failures": 0
+      },
+      {
+        "rec_name": "separate",
+        "first_passed": false,
+        "repair_passed": false,
+        "first_doctest_failures": 0,
+        "repair_doctest_failures": 0
+      },
+      {
+        "rec_name": "bypass_when",
+        "first_passed": false,
+        "repair_passed": false,
+        "first_doctest_failures": 0,
+        "repair_doctest_failures": 0
+      },
+      {
+        "rec_name": "read_uint8",
+        "first_passed": false,
+        "repair_passed": false,
+        "first_doctest_failures": 0,
+        "repair_doctest_failures": 0
+      },
+      {
+        "rec_name": "UriTemplate.is_template",
+        "first_passed": false,
+        "repair_passed": false,
+        "first_doctest_failures": 0,
+        "repair_doctest_failures": 0
+      },
+      {
+        "rec_name": "Version.__str__",
+        "first_passed": false,
+        "repair_passed": false,
+        "first_doctest_failures": 0,
+        "repair_doctest_failures": 0
+      },
+      {
+        "rec_name": "edit_distance",
+        "first_passed": false,
+        "repair_passed": false,
+        "first_doctest_failures": 0,
+        "repair_doctest_failures": 0
+      },
+      {
+        "rec_name": "apply",
+        "first_passed": false,
+        "repair_passed": false,
+        "first_doctest_failures": 0,
+        "repair_doctest_failures": 0
+      },
+      {
+        "rec_name": "repeatfunc",
+        "first_passed": false,
+        "repair_passed": false,
+        "first_doctest_failures": 0,
+        "repair_doctest_failures": 0
+      },
+      {
+        "rec_name": "_missing_canonicalize_license_expression",
+        "first_passed": false,
+        "repair_passed": false,
+        "first_doctest_failures": 0,
+        "repair_doctest_failures": 0
+      },
+      {
+        "rec_name": "read_bytes1",
+        "first_passed": false,
+        "repair_passed": false,
+        "first_doctest_failures": 0,
+        "repair_doctest_failures": 0
+      },
+      {
+        "rec_name": "_parse_header",
+        "first_passed": false,
+        "repair_passed": false,
+        "first_doctest_failures": 0,
+        "repair_doctest_failures": 0
+      },
+      {
+        "rec_name": "_sum",
+        "first_passed": false,
+        "repair_passed": false,
+        "first_doctest_failures": 0,
+        "repair_doctest_failures": 0
+      },
+      {
+        "rec_name": "grouper",
+        "first_passed": false,
+        "repair_passed": false,
+        "first_doctest_failures": 0,
+        "repair_doctest_failures": 0
+      }
+    ]
+  },
+  "leakage_controls": {
+    "benchmark_instructions_in_training_rows": 0,
+    "targets_are_reference_solutions_of_train_records_only": true
+  },
+  "experiment": {
+    "experiment_id": "stage14-B-execution-feedback-training",
+    "parent_commit": "c30ceb5",
+    "source_commit": "c30ceb5fce0d",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "conditioning SFT prompts on the model's OWN actual execution evidence (sandbox execution + reference-doctest outcomes) from the TRAIN split only improves unconditional fixed-decoding pass@1 on immutable v1/v3 vs the stage-12 champion",
+    "acceptance_criteria": "every feedback row's evidence comes from a really executed candidate; targets are the records' own verified CPython-provenance solutions; NO immutable-benchmark task/answer in training; promotion strictly by the pre-registered 5-gate rule; FB_STEPS=600, lr 5e-05, batch 4, seed 20261201",
+    "started": "2026-11-20T12:47:13+0000",
+    "finished": "2026-11-20T12:50:00+0000",
+    "decision": "EXECUTED"
+  }
+}

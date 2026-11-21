@@ -1,0 +1,209 @@
+{
+  "kind": "cortex-stage12-generation-reliability",
+  "owned_by": "Fibonera",
+  "workstream": "E-reliability",
+  "tokenizer_roundtrips": {
+    "n": 4,
+    "all_reencode_ok": true,
+    "per_text": {
+      "Write module `task.py` defining `is_pali": {
+        "reencode_equals_original": true,
+        "length_tokens": 30,
+        "contains_special_ids": false
+      },
+      "def encode(s):\n    out = []\n    for ch i": {
+        "reencode_equals_original": true,
+        "length_tokens": 71,
+        "contains_special_ids": false
+      },
+      "def f():\n    return 1\n": {
+        "reencode_equals_original": true,
+        "length_tokens": 8,
+        "contains_special_ids": false
+      },
+      "<|endoftext|>\n# Task: probe\n": {
+        "reencode_equals_original": true,
+        "length_tokens": 7,
+        "contains_special_ids": true
+      }
+    }
+  },
+  "eot_stop_memory_note": "generation terminates on EOT when the model emits it (stage-A stopped distribution); EOT gating extends completion only while structure is open",
+  "prompt_style_ab_fixed_decoding": {
+    "dense-control": {
+      "eval_style": {
+        "n": 3,
+        "nonempty_rate": 1.0,
+        "parse_rate": 0.0,
+        "pass_at_1": 0.0
+      },
+      "train_style_no_eot": {
+        "n": 3,
+        "nonempty_rate": 1.0,
+        "parse_rate": 0.0,
+        "pass_at_1": 0.0
+      }
+    },
+    "stage12-champion": {
+      "eval_style": {
+        "n": 3,
+        "nonempty_rate": 1.0,
+        "parse_rate": 0.0,
+        "pass_at_1": 0.0
+      },
+      "train_style_no_eot": {
+        "n": 3,
+        "nonempty_rate": 1.0,
+        "parse_rate": 0.0,
+        "pass_at_1": 0.0
+      }
+    }
+  },
+  "eot_gated_constrained_decoding_exploratory": {
+    "label": "EXPLORATORY decoding arm - never evidence of model learning; used only to attribute residual failures to decoding vs the model",
+    "constrained": {
+      "parse_rate": 0.0667,
+      "complete_program_rate": 0.0,
+      "pass_at_1": 0.0
+    },
+    "unconstrained_same_seed": {
+      "parse_rate": 0.0,
+      "complete_program_rate": 0.0,
+      "pass_at_1": 0.0
+    },
+    "per_task": [
+      {
+        "suite": "v1",
+        "task_id": "t-palindrome",
+        "parse": false,
+        "complete_program": false,
+        "stopped": "eot",
+        "passed": false
+      },
+      {
+        "suite": "v1",
+        "task_id": "t-fizzbuzz",
+        "parse": false,
+        "complete_program": false,
+        "stopped": "max_new_tokens",
+        "passed": false
+      },
+      {
+        "suite": "v1",
+        "task_id": "t-wordcount",
+        "parse": false,
+        "complete_program": false,
+        "stopped": "eot",
+        "passed": false
+      },
+      {
+        "suite": "v3",
+        "task_id": "t3-run-length-encode",
+        "parse": false,
+        "complete_program": false,
+        "stopped": "eot",
+        "passed": false
+      },
+      {
+        "suite": "v3",
+        "task_id": "t3-interval-merge",
+        "parse": false,
+        "complete_program": false,
+        "stopped": "max_new_tokens",
+        "passed": false
+      },
+      {
+        "suite": "v3",
+        "task_id": "t3-sql-sqlite-aggregate",
+        "parse": false,
+        "complete_program": false,
+        "stopped": "max_new_tokens",
+        "passed": false
+      },
+      {
+        "suite": "v3",
+        "task_id": "t3-sql-sqlite-window-free",
+        "parse": false,
+        "complete_program": false,
+        "stopped": "max_new_tokens",
+        "passed": false
+      },
+      {
+        "suite": "v3",
+        "task_id": "t3-debug-off-by-one",
+        "parse": false,
+        "complete_program": false,
+        "stopped": "eot",
+        "passed": false
+      },
+      {
+        "suite": "v3",
+        "task_id": "t3-debug-mutation",
+        "parse": false,
+        "complete_program": false,
+        "stopped": "max_new_tokens",
+        "passed": false
+      },
+      {
+        "suite": "v3",
+        "task_id": "t3-testgen-cases",
+        "parse": false,
+        "complete_program": false,
+        "stopped": "max_new_tokens",
+        "passed": false
+      },
+      {
+        "suite": "v3",
+        "task_id": "t3-refactor-fluent",
+        "parse": false,
+        "complete_program": false,
+        "stopped": "max_new_tokens",
+        "passed": false
+      },
+      {
+        "suite": "v3",
+        "task_id": "t3-api-handler",
+        "parse": false,
+        "complete_program": false,
+        "stopped": "max_new_tokens",
+        "passed": false
+      },
+      {
+        "suite": "v3",
+        "task_id": "t3-security-safe-substitute",
+        "parse": false,
+        "complete_program": false,
+        "stopped": "eot",
+        "passed": false
+      },
+      {
+        "suite": "v3",
+        "task_id": "t3-performance-sort-k",
+        "parse": false,
+        "complete_program": false,
+        "stopped": "max_new_tokens",
+        "passed": false
+      },
+      {
+        "suite": "v3",
+        "task_id": "t3-multi-call-node",
+        "parse": true,
+        "complete_program": false,
+        "stopped": "max_new_tokens",
+        "passed": false
+      }
+    ]
+  },
+  "experiment": {
+    "experiment_id": "stage12-E-generation-reliability",
+    "parent_commit": "a8c4e98",
+    "source_commit": "082c5ebc953a",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "tokenizer/decoding mechanics are validated independently; the prompt-style A/B quantifies the EOT mismatch; EOT-gated decoding is measured as an EXPLORATORY decoding arm only",
+    "acceptance_criteria": "fixed decoding stays primary for comparisons; no benchmark changes; ablations never presented as equivalent to fixed decoding",
+    "started": "2026-11-20T06:56:24+0000",
+    "finished": "2026-11-20T06:57:47+0000",
+    "decision": "EXECUTED"
+  }
+}

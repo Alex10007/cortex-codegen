@@ -1,0 +1,54 @@
+{
+  "kind": "cortex-stage10-recovery-report",
+  "owned_by": "Fibonera",
+  "workstream": "H-recovery",
+  "fault_injections": {
+    "truncated_checkpoint": {
+      "detected": true,
+      "error": "PytorchStreamReader failed reading zip archive: failed finding central directory. This is an internal miniz error. If you are seeing this error, there is a high"
+    },
+    "stale_pair_allow_ahead_True": {
+      "refused": true,
+      "error": "stale pair: physical step 5286 vs virtual step 0"
+    },
+    "stale_pair_allow_ahead_False": {
+      "refused": true,
+      "error": "stale pair: physical step 5286 vs virtual step 0"
+    },
+    "corrupt_optimizer_npz": {
+      "detected": true,
+      "error": "File is not a zip file"
+    }
+  },
+  "intact_restart": {
+    "resumed_step": 5286,
+    "parity_ok": true,
+    "physical_digest_ok": true,
+    "virtual_ahead": 0
+  },
+  "sigkill_during_commit": {
+    "child_signaled_ready": true,
+    "killed_with_sigkill": true,
+    "committed_rows_verified": 1,
+    "digests_ok_after_kill": true,
+    "corrupt_row_detected_by_digests": true,
+    "recovery_clean": true
+  },
+  "stage9_lineage_recheck": {
+    "step": 5286,
+    "physical_sha256_ok": true
+  },
+  "recovery_verified": true,
+  "experiment": {
+    "experiment_id": "stage10-H-recovery-fault-injection",
+    "parent_commit": "a8c4e98",
+    "source_commit": "a8c4e98377bd",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "recovery guarantees hold under extended fault injection: truncated checkpoints, corrupt optimizer npz, stale pairs, SIGKILL",
+    "acceptance_criteria": "all faults on disposable copies; authoritative artifacts untouched",
+    "started": "2026-11-20T02:04:13+0000",
+    "finished": "2026-11-20T02:04:31+0000",
+    "decision": "PASS"
+  }
+}

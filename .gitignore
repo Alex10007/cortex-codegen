@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.cortex-state/
+artifacts/runs/
+artifacts/data/
+artifacts/cortex-state/
+*.pt
+*.npy
+*.db
+.vscode/
+node_modules/
+artifacts/virtual-store-502b/
+*.f32
+*.npz

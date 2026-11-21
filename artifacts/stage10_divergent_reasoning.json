@@ -1,0 +1,41 @@
+{
+  "kind": "cortex-stage10-divergent-reasoning",
+  "owned_by": "Fibonera",
+  "workstream": "F-reasoning",
+  "tasks": [
+    "t-palindrome",
+    "t-fizzbuzz",
+    "t-wordcount"
+  ],
+  "single_candidate_fixed_decoding": {
+    "pass_at_1": 0.0,
+    "failure_categories": {
+      "runtime": 3
+    }
+  },
+  "without_repair": {
+    "pass_at_n": 0.0,
+    "distinct_rate": 1.0,
+    "seconds": 12.53
+  },
+  "with_repair": {
+    "pass_at_n": 0.0,
+    "pass_via_repair": 0.0,
+    "distinct_rate": 1.0,
+    "seconds": 18.4
+  },
+  "repair_round_delta_pass_at_n": 0,
+  "conclusion": "reasoning extension changes selection and repair behavior but cannot create correctness the base model lacks; both arms executed and graded by real sandbox execution",
+  "experiment": {
+    "experiment_id": "stage10-F-reasoning-ablation",
+    "parent_commit": "a8c4e98",
+    "source_commit": "a8c4e98377bd",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "the repair round only helps if failure evidence reaches a model capable enough to use it; at pass@1=0 expect no measurable gain",
+    "acceptance_criteria": "pass rates from sandbox execution only; diversity is not success",
+    "started": "2026-11-20T02:01:23+0000",
+    "finished": "2026-11-20T02:01:59+0000",
+    "decision": "EXECUTED"
+  }
+}

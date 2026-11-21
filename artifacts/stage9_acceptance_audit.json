@@ -1,0 +1,166 @@
+{
+  "kind": "cortex-stage9-acceptance-audit",
+  "owned_by": "Fibonera",
+  "independent_logic": {
+    "fingerprints": {
+      "v1_recomputed": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177",
+      "v1_matches_immutable": true,
+      "v1_module_agrees": true,
+      "v2_recomputed": "64ea2c020004af92854aebdde0557678293313b06881fdf5b5abb54e8729c8a3",
+      "v2_matches_immutable": true,
+      "v3_recomputed": "c70feb13b061a35b9b3940296c40ea8365aa57089b325050ef238dc93774ccbb",
+      "v3_registered_in_module": true,
+      "v3_value": "c70feb13b061a35b9b3940296c40ea8365aa57089b325050ef238dc93774ccbb"
+    },
+    "virtual_accounting": {
+      "slots_with_optimizer_state_gt0": 35292,
+      "params_per_slot_variants": [
+        6144
+      ],
+      "unique_trained_scalars_recomputed": 216834048,
+      "optimizer_steps_per_slot_total": 196357,
+      "max_steps_per_slot": 228,
+      "corrupt_npz_files": []
+    },
+    "lineage": {
+      "lineages": {
+        "stage7": {
+          "step": 655,
+          "transaction_id": "tx-stage7-joint",
+          "physical_sha256_ok": true
+        },
+        "stage8": {
+          "step": 1875,
+          "transaction_id": "tx-stage8-expansion",
+          "physical_sha256_ok": true
+        },
+        "stage9": {
+          "step": 5286,
+          "transaction_id": "tx-stage9-row6",
+          "physical_sha256_ok": true
+        }
+      },
+      "monotonic_lineage_order": true
+    },
+    "manifest_digest_sampling": {
+      "banks_sampled": 100,
+      "rows_digest_checked": 727,
+      "bad_rows": [],
+      "digests_ok": true
+    },
+    "artifact_checksums": {
+      "dataset_v3": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+      "tokenizer": "ae6a01d800bce3de490c098667889447c403e2b2da690ba1c3bec75fab907c73",
+      "warm6_checkpoint": "831f9ac648a8ac8268651cbb75f33e2287633da923a2dd9697d4953eb567f5f2",
+      "stage8_report": "13c7aff062112d38858bcfa094afb1cf5927d2e00d960d2f112be2de8761eb64",
+      "stage8_lineage_physical": "ce5f130fefde6cead84f007972a857807521520811e70e1e2ea2bb8cd58eb49c"
+    }
+  },
+  "checks": {
+    "A_infrastructure": {
+      "status": "BLOCKED",
+      "evidence": {
+        "decision": "BLOCKED",
+        "gpu_count": 0,
+        "flawed_if_gpu_qualification_executed": false
+      }
+    },
+    "B_physical_2b_model": {
+      "status": "BLOCKED",
+      "evidence": {
+        "param_count_verified": true,
+        "trained": false
+      }
+    },
+    "C_virtual_scalar_updates": {
+      "status": "PASS",
+      "evidence": {
+        "unique_trained_scalars_recomputed": 216834048,
+        "orchestrator_matches_independent_scan": true,
+        "stage9_start_scan_recorded": 125804544,
+        "store_advanced_since_stage9_start": 91029504,
+        "stage8_snapshot_monotonic": true,
+        "stage8_post_C_advance_explained": true,
+        "slots_delta_vs_stage8_snapshot": 15056,
+        "invariants_hold": true,
+        "stage8_report_baseline": 124329984
+      }
+    },
+    "D_moe_specialization": {
+      "status": "PASS",
+      "evidence": {
+        "specialization_demonstrated": true,
+        "root_cause": "measured input-conditional routing beyond the 0.005 JS threshold (stages 7/8 measured exactly 0.0 across all layers): the stage-9 sweep training moved the routers off uniform posteriors. This is a weak, early-horizon sig",
+        "router_grads_flow": true
+      }
+    },
+    "E_divergent_reasoning": {
+      "status": "FAIL",
+      "evidence": {
+        "pass_at_n": 0.0,
+        "pass_via_repair": 0.0,
+        "failure_categories_round1": {
+          "passed": 0,
+          "syntax": 0,
+          "import": 0,
+          "runtime": 9,
+          "assertion": 0,
+          "timeout": 0,
+          "empty": 0,
+          "unknown": 0
+        }
+      }
+    },
+    "F_coding_capability": {
+      "status": "FAIL",
+      "evidence": {
+        "fingerprints_preserved": true,
+        "max_subject_pass_at_1_v3": 0.0,
+        "harness_sanity": {
+          "v1_sanity_pass_at_1": 1.0,
+          "v2_sanity_pass_at_1": 1.0,
+          "v3_sanity_pass_at_1": 1.0
+        },
+        "note": "zero pass rate == capability failure, honestly graded; not a benchmark-integrity violation"
+      }
+    },
+    "G_joint_vs_dense": {
+      "status": "FAIL",
+      "evidence": {
+        "joint_better_than_dense_on_heldout": false,
+        "heldout_delta_joint_minus_dense": 0.5875,
+        "against_fairness_note": "identical batch order/count and optimizer settings; joint arms page in fresh row-7 virtual slots per group, so the extra virtual compute per step is reported rather than hidden; validation slice is the untouched heldout split"
+      }
+    },
+    "H_recovery_reproducibility": {
+      "status": "PASS",
+      "evidence": {
+        "recovery_verified": true,
+        "kill_probe_clean": true,
+        "multi_gpu_recovery": "BLOCKED-BY-INFRASTRUCTURE (no CUDA device on this host)"
+      }
+    },
+    "I_reproducibility_fingerprints": {
+      "status": "PASS",
+      "evidence": {
+        "v1_ok": true,
+        "v2_ok": true,
+        "v3_registered": true,
+        "lineage_monotonic": true,
+        "manifest_digests_ok": true
+      }
+    },
+    "J_ownership": {
+      "status": "PASS",
+      "evidence": {
+        "owned_by_fibonera_in_artifacts": true
+      }
+    }
+  },
+  "summary_counts": {
+    "PASS": 5,
+    "FAIL": 3,
+    "BLOCKED": 2,
+    "NOT YET TESTED": 0
+  }
+}

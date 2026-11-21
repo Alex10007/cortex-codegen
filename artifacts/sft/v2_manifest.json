@@ -1,0 +1,24 @@
+{
+  "path": "/workspace/github__Alex10007__cortex-codegen/artifacts/sft/dataset_v2.jsonl",
+  "counts": {
+    "train": 237,
+    "val": 26,
+    "heldout": 65
+  },
+  "stats": {
+    "input": 577,
+    "deduped": 249,
+    "license_rejected": 0,
+    "contamination_dropped": 0
+  },
+  "seeds": {
+    "split": 1337,
+    "val_carve": 1338
+  },
+  "fingerprints": {
+    "full": "c1b66814a3d820a325fc376060f4524deca58d3cac020e24c4ed2e5d46906ad3",
+    "train": "ad5b68b68e1910644de500fdc99a0d0ba59538f3f018ed1406280b8c2f13dc7a",
+    "val": "5ddc9366ea09995df7ec0d28fd985f70e80d7324fb171c099adff1fd3a61c1eb",
+    "heldout": "95ced4a256f5d75f3558a1269c30bb2f80130b7e28701f495f7f841061cde726"
+  }
+}

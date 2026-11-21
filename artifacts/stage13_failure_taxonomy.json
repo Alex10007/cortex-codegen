@@ -1,0 +1,42 @@
+{
+  "kind": "cortex-stage13-failure-taxonomy",
+  "owned_by": "Fibonera",
+  "workstream": "A-taxonomy",
+  "definitions": {
+    "incorrect_indent_increase": "generated indent deeper than any valid target at the transition",
+    "incorrect_indent_decrease": "unindent to a non-matching level (incl. parser 'unindent' errors)",
+    "missing_indentation_after_block": "expected an indented block",
+    "unexpected_indentation": "unexpected indent applied by the model where no block opens",
+    "missing_colon": "block opener not terminated by ':'",
+    "unclosed_delimiter_or_string": "open paren/bracket/brace or unterminated string at stop",
+    "premature_eot_open_construct": "self-emitted EOT while an construct is still open",
+    "incomplete_block_missing_indent": "EOF-incomplete block body",
+    "incomplete_function_or_class": "function/class body not closed",
+    "incomplete_module": "module-level structure truncated",
+    "invalid_statement_ordering": "statements in invalid order",
+    "truncated_generation_max_new_tokens": "max_new_tokens exhausted without EOT",
+    "repetition_degeneration_truncation": "4-token degenerate repeat detected; generation stopped",
+    "tokenizer_or_decoding_corruption": "decode-level corruption (round-trip checked)",
+    "other_parser_confirmed_syntax_error": "parser-confirmed defect outside the above classes"
+  },
+  "measured_frequencies": {
+    "dense-warm6-parent": {
+      "unexpected_indentation_transition": 12,
+      "other_parser_confirmed_syntax_error": 2,
+      "premature_eot_open_construct": 1
+    },
+    "stage12-chunked_control": {
+      "unexpected_indentation_transition": 9,
+      "other_parser_confirmed_syntax_error": 4,
+      "missing_opening_delimiter": 1,
+      "complete_program": 1
+    }
+  },
+  "stage12_context": {
+    "incorrect_indentation": 38,
+    "other": 5,
+    "premature_stop": 2,
+    "note": "stage-12 measured 43/45 persistent syntax defects, 38/45 indentation-related (indent transitions), 38/45 self-emitted EOT"
+  },
+  "passthrough_categories_note": "missing_opening_delimiter, invalid_token and other_parser_confirmed_syntax_error pass through unchanged from the stage-10/12 categories"
+}

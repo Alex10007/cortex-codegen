@@ -1,0 +1,269 @@
+{
+  "kind": "cortex-stage10-acceptance-audit",
+  "owned_by": "Fibonera",
+  "parent_commit": "a8c4e98",
+  "independent_logic": {
+    "fingerprints": {
+      "v1_recomputed": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177",
+      "v1_matches_immutable": true,
+      "v2_recomputed": "64ea2c020004af92854aebdde0557678293313b06881fdf5b5abb54e8729c8a3",
+      "v2_matches_immutable": true,
+      "v3_recomputed": "c70feb13b061a35b9b3940296c40ea8365aa57089b325050ef238dc93774ccbb",
+      "v3_matches_immutable": true,
+      "v3_builder_agrees": true
+    },
+    "virtual_accounting_recount": {
+      "slots_with_optimizer_state_gt0": 35292,
+      "params_per_slot_variants": [
+        6144
+      ],
+      "unique_trained_scalars_recomputed": 216834048,
+      "matches_stage9_final": true,
+      "optimizer_steps_per_slot_total": 196357,
+      "corrupt_npz_files": []
+    },
+    "benchmark_task_files": {
+      "diff_vs_parent_commit_empty": true,
+      "working_tree_clean_for_benchmark_files": true,
+      "detail": ""
+    },
+    "dataset_tokenizer_checksums": {
+      "dataset_v3": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+      "tokenizer": "ae6a01d800bce3de490c098667889447c403e2b2da690ba1c3bec75fab907c73"
+    }
+  },
+  "checks": {
+    "A_gpu_qualification": {
+      "status": "BLOCKED",
+      "evidence": {
+        "decision": "BLOCKED",
+        "gpu_count": 0,
+        "no_gpu_claimed_as_qualified": true
+      }
+    },
+    "B_2b_training": {
+      "status": "BLOCKED",
+      "evidence": {
+        "trained_honestly_false": true,
+        "param_count_verified": true,
+        "spend_usd": 0.0,
+        "manipulable_config_param_count": 2056012800
+      }
+    },
+    "C_pass1_root_cause": {
+      "status": "PASS",
+      "evidence": {
+        "executed": true,
+        "c1_suites_diagnosed": 4,
+        "c2_fit_rate": 0.2892,
+        "c2_split_deterministic": true,
+        "remediation_arms": [
+          "legacy_batching",
+          "chunked_batching"
+        ],
+        "promotion_decision": "NOT PROMOTED - no immutable-benchmark improvement over the executed baseline; negative result recorded",
+        "promotion_only_with_benchmark_gain": true,
+        "harness_reference_pass": {
+          "v1_reference_pass_rate": 1.0,
+          "v3_reference_pass_rate": 1.0,
+          "fingerprint_v1_ok": true,
+          "fingerprint_v2_ok": true,
+          "fingerprint_v3": "c70feb13b061a35b9b3940296c40ea8365aa57089b325050ef238dc93774ccbb"
+        }
+      }
+    },
+    "D_virtual_expansion": {
+      "status": "PASS",
+      "evidence": {
+        "authoritative_unique_trained_scalars": 216834048,
+        "independent_recount_matches_stage9_final": true
+      }
+    },
+    "E_moe_specialization": {
+      "status": "FAIL",
+      "evidence": {
+        "specialization_accepted": false,
+        "routing_differs_by_family": true,
+        "quality_differs_by_family": false,
+        "js_max": 0.021884,
+        "honest_note": "task-performance evidence = per-family completion-loss differences; execution-quality differences cannot be measured while pass rates are 0.0"
+      }
+    },
+    "F_divergent_reasoning": {
+      "status": "FAIL",
+      "evidence": {
+        "repair_delta_pass_at_n": 0,
+        "with_repair": 0.0,
+        "without_repair": 0.0,
+        "single_candidate": 0.0
+      }
+    },
+    "G_dense_vs_unified": {
+      "status": "FAIL",
+      "evidence": {
+        "joint_warm_beats_dense": false,
+        "authoritative_store_untouched": true,
+        "warm_minus_dense_heldout": 0.4947,
+        "arms_recorded": [
+          "dense_control",
+          "joint_fresh_slots",
+          "joint_warm_trained_slots"
+        ]
+      }
+    },
+    "H_recovery": {
+      "status": "PASS",
+      "evidence": {
+        "recovery_verified": true,
+        "intact_restart_parity_ok": true,
+        "intact_restart_step": 5286,
+        "all_fault_injections_detected": true,
+        "sigkill_recovery_clean": true,
+        "stage9_lineage_sha256_ok": true
+      }
+    },
+    "I_capability_maturity": {
+      "status": "PASS",
+      "evidence": {
+        "capabilities": 6,
+        "max_level": 5,
+        "blocked_rows": 4,
+        "problems": []
+      }
+    },
+    "J_reproducibility_integrity": {
+      "status": "PASS",
+      "evidence": {
+        "v1_ok": true,
+        "v2_ok": true,
+        "v3_ok": true,
+        "lineage_monotonic": true,
+        "lineage": {
+          "stage7": {
+            "step": 655,
+            "physical_sha256_ok": true
+          },
+          "stage8": {
+            "step": 1875,
+            "physical_sha256_ok": true
+          },
+          "stage9": {
+            "step": 5286,
+            "physical_sha256_ok": true
+          },
+          "monotonic": true
+        },
+        "benchmarks_untouched": {
+          "diff_vs_parent_commit_empty": true,
+          "working_tree_clean_for_benchmark_files": true,
+          "detail": ""
+        },
+        "virtual_scalar_recount": 216834048,
+        "artifacts": {
+          "stage10_report.json": "OK",
+          "stage10_capability_report.json": "OK",
+          "stage10_gpu_qualification.json": "OK",
+          "stage10_pass1_root_cause.json": "OK",
+          "stage10_virtual_coverage.json": "OK",
+          "stage10_moe_specialization.json": "OK",
+          "stage10_divergent_reasoning.json": "OK",
+          "stage10_dense_vs_unified.json": "OK",
+          "stage10_recovery_report.json": "OK",
+          "stage10_training_readiness.json": "OK"
+        },
+        "governance": {
+          "stage10_gpu_qualification": {
+            "experiment_id": "stage10-A-infra",
+            "parent_commit_ok": true,
+            "has_hypothesis": true,
+            "has_criteria": true,
+            "has_started_finished": true,
+            "decision": "BLOCKED"
+          },
+          "stage10_training_readiness": {
+            "experiment_id": "stage10-B-2b-gate",
+            "parent_commit_ok": true,
+            "has_hypothesis": true,
+            "has_criteria": true,
+            "has_started_finished": true,
+            "decision": "BLOCKED-BY-INFRASTRUCTURE"
+          },
+          "stage10_pass1_root_cause": {
+            "experiment_id": "stage10-C-pass1-root-cause",
+            "parent_commit_ok": true,
+            "has_hypothesis": true,
+            "has_criteria": true,
+            "has_started_finished": true,
+            "decision": "EXECUTED"
+          },
+          "stage10_virtual_coverage": {
+            "experiment_id": "stage10-D-virtual-strategies",
+            "parent_commit_ok": true,
+            "has_hypothesis": true,
+            "has_criteria": true,
+            "has_started_finished": true,
+            "decision": "EXECUTED"
+          },
+          "stage10_moe_specialization": {
+            "experiment_id": "stage10-E-moe-specialization",
+            "parent_commit_ok": true,
+            "has_hypothesis": true,
+            "has_criteria": true,
+            "has_started_finished": true,
+            "decision": "EXECUTED"
+          },
+          "stage10_divergent_reasoning": {
+            "experiment_id": "stage10-F-reasoning-ablation",
+            "parent_commit_ok": true,
+            "has_hypothesis": true,
+            "has_criteria": true,
+            "has_started_finished": true,
+            "decision": "EXECUTED"
+          },
+          "stage10_dense_vs_unified": {
+            "experiment_id": "stage10-G-dense-vs-unified",
+            "parent_commit_ok": true,
+            "has_hypothesis": true,
+            "has_criteria": true,
+            "has_started_finished": true,
+            "decision": "EXECUTED"
+          },
+          "stage10_recovery_report": {
+            "experiment_id": "stage10-H-recovery-fault-injection",
+            "parent_commit_ok": true,
+            "has_hypothesis": true,
+            "has_criteria": true,
+            "has_started_finished": true,
+            "decision": "PASS"
+          },
+          "stage10_capability_report": {
+            "experiment_id": "stage10-I-readiness",
+            "parent_commit_ok": true,
+            "has_hypothesis": true,
+            "has_criteria": true,
+            "has_started_finished": true,
+            "decision": "EXECUTED"
+          }
+        },
+        "report_consistency": {
+          "authoritative_store_untouched_claimed": true,
+          "baseline_scalars_recorded": 216834048,
+          "g_untouched": true,
+          "c2_fit_rate_recorded": 0.2892,
+          "fault_injection_consistency": {
+            "n_injections": 4,
+            "all_flags_true": false
+          },
+          "recovery_verified_claim": true,
+          "issues": []
+        }
+      }
+    }
+  },
+  "summary_counts": {
+    "PASS": 5,
+    "FAIL": 3,
+    "BLOCKED": 2,
+    "NOT YET TESTED": 0
+  }
+}

@@ -1,0 +1,294 @@
+{
+  "kind": "cortex-stage16-self-correction",
+  "owned_by": "Fibonera",
+  "workstream": "7-self-correction",
+  "primary_arm": "exposure_sched",
+  "n_tasks": 11,
+  "max_repair_rounds": 2,
+  "direct_successes": 0,
+  "first_attempt_success_rate": 0.0,
+  "success_after_corrections": 0.0,
+  "n_repaired": 11,
+  "repair_successes": 0,
+  "average_correction_attempts": 3.0,
+  "revisions_differing": 22,
+  "regression_rate": 0.0,
+  "per_task": [
+    {
+      "suite": "v1",
+      "task_id": "t-palindrome",
+      "attempts": 3,
+      "direct_passed": false,
+      "direct_executed": true,
+      "repair_rounds": [
+        {
+          "round": 1,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "round": 2,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        }
+      ],
+      "final_passed": false
+    },
+    {
+      "suite": "v1",
+      "task_id": "t-fizzbuzz",
+      "attempts": 3,
+      "direct_passed": false,
+      "direct_executed": true,
+      "repair_rounds": [
+        {
+          "round": 1,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "round": 2,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        }
+      ],
+      "final_passed": false
+    },
+    {
+      "suite": "v1",
+      "task_id": "t-wordcount",
+      "attempts": 3,
+      "direct_passed": false,
+      "direct_executed": true,
+      "repair_rounds": [
+        {
+          "round": 1,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "round": 2,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        }
+      ],
+      "final_passed": false
+    },
+    {
+      "suite": "t16-unseen",
+      "task_id": "t16-binary-add",
+      "attempts": 3,
+      "direct_passed": false,
+      "direct_executed": true,
+      "repair_rounds": [
+        {
+          "round": 1,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "round": 2,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        }
+      ],
+      "final_passed": false
+    },
+    {
+      "suite": "t16-unseen",
+      "task_id": "t16-flatten-dict",
+      "attempts": 3,
+      "direct_passed": false,
+      "direct_executed": true,
+      "repair_rounds": [
+        {
+          "round": 1,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "round": 2,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        }
+      ],
+      "final_passed": false
+    },
+    {
+      "suite": "t16-unseen",
+      "task_id": "t16-run-length-encode",
+      "attempts": 3,
+      "direct_passed": false,
+      "direct_executed": true,
+      "repair_rounds": [
+        {
+          "round": 1,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "round": 2,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        }
+      ],
+      "final_passed": false
+    },
+    {
+      "suite": "t16-unseen",
+      "task_id": "t16-merge-intervals",
+      "attempts": 3,
+      "direct_passed": false,
+      "direct_executed": true,
+      "repair_rounds": [
+        {
+          "round": 1,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "round": 2,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        }
+      ],
+      "final_passed": false
+    },
+    {
+      "suite": "t16-unseen",
+      "task_id": "t16-bank-account-class",
+      "attempts": 3,
+      "direct_passed": false,
+      "direct_executed": true,
+      "repair_rounds": [
+        {
+          "round": 1,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "round": 2,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        }
+      ],
+      "final_passed": false
+    },
+    {
+      "suite": "t16-unseen",
+      "task_id": "t16-top-words",
+      "attempts": 3,
+      "direct_passed": false,
+      "direct_executed": true,
+      "repair_rounds": [
+        {
+          "round": 1,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "round": 2,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        }
+      ],
+      "final_passed": false
+    },
+    {
+      "suite": "t16-unseen",
+      "task_id": "t16-fib-memo",
+      "attempts": 3,
+      "direct_passed": false,
+      "direct_executed": true,
+      "repair_rounds": [
+        {
+          "round": 1,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "round": 2,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        }
+      ],
+      "final_passed": false
+    },
+    {
+      "suite": "t16-unseen",
+      "task_id": "t16-rotate-matrix",
+      "attempts": 3,
+      "direct_passed": false,
+      "direct_executed": true,
+      "repair_rounds": [
+        {
+          "round": 1,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "round": 2,
+          "evidence": "runtime_exception:",
+          "revision_differs": true,
+          "executed": true,
+          "passed": false
+        }
+      ],
+      "final_passed": false
+    }
+  ],
+  "experiment": {
+    "experiment_id": "stage16-7-generation-and-self-correction",
+    "parent_commit": "799a217",
+    "source_commit": "799a21758b1a",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "the complete generate->execute->diagnose->revise->re-execute loop with the exposure-trained model improves execution-verified success within REPAIR_ROUNDS; every repair uses ONLY the model's own revision conditioned on compacted real error evidence",
+    "acceptance_criteria": "v1 (3 tasks) + t16-unseen (8 tasks); up to 2 correction rounds; every transition measured independently (executed, revision differs, re-executed, passed); success counted ONLY on the original task's real tests; model-only vs system-with-execution-tool separated in the report; seed 20261830; no external repair, no grammar constraints",
+    "started": "2026-11-20T21:14:24+0000",
+    "finished": "2026-11-20T21:15:13+0000",
+    "decision": "EXECUTED"
+  }
+}

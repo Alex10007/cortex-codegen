@@ -1,0 +1,62 @@
+{
+  "measured": {
+    "cores": 5,
+    "ram_bytes": 6359416832,
+    "ram_gb": 6.36,
+    "disk_free_gb": 5867.09,
+    "cuda": {
+      "available": false,
+      "device_count": 0,
+      "names": [],
+      "bf16_supported": false
+    },
+    "cpu_bf16_autocast_executed_ok": true
+  },
+  "cluster_matrix_2b": {
+    "config": "cortex-2b",
+    "params": 2056012800,
+    "batch_size": 8,
+    "seq_len": 8192,
+    "plans": [
+      {
+        "world_size": 2,
+        "sharding": "ZeRO-3 / FSDP full shard",
+        "micro_batch": 4,
+        "per_gpu_state_gb": 16.45,
+        "per_gpu_activation_gb_est": 96.64,
+        "per_gpu_total_gb_est": 113.08,
+        "fits_40gb_gpu": false,
+        "fits_80gb_gpu": false
+      },
+      {
+        "world_size": 4,
+        "sharding": "ZeRO-3 / FSDP full shard",
+        "micro_batch": 2,
+        "per_gpu_state_gb": 8.22,
+        "per_gpu_activation_gb_est": 48.32,
+        "per_gpu_total_gb_est": 56.54,
+        "fits_40gb_gpu": false,
+        "fits_80gb_gpu": true
+      },
+      {
+        "world_size": 8,
+        "sharding": "ZeRO-3 / FSDP full shard",
+        "micro_batch": 1,
+        "per_gpu_state_gb": 4.11,
+        "per_gpu_activation_gb_est": 24.16,
+        "per_gpu_total_gb_est": 28.27,
+        "fits_40gb_gpu": true,
+        "fits_80gb_gpu": true
+      }
+    ],
+    "cpu_offload_optimizer": true,
+    "note": "per-GPU arithmetic; measured only on GPU infrastructure during a real run"
+  },
+  "phase_b_pretraining_gate": {
+    "config": "cortex-2b",
+    "params": 2056012800,
+    "gpus_present": 0,
+    "gpus_required": 8,
+    "status": "BLOCKED: this host measured cuda=False, devices=0; the 2B run must execute on the Fibonera GPU cluster (8 x 40 GB or 4 x 80 GB). Nothing simulated."
+  }
+}

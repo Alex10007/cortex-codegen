@@ -1,0 +1,23 @@
+{
+  "config": "cortex-2b",
+  "dim": 2560,
+  "n_layers": 24,
+  "n_heads": 20,
+  "head_dim": 128,
+  "vocab_size": 32768,
+  "max_seq_len": 8192,
+  "tie_word_embeddings": false,
+  "f_fn_mult": 4,
+  "d_ff": 10240,
+  "theoretical_param_count": 2056012800,
+  "meta_instantiated_param_count": 2056012800,
+  "counts_match": true,
+  "at_least_2e9": true,
+  "breakdown": {
+    "tok_emb": 83886080,
+    "head": 83886080,
+    "final_ln": 5120,
+    "blocks": 1888235520
+  },
+  "training_status": "DECLARED-NOT-TRAINED (no host with sufficient compute in this environment; see scaling plan)"
+}

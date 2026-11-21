@@ -1,0 +1,490 @@
+{
+  "kind": "cortex-stage11-extended-training",
+  "owned_by": "Fibonera",
+  "workstream": "B-training",
+  "pre_registered_promotion_rule": "PROMOTE iff fixed-decoding pass@1 > 0.0 on v1 or v3 AND held-out loss <= the stage-10 measured pre-training value; otherwise NOT PROMOTED (recorded regardless of training-loss behaviour)",
+  "heldout_at_start": 3.3015,
+  "stage10_heldout_start_reference": 3.3015,
+  "steps": 4000,
+  "eval_every": 400,
+  "lr": 5e-05,
+  "batch": 4,
+  "arms": {
+    "legacy_stream_control": {
+      "loss_first": 2.6055,
+      "loss_last": 0.6996,
+      "steps_with_targets_total": 3101,
+      "steps_out_of_4000": 3101,
+      "heldout_curve": [
+        {
+          "step": 0,
+          "heldout": 3.3015
+        },
+        {
+          "step": 400,
+          "heldout": 3.1017,
+          "steps_with_targets_in_chunk": 310
+        },
+        {
+          "step": 800,
+          "heldout": 3.0926,
+          "steps_with_targets_in_chunk": 308
+        },
+        {
+          "step": 1200,
+          "heldout": 3.0349,
+          "steps_with_targets_in_chunk": 314
+        },
+        {
+          "step": 1600,
+          "heldout": 2.9678,
+          "steps_with_targets_in_chunk": 309
+        },
+        {
+          "step": 2000,
+          "heldout": 2.9962,
+          "steps_with_targets_in_chunk": 308
+        },
+        {
+          "step": 2400,
+          "heldout": 2.9462,
+          "steps_with_targets_in_chunk": 314
+        },
+        {
+          "step": 2800,
+          "heldout": 2.9181,
+          "steps_with_targets_in_chunk": 308
+        },
+        {
+          "step": 3200,
+          "heldout": 2.9528,
+          "steps_with_targets_in_chunk": 309
+        },
+        {
+          "step": 3600,
+          "heldout": 2.8852,
+          "steps_with_targets_in_chunk": 313
+        },
+        {
+          "step": 4000,
+          "heldout": 2.96,
+          "steps_with_targets_in_chunk": 308
+        }
+      ],
+      "heldout_final": 2.96,
+      "heldout_best": 2.8852,
+      "seconds": 439.1,
+      "benchmarks": {
+        "v1_pass_at_1": 0.0,
+        "v3_pass_at_1": 0.0
+      },
+      "per_task_v3_after": [
+        {
+          "task_id": "t3-run-length-encode",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-interval-merge",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-sql-sqlite-aggregate",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-sql-sqlite-window-free",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-debug-off-by-one",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-debug-mutation",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-testgen-cases",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-refactor-fluent",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-api-handler",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-security-safe-substitute",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-performance-sort-k",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-multi-call-node",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        }
+      ],
+      "per_task_v1_after": [
+        {
+          "task_id": "t-palindrome",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t-fizzbuzz",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t-wordcount",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        }
+      ]
+    },
+    "chunked_stream": {
+      "loss_first": 3.8434,
+      "loss_last": 1.4301,
+      "steps_with_targets_total": 4000,
+      "steps_out_of_4000": 4000,
+      "heldout_curve": [
+        {
+          "step": 0,
+          "heldout": 3.3015
+        },
+        {
+          "step": 400,
+          "heldout": 3.085,
+          "steps_with_targets_in_chunk": 400
+        },
+        {
+          "step": 800,
+          "heldout": 3.0156,
+          "steps_with_targets_in_chunk": 400
+        },
+        {
+          "step": 1200,
+          "heldout": 2.9997,
+          "steps_with_targets_in_chunk": 400
+        },
+        {
+          "step": 1600,
+          "heldout": 3.0016,
+          "steps_with_targets_in_chunk": 400
+        },
+        {
+          "step": 2000,
+          "heldout": 2.9414,
+          "steps_with_targets_in_chunk": 400
+        },
+        {
+          "step": 2400,
+          "heldout": 2.9646,
+          "steps_with_targets_in_chunk": 400
+        },
+        {
+          "step": 2800,
+          "heldout": 2.9491,
+          "steps_with_targets_in_chunk": 400
+        },
+        {
+          "step": 3200,
+          "heldout": 2.8599,
+          "steps_with_targets_in_chunk": 400
+        },
+        {
+          "step": 3600,
+          "heldout": 2.8382,
+          "steps_with_targets_in_chunk": 400
+        },
+        {
+          "step": 4000,
+          "heldout": 2.8819,
+          "steps_with_targets_in_chunk": 400
+        }
+      ],
+      "heldout_final": 2.8819,
+      "heldout_best": 2.8382,
+      "seconds": 1211.3,
+      "benchmarks": {
+        "v1_pass_at_1": 0.0,
+        "v3_pass_at_1": 0.0
+      },
+      "per_task_v3_after": [
+        {
+          "task_id": "t3-run-length-encode",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-interval-merge",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-sql-sqlite-aggregate",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-sql-sqlite-window-free",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-debug-off-by-one",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-debug-mutation",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-testgen-cases",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-refactor-fluent",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-api-handler",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-security-safe-substitute",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-performance-sort-k",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t3-multi-call-node",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        }
+      ],
+      "per_task_v1_after": [
+        {
+          "task_id": "t-palindrome",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t-fizzbuzz",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        },
+        {
+          "task_id": "t-wordcount",
+          "passed": false,
+          "exit_code": 2,
+          "candidate_nonempty": true,
+          "failure_category": "runtime",
+          "seconds": 0.0,
+          "tokens": 180,
+          "family": "v1"
+        }
+      ]
+    }
+  },
+  "checkpoints": [
+    {
+      "path": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage11-legacy_stream_control.pt",
+      "batching": "legacy_stream_control",
+      "steps": 4000,
+      "lr": 5e-05,
+      "sha256": "772440c4289aa05d655395037c9e3236cb74c636fe284b12a05ed1e753133f50"
+    },
+    {
+      "path": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage11-chunked_stream.pt",
+      "batching": "chunked_stream",
+      "steps": 4000,
+      "lr": 5e-05,
+      "sha256": "960e9d4e1e251a23f49cddb551313a0942b7cedbcdfb912012e60eb59bfaeb14"
+    }
+  ],
+  "chunked_vs_legacy_heldout_delta": -0.0781,
+  "promotion_decision": "NOT PROMOTED - no immutable-benchmark improvement; negative result recorded",
+  "experiment": {
+    "experiment_id": "PROMOTE iff fixed-decoding pass@1 > 0.0 on v1 or v3 AND held-out loss <= the stage-10 measured pre-training value; otherwise NOT PROMOTED (recorded regardless of training-loss behaviour)",
+    "parent_commit": "a8c4e98",
+    "source_commit": "8eba46c2c620",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "at a 4000-step fixed horizon from the same warm-6 parent, the chunked stream (100% record coverage) reaches lower held-out loss and better generation validity than the starved legacy stream (28.9% coverage)",
+    "acceptance_criteria": "identical seeds/batches/optimizer; held-out evaluated every 400 steps; promotion strictly by PROMOTE iff fixed-decoding pass@1 > 0.0 on v1 or v3 AND held-out loss <= the stage-10 measured pre-training value; otherwise NOT PROMOTED (recorded regardless of training-loss behaviour)",
+    "started": "2026-11-20T02:31:52+0000",
+    "finished": "2026-11-20T02:59:23+0000",
+    "decision": "NOT PROMOTED"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "kind": "cortex-stage9-recovery-report",
+  "owned_by": "Fibonera",
+  "stage": "H-recovery-and-reproducibility",
+  "checkpoint_restart": {
+    "resumed_step": 5286,
+    "parity_ok": true,
+    "physical_digest_ok": true,
+    "lineage_steps_match": true,
+    "virtual_integrity_ok": true
+  },
+  "checks": {
+    "physical_checkpoint_sha256_ok": true,
+    "monotonic_step_enforcement": true,
+    "persisted_optimizer_states_readable": true,
+    "npz_files_with_step_count_gt0_sampled": 50,
+    "stale_pair_refusal": "covered by tests/test_stage9.py (BEHIND refusal default)",
+    "duplicate_ownership": "covered by tests/test_stage9.py",
+    "corrupted_optimizer_state": "covered by tests/test_stage9.py",
+    "multi_gpu_recovery": "BLOCKED-BY-INFRASTRUCTURE (no CUDA device on this host)"
+  },
+  "kill_recovery_subprocess_probe": {
+    "child_signaled_ready": true,
+    "killed_with_sigkill": true,
+    "committed_rows_verified": 1,
+    "digests_ok_after_kill": true,
+    "corrupt_row_detected_by_digests": true,
+    "recovery_clean": true
+  },
+  "recovery_verified": true
+}

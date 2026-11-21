@@ -1,0 +1,34 @@
+checkpoint: artifacts/runs/cortex-sft-stage4/stage4-epoch-004.pt
+prompt: is_palindrome task, temperature=0.2, top_k=20
+
+
+
+    """
+    return self.is_name(self)
+    return self.is_name(self)
+    return self.get(self)
+    return self.
+
+    return self.
+    return self.
+    return self.
+
+    return self.
+    return self.
+
+    return self.
+    return self.
+
+    return self.
+    return self.
+    return self.
+    return self.
+    return self.
+    return self.
+    return self.
+    return self.
+    return self.
+    return self.
+    return self.
+    return self.
+   

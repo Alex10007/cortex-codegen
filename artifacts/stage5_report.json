@@ -1,0 +1,290 @@
+{
+  "lineage": {
+    "checkpoint_lineage_complete": true,
+    "missing": [],
+    "v1_benchmark_integrity": {
+      "status": "unmodified",
+      "fingerprint": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177"
+    }
+  },
+  "dataset_seq_len_compatibility": {
+    "max_seq_len": 256,
+    "train_records": 241,
+    "train_records_fitting": 74,
+    "too_long_dropped_by_sft_silently_before": 0.6929,
+    "note": "records longer than max_seq_len contribute zero training gradient at demo scale - a measured data limitation, kept honest rather than bypassed by editing the dataset"
+  },
+  "audit": {
+    "alignment": {
+      "suite": "input-target alignment",
+      "n_records": 6,
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "shift: y[t] == x[t+1] over real tokens",
+          "ok": true,
+          "detail": null
+        },
+        {
+          "check": "prompt labels fully masked (-100)",
+          "ok": true,
+          "detail": null
+        },
+        {
+          "check": "completion region labels = actual next tokens",
+          "ok": true,
+          "detail": null
+        },
+        {
+          "check": "final unmasked target is EOT",
+          "ok": true,
+          "detail": null
+        },
+        {
+          "check": "padded labels masked (-100)",
+          "ok": true,
+          "detail": null
+        }
+      ]
+    },
+    "loss_and_padding": {
+      "suite": "loss computation & padding",
+      "loss_matches_token_mean_over_unmasked": true,
+      "unmasked_targets": 179,
+      "total_positions": 510,
+      "loss": 10.482254028320312,
+      "pad_keys_excluded": true,
+      "pad_attention_note": "outputs identical while pad-token identities vary once pad_mask is applied",
+      "all_pass": true
+    },
+    "gradient_flow": {
+      "suite": "gradient flow",
+      "loss_finite": true,
+      "params_total": 51,
+      "params_without_grad": [],
+      "params_nonfinite_grad": [],
+      "params_zero_grad": [],
+      "all_pass": true
+    }
+  },
+  "overfit_probe": {
+    "config": "cortex-demo",
+    "records_overfit": [
+      "all_classes",
+      "dotproduct",
+      "separate",
+      "_TrimmedRelease.release"
+    ],
+    "steps_executed": 50,
+    "loss_first": 10.4376,
+    "loss_last": 0.982,
+    "target_loss": 1.0,
+    "reached_target": true,
+    "greedy_next_token_accuracy_on_memorized_examples": 0.88,
+    "free_running_sample": "\n    \"\"\"\n    \"\"\"\n    \"\"\"\n    return c.\n    \"\"\"\n    \"\"\"\n    \"\"\"\n    \"\"\"\n    \"\"\"\n    \"\"\"\n    \"\"\"\n    \"\"\"\n    >>> list in all_classes(c2):\n    \"\"\"\n    return c.mro()\n    \"\"\"\n",
+    "peak_rss_mb": 1152.1
+  },
+  "gpu_provisioning": {
+    "measured_host": {
+      "cores": 5,
+      "ram_bytes": 6359416832,
+      "ram_gb": 6.36,
+      "disk_free_gb": 5866.75,
+      "cuda": {
+        "available": false,
+        "device_count": 0,
+        "names": [],
+        "bf16_supported": false
+      },
+      "cpu_bf16_autocast_executed_ok": true
+    },
+    "cuda_available": false,
+    "provisioned_gpu_count": 0,
+    "2b_cluster_matrix": {
+      "config": "cortex-2b",
+      "params": 2056012800,
+      "batch_size": 8,
+      "seq_len": 8192,
+      "plans": [
+        {
+          "world_size": 2,
+          "sharding": "ZeRO-3 / FSDP full shard",
+          "micro_batch": 4,
+          "per_gpu_state_gb": 16.45,
+          "per_gpu_activation_gb_est": 96.64,
+          "per_gpu_total_gb_est": 113.08,
+          "fits_40gb_gpu": false,
+          "fits_80gb_gpu": false
+        },
+        {
+          "world_size": 4,
+          "sharding": "ZeRO-3 / FSDP full shard",
+          "micro_batch": 2,
+          "per_gpu_state_gb": 8.22,
+          "per_gpu_activation_gb_est": 48.32,
+          "per_gpu_total_gb_est": 56.54,
+          "fits_40gb_gpu": false,
+          "fits_80gb_gpu": true
+        },
+        {
+          "world_size": 8,
+          "sharding": "ZeRO-3 / FSDP full shard",
+          "micro_batch": 1,
+          "per_gpu_state_gb": 4.11,
+          "per_gpu_activation_gb_est": 24.16,
+          "per_gpu_total_gb_est": 28.27,
+          "fits_40gb_gpu": true,
+          "fits_80gb_gpu": true
+        }
+      ],
+      "cpu_offload_optimizer": true,
+      "note": "per-GPU arithmetic; measured only on GPU infrastructure during a real run"
+    },
+    "viable_cluster": null,
+    "status": "BLOCKED: no CUDA devices present in this execution environment; provisioning Fibonera GPU infrastructure is outside this sandbox's capabilities. Nothing is simulated. All executable code paths were validated on this host (see ddp_validation, overfit_probe, amp smoke, audit)."
+  },
+  "ddp_validation": {
+    "backend": "gloo",
+    "world_size": 2,
+    "steps": 8,
+    "per_rank": [
+      {
+        "rank": 0,
+        "steps": 8,
+        "loss_first": 10.474194526672363,
+        "loss_last": 9.840510368347168,
+        "losses_finite": true,
+        "param_spread_across_ranks": 0.0
+      },
+      {
+        "rank": 1,
+        "steps": 8,
+        "loss_first": 10.462141036987305,
+        "loss_last": 9.922999382019043,
+        "losses_finite": true,
+        "param_spread_across_ranks": 0.0
+      }
+    ],
+    "loss_first": 10.474194526672363,
+    "loss_last": 9.840510368347168,
+    "rank0_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/ddp-validation/ddp-final-rank0.pt",
+    "checkpoint_reloaded": true,
+    "max_param_spread_across_ranks": 0.0,
+    "wall_time_s": 37.17,
+    "note": "executed distributed mechanics (gradient all-reduce, sharded data, single-writer checkpoint) in real OS processes; 2B-scale execution still requires the measured GPU infrastructure"
+  },
+  "staged_training": [
+    {
+      "epoch": 1,
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage5/stage5-epoch-001.pt",
+      "init_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage4/stage4-epoch-004.pt",
+      "heldout_loss": 3.496311757316254,
+      "v1_pass_at_1": 0.0,
+      "v1_nonempty": 1.0,
+      "v1_syntactically_valid": 0.0,
+      "v2_pass_at_1": 0.0,
+      "v2_compile_ok_rate": 0.2,
+      "v2_executed_rate": 1.0
+    },
+    {
+      "epoch": 2,
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage5/stage5-epoch-002.pt",
+      "init_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage5/stage5-epoch-001.pt",
+      "heldout_loss": 3.457995894562495,
+      "v1_pass_at_1": 0.0,
+      "v1_nonempty": 1.0,
+      "v1_syntactically_valid": 0.0,
+      "v2_pass_at_1": 0.0,
+      "v2_compile_ok_rate": 0.2,
+      "v2_executed_rate": 1.0
+    },
+    {
+      "epoch": 3,
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage5/stage5-epoch-003.pt",
+      "init_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage5/stage5-epoch-002.pt",
+      "heldout_loss": 3.425125993180604,
+      "v1_pass_at_1": 0.0,
+      "v1_nonempty": 1.0,
+      "v1_syntactically_valid": 0.0,
+      "v2_pass_at_1": 0.0,
+      "v2_compile_ok_rate": 0.2,
+      "v2_executed_rate": 1.0
+    },
+    {
+      "epoch": 4,
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage5/stage5-epoch-004.pt",
+      "init_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage5/stage5-epoch-003.pt",
+      "heldout_loss": 3.3936574976596807,
+      "v1_pass_at_1": 0.0,
+      "v1_nonempty": 1.0,
+      "v1_syntactically_valid": 0.0,
+      "v2_pass_at_1": 0.0,
+      "v2_compile_ok_rate": 0.2,
+      "v2_executed_rate": 1.0
+    }
+  ],
+  "failure_taxonomy": {
+    "prompt_format_ab": {
+      "eval_style": {
+        "passed": false,
+        "generated_head": "\n\n    \"\"\"\n    return _is_name(iterable)\n    return a\n<|endoftext|>\n    return a\n<|endoftext|>\n    return _read(iterable)\n<|endoftext|>\n    return a\n<|endoftext|>\n    return a\n    return a\n\n    return a\n<|endoftext|>\n    return a\n<|endoftext"
+      },
+      "sft_style": {
+        "passed": false,
+        "generated_head": "\n    \"\"\"\n    return self.is_name(self)\n    return self.get_name(self)\n<|endoftext|>\n    return self.get_name(self)\n<|endoftext|>\ndef _get_name(self, self, self, self.get_name)\ndef _is_name(self, self, self.get_name)\n    return self.is_name("
+      }
+    },
+    "decode_ablation": {
+      "greedy": {
+        "passed": false,
+        "generated_head": "\n\n    >>> list(iterable):\n    \"\"\"\n    return _is_name(iterable)\n    return _args\n<|endoftext|>\n    return a\n<|endoftext|>\n    return a\n<|endoftext|>\n    return a\n<|endoftext|>\n    return a\n<|endoftext|>\n    return a\n<|endoftext|>\n    return"
+      },
+      "temp02-k50": {
+        "passed": false,
+        "generated_head": "\n\n    >>> list(func)\n    >>> list(iterable)\n    >>> list(1)\n    '1\n    \"\"\"\n    return None\n    return a\n    return a\n<|endoftext|>\n    return a\n<|endoftext|>\n    return a\n<|endoftext|>\ndef a_1(iterable, None)\n    return a\n<|endoftext|>\ndef "
+      },
+      "temp07-k50": {
+        "passed": false,
+        "generated_head": "\n    \"\"\"\n    self. isinstance(2.3 None\n    \"\"\"\n    return None\n    return read.\n<|endoftext|>\n    return self.._items():\n        if not None\n<|endoftext|>\n    return self.read(data, _from_data\n    return read.\n    return _get_url(self)\n<|en"
+      }
+    },
+    "compile_stage": {
+      "stage": "syntax-error",
+      "generated_head": "\n        \"\"\"\n        return self.is_args(self.get(self.get_self.get(self.get(self.get_self.get(self.get_self.get(self.get_param if self.\n        return self.get_configuration.get(self.get_url\n<|endoftext|>\n<|endoftext|>\n<|endoftext|>\ndef self.get(self.get_url\n<|endoftext|>\ndef self.get_url(self, self.get_configuration.get_url\n<|endoftext|>\ndef self.get_get(self.get_url)\n    if self.get_url is not ",
+      "text_head": "\n        \"\"\"\n        return self.is_args(self.get(self.get_self.get(self.get(self.get_self.get(self.get_self.get(self.get_param if self.\n        return self.get_configuration.get(self.get_url\n<|endoftext|>\n<|endoftext|>\n<|endoftext|>\ndef self.get(self.get_url\n<|endoftext|>\ndef self.get_url(self, self.get_configuration.get_url\n<|endoftext|>\ndef self.get_get(self.get_url)\n    if self.get_url is not "
+    },
+    "teacher_forced_token_accuracy_heldout": 0.4688
+  },
+  "knowledge_expansion": {
+    "multifile_packages_verified_sources": 4,
+    "patterns_ingested_this_stage": 0,
+    "capacity": {
+      "stored": 79034,
+      "indexed": 79034,
+      "retrievable": 49001,
+      "retrieval_recall_at_5": 0.62,
+      "probe_attempts": 200,
+      "probe_hits": 124,
+      "validated": 329
+    }
+  },
+  "promotion": {
+    "promoted": false,
+    "reasons": [
+      "pass@1 did not improve by >= 0.1 (base=0.0, cand=0.0)"
+    ],
+    "baseline": {
+      "pass_at_1": 0.0,
+      "val_loss": 3.564237281100514
+    },
+    "candidate": {
+      "pass_at_1": 0.0,
+      "compile_ok_rate": 0.2,
+      "executed_rate": 1.0,
+      "per_tier": {},
+      "val_loss": 3.3936574976596807
+    },
+    "baseline_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage4/stage4-epoch-004.pt",
+    "candidate_checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage5/stage5-epoch-004.pt"
+  }
+}

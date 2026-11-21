@@ -1,0 +1,900 @@
+{
+  "kind": "cortex-stage16-baseline",
+  "owned_by": "Fibonera",
+  "workstream": "1-baseline",
+  "checkpoints": {
+    "stage12_champion": {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage12-chunked_control.pt",
+      "exists": true,
+      "sha256": "9d8382efcd03c542686de843e56ff231fa0a6c5acbba8bc373d2435e0db1430e",
+      "arch": "CortexTransformer",
+      "stage": 12,
+      "training_steps": 2000,
+      "parent": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage6/stage6-epoch-002.pt",
+      "config": {
+        "prompt_style": "legacy",
+        "complete_rows_only": false
+      },
+      "heldout_native": 2.9435,
+      "heldout_eval_aligned": 2.9498,
+      "structural_token_accuracy": {
+        "n_batches": 6,
+        "accuracy_overall": 0.5414,
+        "accuracy_whitespace": 0.9016,
+        "accuracy_structure_keyword": 0.678,
+        "accuracy_delimiter": 0.6667,
+        "accuracy_other": 0.3819,
+        "token_counts": {
+          "whitespace": 254,
+          "structure_keyword": 59,
+          "delimiter": 192,
+          "other": 775,
+          "overall": 1280
+        }
+      },
+      "indent_transition_accuracy": 0.9412,
+      "capability": {
+        "n_tasks": 15,
+        "pass_at_1": 0.0,
+        "v1_pass_at_1": 0.0,
+        "v3_pass_at_1": 0.0,
+        "syntax_valid_rate": 0.0,
+        "complete_program_rate": 0.0,
+        "execution_attempted_rate": 1.0
+      },
+      "capability_per_task": [
+        {
+          "suite": "v1",
+          "task_id": "t-palindrome",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-fizzbuzz",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-wordcount",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-run-length-encode",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-interval-merge",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-aggregate",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-window-free",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-off-by-one",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-mutation",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-testgen-cases",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-refactor-fluent",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-api-handler",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-security-safe-substitute",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-performance-sort-k",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-multi-call-node",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        }
+      ]
+    },
+    "stage15_control": {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage15-control_rep2.pt",
+      "exists": true,
+      "sha256": "e3a719da9d3dcbc8c802fc9718f6bc937fc552e21688f8e97730e5b1daf32b4d",
+      "arch": "CortexTransformer",
+      "stage": 14,
+      "training_steps": 6000,
+      "parent": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage6/stage6-epoch-002.pt",
+      "config": {
+        "prompt_style": "legacy",
+        "segmentation": "fixed"
+      },
+      "heldout_native": 2.9074,
+      "heldout_eval_aligned": 2.925,
+      "structural_token_accuracy": {
+        "n_batches": 6,
+        "accuracy_overall": 0.6047,
+        "accuracy_whitespace": 0.8937,
+        "accuracy_structure_keyword": 0.678,
+        "accuracy_delimiter": 0.6771,
+        "accuracy_other": 0.4865,
+        "token_counts": {
+          "whitespace": 254,
+          "structure_keyword": 59,
+          "delimiter": 192,
+          "other": 775,
+          "overall": 1280
+        }
+      },
+      "indent_transition_accuracy": 0.9608,
+      "capability": {
+        "n_tasks": 15,
+        "pass_at_1": 0.0,
+        "v1_pass_at_1": 0.0,
+        "v3_pass_at_1": 0.0,
+        "syntax_valid_rate": 0.0,
+        "complete_program_rate": 0.0,
+        "execution_attempted_rate": 1.0
+      },
+      "capability_per_task": [
+        {
+          "suite": "v1",
+          "task_id": "t-palindrome",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-fizzbuzz",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-wordcount",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-run-length-encode",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-interval-merge",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-aggregate",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-window-free",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-off-by-one",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-mutation",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-testgen-cases",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-refactor-fluent",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-api-handler",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-security-safe-substitute",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-performance-sort-k",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-multi-call-node",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        }
+      ]
+    },
+    "stage15_structural_champion": {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage10/cortex-sft-stage14-structural_h6000.pt",
+      "exists": true,
+      "sha256": "c87907616e9f84febce27b40dba5015cf81f8e3940816498bccd088be4229e27",
+      "arch": "CortexTransformer",
+      "stage": 14,
+      "training_steps": 6000,
+      "parent": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-stage6/stage6-epoch-002.pt",
+      "config": {
+        "prompt_style": "legacy",
+        "segmentation": "structural"
+      },
+      "heldout_native": 2.9074,
+      "heldout_eval_aligned": 2.9124,
+      "structural_token_accuracy": {
+        "n_batches": 6,
+        "accuracy_overall": 0.6188,
+        "accuracy_whitespace": 0.9055,
+        "accuracy_structure_keyword": 0.7458,
+        "accuracy_delimiter": 0.7188,
+        "accuracy_other": 0.4903,
+        "token_counts": {
+          "whitespace": 254,
+          "structure_keyword": 59,
+          "delimiter": 192,
+          "other": 775,
+          "overall": 1280
+        }
+      },
+      "indent_transition_accuracy": 0.9608,
+      "capability": {
+        "n_tasks": 15,
+        "pass_at_1": 0.0,
+        "v1_pass_at_1": 0.0,
+        "v3_pass_at_1": 0.0,
+        "syntax_valid_rate": 0.0,
+        "complete_program_rate": 0.0,
+        "execution_attempted_rate": 1.0
+      },
+      "capability_per_task": [
+        {
+          "suite": "v1",
+          "task_id": "t-palindrome",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-fizzbuzz",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v1",
+          "task_id": "t-wordcount",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-run-length-encode",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-interval-merge",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-aggregate",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-sql-sqlite-window-free",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-off-by-one",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-debug-mutation",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-testgen-cases",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-refactor-fluent",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-api-handler",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-security-safe-substitute",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-performance-sort-k",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        },
+        {
+          "suite": "v3",
+          "task_id": "t3-multi-call-node",
+          "nonempty": true,
+          "parse": false,
+          "complete_program": false,
+          "executed": true,
+          "passed": false
+        }
+      ]
+    }
+  },
+  "free_running_failure_reproduction": {
+    "n_probes": 8,
+    "parse_rate": 0.0,
+    "complete_program_rate": 0.0,
+    "eot_stop_count": 6,
+    "failures_at_first_indent_transition": 8,
+    "training_fragment_continuations": 0,
+    "per_probe": [
+      {
+        "probe": "nested_function",
+        "parse": false,
+        "complete_program": false,
+        "taxonomy": "unexpected_indentation_transition",
+        "evidence": {
+          "step": 4,
+          "token_text": " >>>",
+          "token_id": 740,
+          "lex_before": {
+            "line_indent_spaces": 7,
+            "mid_line": true,
+            "open_quote": null,
+            "paren_depth": 0,
+            "brace_depth": 0
+          },
+          "parser_message": "unexpected indent",
+          "token_line_indent": -1
+        },
+        "stopped": "eot",
+        "eot_step": 9,
+        "first_invalid": {
+          "first_invalid_index": 4,
+          "position": "middle",
+          "directly_introduced_by_newest_token": true,
+          "failure_class": "invalid_token_direct",
+          "category": "incorrect_indentation",
+          "parser_message": "unexpected indent",
+          "error_line": 3,
+          "error_column": 8
+        },
+        "n_generated_tokens": 9,
+        "lex_state_end": {
+          "paren_depth": 0,
+          "open_quote": null,
+          "unbalanced": false
+        },
+        "training_fragment": {
+          "max_prefix_overlap_ratio": 0.0,
+          "best_matching_record": null
+        }
+      },
+      {
+        "probe": "nested_control",
+        "parse": false,
+        "complete_program": false,
+        "taxonomy": "unexpected_indentation_transition",
+        "evidence": {
+          "step": 4,
+          "token_text": " >>>",
+          "token_id": 740,
+          "lex_before": {
+            "line_indent_spaces": 7,
+            "mid_line": true,
+            "open_quote": null,
+            "paren_depth": 0,
+            "brace_depth": 0
+          },
+          "parser_message": "unexpected indent",
+          "token_line_indent": -1
+        },
+        "stopped": "eot",
+        "eot_step": 7,
+        "first_invalid": {
+          "first_invalid_index": 4,
+          "position": "middle",
+          "directly_introduced_by_newest_token": true,
+          "failure_class": "invalid_token_direct",
+          "category": "incorrect_indentation",
+          "parser_message": "unexpected indent",
+          "error_line": 3,
+          "error_column": 8
+        },
+        "n_generated_tokens": 7,
+        "lex_state_end": {
+          "paren_depth": 0,
+          "open_quote": null,
+          "unbalanced": false
+        },
+        "training_fragment": {
+          "max_prefix_overlap_ratio": 0.0,
+          "best_matching_record": null
+        }
+      },
+      {
+        "probe": "class_with_methods",
+        "parse": false,
+        "complete_program": false,
+        "taxonomy": "unexpected_indentation_transition",
+        "evidence": {
+          "step": 4,
+          "token_text": " >>>",
+          "token_id": 740,
+          "lex_before": {
+            "line_indent_spaces": 3,
+            "mid_line": true,
+            "open_quote": null,
+            "paren_depth": 0,
+            "brace_depth": 0
+          },
+          "parser_message": "unexpected indent",
+          "token_line_indent": -1
+        },
+        "stopped": "max_new_tokens",
+        "eot_step": null,
+        "first_invalid": {
+          "first_invalid_index": 4,
+          "position": "beginning",
+          "directly_introduced_by_newest_token": true,
+          "failure_class": "invalid_token_direct",
+          "category": "incorrect_indentation",
+          "parser_message": "unexpected indent",
+          "error_line": 3,
+          "error_column": 4
+        },
+        "n_generated_tokens": 180,
+        "lex_state_end": {
+          "paren_depth": 1,
+          "open_quote": "\"\"\"",
+          "unbalanced": true
+        },
+        "training_fragment": {
+          "max_prefix_overlap_ratio": 0.0,
+          "best_matching_record": null
+        }
+      },
+      {
+        "probe": "exception_handling",
+        "parse": false,
+        "complete_program": false,
+        "taxonomy": "unexpected_indentation_transition",
+        "evidence": {
+          "step": 4,
+          "token_text": " >>>",
+          "token_id": 740,
+          "lex_before": {
+            "line_indent_spaces": 7,
+            "mid_line": true,
+            "open_quote": null,
+            "paren_depth": 0,
+            "brace_depth": 0
+          },
+          "parser_message": "unexpected indent",
+          "token_line_indent": -1
+        },
+        "stopped": "eot",
+        "eot_step": 85,
+        "first_invalid": {
+          "first_invalid_index": 4,
+          "position": "beginning",
+          "directly_introduced_by_newest_token": true,
+          "failure_class": "invalid_token_direct",
+          "category": "incorrect_indentation",
+          "parser_message": "unexpected indent",
+          "error_line": 3,
+          "error_column": 8
+        },
+        "n_generated_tokens": 85,
+        "lex_state_end": {
+          "paren_depth": 1,
+          "open_quote": "\"\"\"",
+          "unbalanced": true
+        },
+        "training_fragment": {
+          "max_prefix_overlap_ratio": 0.0,
+          "best_matching_record": null
+        }
+      },
+      {
+        "probe": "imports_and_module",
+        "parse": false,
+        "complete_program": false,
+        "taxonomy": "unexpected_indentation_transition",
+        "evidence": {
+          "step": 4,
+          "token_text": " >>>",
+          "token_id": 740,
+          "lex_before": {
+            "line_indent_spaces": 3,
+            "mid_line": true,
+            "open_quote": null,
+            "paren_depth": 0,
+            "brace_depth": 0
+          },
+          "parser_message": "unexpected indent",
+          "token_line_indent": -1
+        },
+        "stopped": "eot",
+        "eot_step": 99,
+        "first_invalid": {
+          "first_invalid_index": 4,
+          "position": "beginning",
+          "directly_introduced_by_newest_token": true,
+          "failure_class": "invalid_token_direct",
+          "category": "incorrect_indentation",
+          "parser_message": "unexpected indent",
+          "error_line": 3,
+          "error_column": 4
+        },
+        "n_generated_tokens": 99,
+        "lex_state_end": {
+          "paren_depth": 0,
+          "open_quote": null,
+          "unbalanced": false
+        },
+        "training_fragment": {
+          "max_prefix_overlap_ratio": 0.0,
+          "best_matching_record": null
+        }
+      },
+      {
+        "probe": "multi_function",
+        "parse": false,
+        "complete_program": false,
+        "taxonomy": "unexpected_indentation_transition",
+        "evidence": {
+          "step": 4,
+          "token_text": " >>>",
+          "token_id": 740,
+          "lex_before": {
+            "line_indent_spaces": 7,
+            "mid_line": true,
+            "open_quote": null,
+            "paren_depth": 0,
+            "brace_depth": 0
+          },
+          "parser_message": "unexpected indent",
+          "token_line_indent": -1
+        },
+        "stopped": "eot",
+        "eot_step": 104,
+        "first_invalid": {
+          "first_invalid_index": 4,
+          "position": "beginning",
+          "directly_introduced_by_newest_token": true,
+          "failure_class": "invalid_token_direct",
+          "category": "incorrect_indentation",
+          "parser_message": "unexpected indent",
+          "error_line": 3,
+          "error_column": 8
+        },
+        "n_generated_tokens": 104,
+        "lex_state_end": {
+          "paren_depth": 0,
+          "open_quote": "\"\"\"",
+          "unbalanced": true
+        },
+        "training_fragment": {
+          "max_prefix_overlap_ratio": 0.0,
+          "best_matching_record": null
+        }
+      },
+      {
+        "probe": "docstring_program",
+        "parse": false,
+        "complete_program": false,
+        "taxonomy": "unexpected_indentation_transition",
+        "evidence": {
+          "step": 4,
+          "token_text": " >>>",
+          "token_id": 740,
+          "lex_before": {
+            "line_indent_spaces": 3,
+            "mid_line": true,
+            "open_quote": null,
+            "paren_depth": 0,
+            "brace_depth": 0
+          },
+          "parser_message": "unexpected indent",
+          "token_line_indent": -1
+        },
+        "stopped": "eot",
+        "eot_step": 126,
+        "first_invalid": {
+          "first_invalid_index": 4,
+          "position": "beginning",
+          "directly_introduced_by_newest_token": true,
+          "failure_class": "invalid_token_direct",
+          "category": "incorrect_indentation",
+          "parser_message": "unexpected indent",
+          "error_line": 3,
+          "error_column": 4
+        },
+        "n_generated_tokens": 126,
+        "lex_state_end": {
+          "paren_depth": 0,
+          "open_quote": "'",
+          "unbalanced": true
+        },
+        "training_fragment": {
+          "max_prefix_overlap_ratio": 0.0,
+          "best_matching_record": null
+        }
+      },
+      {
+        "probe": "longer_program",
+        "parse": false,
+        "complete_program": false,
+        "taxonomy": "unexpected_indentation_transition",
+        "evidence": {
+          "step": 4,
+          "token_text": " >>>",
+          "token_id": 740,
+          "lex_before": {
+            "line_indent_spaces": 7,
+            "mid_line": true,
+            "open_quote": null,
+            "paren_depth": 0,
+            "brace_depth": 0
+          },
+          "parser_message": "unexpected indent",
+          "token_line_indent": -1
+        },
+        "stopped": "max_new_tokens",
+        "eot_step": null,
+        "first_invalid": {
+          "first_invalid_index": 4,
+          "position": "beginning",
+          "directly_introduced_by_newest_token": true,
+          "failure_class": "invalid_token_direct",
+          "category": "incorrect_indentation",
+          "parser_message": "unexpected indent",
+          "error_line": 3,
+          "error_column": 8
+        },
+        "n_generated_tokens": 180,
+        "lex_state_end": {
+          "paren_depth": 5,
+          "open_quote": "'",
+          "unbalanced": true
+        },
+        "training_fragment": {
+          "max_prefix_overlap_ratio": 0.0,
+          "best_matching_record": null
+        }
+      }
+    ]
+  },
+  "stage15_reference_findings": {
+    "indent_transition_accuracy_stage15": 0.9608,
+    "free_running_parse_rate_stage15": 0.0
+  },
+  "experiment": {
+    "experiment_id": "stage16-1-baseline-and-failure-reproduction",
+    "parent_commit": "799a217",
+    "source_commit": "799a21758b1a",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, <=6 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "the stage-15 reference arm's held-out, structural and free-running measurements reproduce under the identical stage-16 protocol, and its 8 free-running structural probes still fail at the FIRST indentation transition (stage-15 B: 0/8 parse, unexpected_indentation_transition)",
+    "acceptance_criteria": "3 historical checkpoints re-hashed, re-loaded and re-evaluated with identical held-out/structural/capability recipes; instrumented trajectories (trajectory_generate + classify_structural_failure) record first-invalid-token evidence, EOT stats and training-fragment overlap; no repair, no grammar constraints, decoding never changed",
+    "started": "2026-11-20T19:20:31+0000",
+    "finished": "2026-11-20T19:22:16+0000",
+    "decision": "PASS"
+  }
+}

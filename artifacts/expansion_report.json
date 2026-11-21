@@ -1,0 +1,206 @@
+{
+  "harvest": {
+    "total": 577,
+    "by_kind": {
+      "function": 274,
+      "method": 121,
+      "debugging": 182
+    }
+  },
+  "dataset_v2": {
+    "path": "/workspace/github__Alex10007__cortex-codegen/artifacts/sft/dataset_v2.jsonl",
+    "counts": {
+      "train": 237,
+      "val": 26,
+      "heldout": 65
+    },
+    "stats": {
+      "input": 577,
+      "deduped": 249,
+      "license_rejected": 0,
+      "contamination_dropped": 0
+    },
+    "seeds": {
+      "split": 1337,
+      "val_carve": 1338
+    },
+    "fingerprints": {
+      "full": "c1b66814a3d820a325fc376060f4524deca58d3cac020e24c4ed2e5d46906ad3",
+      "train": "ad5b68b68e1910644de500fdc99a0d0ba59538f3f018ed1406280b8c2f13dc7a",
+      "val": "5ddc9366ea09995df7ec0d28fd985f70e80d7324fb171c099adff1fd3a61c1eb",
+      "heldout": "95ced4a256f5d75f3558a1269c30bb2f80130b7e28701f495f7f841061cde726"
+    }
+  },
+  "baseline": {
+    "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-demo/final.pt",
+    "heldout_loss": 7.841630540797522,
+    "v1": {
+      "pass_at_1": 0.0
+    },
+    "v2": {
+      "pass_at_1": 0.0,
+      "compile_ok_rate": 0.2,
+      "per_tier": {
+        "function": 0.0,
+        "debugging": 0.0,
+        "multi-file": 0.0,
+        "repo": 0.0
+      }
+    },
+    "val_loss": 7.841630540797522
+  },
+  "staged_training": [
+    {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-expansion/sft-expansion-epoch-001.pt",
+      "heldout_loss": 3.051149212730724,
+      "v1": {
+        "pass_at_1": 0.0
+      },
+      "v2": {
+        "pass_at_1": 0.0,
+        "compile_ok_rate": 1.0,
+        "per_tier": {
+          "function": 0.0,
+          "debugging": 0.0,
+          "multi-file": 0.0,
+          "repo": 0.0
+        }
+      },
+      "epoch": 1,
+      "train_loss": 3.413006544113159,
+      "val_loss": 3.051149212730724,
+      "val_loss_delta_vs_baseline": -4.7905
+    },
+    {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-expansion/sft-expansion-epoch-002.pt",
+      "heldout_loss": 2.4394165958035994,
+      "v1": {
+        "pass_at_1": 0.0
+      },
+      "v2": {
+        "pass_at_1": 0.0,
+        "compile_ok_rate": 1.0,
+        "per_tier": {
+          "function": 0.0,
+          "debugging": 0.0,
+          "multi-file": 0.0,
+          "repo": 0.0
+        }
+      },
+      "epoch": 2,
+      "train_loss": 2.8403172492980957,
+      "val_loss": 2.4394165958035994,
+      "val_loss_delta_vs_baseline": -5.4022
+    },
+    {
+      "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-expansion/sft-expansion-epoch-003.pt",
+      "heldout_loss": 2.1754407703203418,
+      "v1": {
+        "pass_at_1": 0.0
+      },
+      "v2": {
+        "pass_at_1": 0.0,
+        "compile_ok_rate": 1.0,
+        "per_tier": {
+          "function": 0.0,
+          "debugging": 0.0,
+          "multi-file": 0.0,
+          "repo": 0.0
+        }
+      },
+      "epoch": 3,
+      "train_loss": 2.5870957374572754,
+      "val_loss": 2.1754407703203418,
+      "val_loss_delta_vs_baseline": -5.6662
+    }
+  ],
+  "diagnosis": {
+    "teacher_forced_token_accuracy": {
+      "pretrained_baseline": 0.0104,
+      "sft_checkpoint": 0.6626,
+      "heldout_examples": 65
+    },
+    "prompt_format_ab": {
+      "eval_style": {
+        "passed": false,
+        "generated_head": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+      },
+      "sft_style": {
+        "passed": false,
+        "generated_head": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+      }
+    },
+    "decode_ablation": {
+      "greedy": {
+        "passed": false,
+        "generated_head": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+      },
+      "temp02-k50": {
+        "passed": false,
+        "generated_head": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+      },
+      "temp07-k50": {
+        "passed": false,
+        "generated_head": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+      }
+    },
+    "compile_stage": {
+      "stage": "parsed",
+      "generated_head": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+      "text_head": "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+    }
+  },
+  "benchmarks": {
+    "v1_integrity": {
+      "status": "unmodified",
+      "fingerprint": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177"
+    },
+    "v1_fingerprint": "74cc760709f5cec015849251f932498f0628aee281284886515eabea9c8cc177",
+    "v2_fingerprint": "64ea2c020004af92854aebdde0557678293313b06881fdf5b5abb54e8729c8a3",
+    "v2_harness_sanity_pass": 1.0,
+    "v2_model": {
+      "pass_at_1": 0.0,
+      "compile_ok_rate": 1.0,
+      "executed_rate": 1.0,
+      "per_tier": {
+        "function": 0.0,
+        "debugging": 0.0,
+        "multi-file": 0.0,
+        "repo": 0.0
+      }
+    }
+  },
+  "promotion": {
+    "promoted": false,
+    "reasons": [
+      "pass@1 did not improve by >= 0.1 (base=0.0, cand=0.0)"
+    ],
+    "baseline": {
+      "pass_at_1": 0.0,
+      "val_loss": 7.841630540797522
+    },
+    "candidate": {
+      "pass_at_1": 0.0,
+      "compile_ok_rate": 1.0,
+      "executed_rate": 1.0,
+      "per_tier": {
+        "function": 0.0,
+        "debugging": 0.0,
+        "multi-file": 0.0,
+        "repo": 0.0
+      },
+      "val_loss": 2.1754407703203418
+    },
+    "applied": false,
+    "checkpoint": "/workspace/github__Alex10007__cortex-codegen/artifacts/runs/cortex-sft-expansion/sft-expansion-epoch-003.pt"
+  },
+  "knowledge_capacity": {
+    "stored": 79034,
+    "indexed": 79034,
+    "retrievable": 50581,
+    "retrieval_recall_at_5": 0.64,
+    "probe_attempts": 150,
+    "probe_hits": 96,
+    "validated": 329
+  }
+}

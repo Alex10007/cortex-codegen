@@ -1,0 +1,164 @@
+{
+  "kind": "cortex-stage13-generalization",
+  "owned_by": "Fibonera",
+  "workstream": "G-generalization",
+  "contamination": {
+    "max_contamination_overlap": 0.2472,
+    "worst_task": "t-wordcount",
+    "worst_record": "repo::cortexpkg_textools"
+  },
+  "dataset_overlap": {
+    "n_records": 332,
+    "exact_duplicate_records": 0,
+    "repeated_function_bodies": 2,
+    "repeated_function_body_examples": [
+      "train/FunctionDef:wrapper"
+    ],
+    "train_val_heldout_near_dup_pairs_ge_0.8": 22,
+    "splits": {
+      "train": 241,
+      "val": 26,
+      "heldout": 65
+    }
+  },
+  "perturbation_suite": {
+    "n_valid_probes": 14,
+    "rejected": [
+      {
+        "task_id": "t3-testgen-cases",
+        "reason": "no def/class found"
+      }
+    ]
+  },
+  "perturbed_task_results": {
+    "n_tasks": 14,
+    "pass_at_1": 0.0,
+    "syntax_valid_rate": 0.0714,
+    "complete_program_rate": 0.0,
+    "per_task": [
+      {
+        "task_id": "t-palindrome-perturbed",
+        "parses": false,
+        "complete_program": false,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t-fizzbuzz-perturbed",
+        "parses": false,
+        "complete_program": false,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t-wordcount-perturbed",
+        "parses": false,
+        "complete_program": false,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-run-length-encode-perturbed",
+        "parses": false,
+        "complete_program": false,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-interval-merge-perturbed",
+        "parses": false,
+        "complete_program": false,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-sql-sqlite-aggregate-perturbed",
+        "parses": false,
+        "complete_program": false,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-sql-sqlite-window-free-perturbed",
+        "parses": false,
+        "complete_program": false,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-debug-off-by-one-perturbed",
+        "parses": false,
+        "complete_program": false,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-debug-mutation-perturbed",
+        "parses": false,
+        "complete_program": false,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-refactor-fluent-perturbed",
+        "parses": false,
+        "complete_program": false,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-api-handler-perturbed",
+        "parses": false,
+        "complete_program": false,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-security-safe-substitute-perturbed",
+        "parses": false,
+        "complete_program": false,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-performance-sort-k-perturbed",
+        "parses": false,
+        "complete_program": false,
+        "executed": true,
+        "passed": false
+      },
+      {
+        "task_id": "t3-multi-call-node-perturbed",
+        "parses": true,
+        "complete_program": false,
+        "executed": true,
+        "passed": false
+      }
+    ]
+  },
+  "teacher_forced_accuracy": {
+    "heldout_subset": 0.5736,
+    "train_subset": 0.6816,
+    "n_heldout_records": 16,
+    "gap_note": "train vs held-out teacher-forced accuracy gap on identical eval protocol (stage-12 measured 0.9322 vs 0.6214)"
+  },
+  "separation_of_transfer_kinds": {
+    "exact_memorization": "measured via dataset_overlap exact duplicates",
+    "near_duplicate_reproduction": "measured via dataset_overlap near-duplicates",
+    "structural_transfer": "perturbed probes rename identifiers and alter constraints",
+    "algorithmic_transfer": "perturbed probes alter numerical range/structures",
+    "functional_generalization": "pass on perturbed probes"
+  },
+  "experiment": {
+    "experiment_id": "stage13-G-generalization",
+    "parent_commit": "a8c4e98",
+    "source_commit": "402de4691ef7",
+    "dataset_sha256": "8c37f0db5f911b7cab8dba53da589ae0877fe3436a0776a99628f3251ee04e56",
+    "hardware": "CPU-only host (5 cores, 5.92 GB RAM, 0 CUDA devices)",
+    "pre_registered_hypothesis": "contamination is unchanged and unseen perturbed task variants remain unsolved (pass@1 = 0), so transfer to unseen formulations is already measurable and the held-out accuracy gap can be re-quantified on the champion",
+    "acceptance_criteria": "immutable v1/v3 fingerprints unchanged; perturbation seed_base 20261300; heldout split never trained on",
+    "started": "2026-11-20T11:11:08+0000",
+    "finished": "2026-11-20T11:11:47+0000",
+    "decision": "EXECUTED"
+  }
+}
