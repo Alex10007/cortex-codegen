@@ -376,6 +376,104 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
 
         ScopedSymbolVisitor().visit(tree)
 
+    # Cross-module Python import resolution. Only repository-indexed targets
+    # are resolved; third-party and ambiguous references remain unresolved.
+    counts.update({"resolved_imports": 0, "unresolved_imports": 0,
+                   "ambiguous_imports": 0, "cross_module_calls": 0})
+    imported_symbols: dict[tuple[str, str], list[tuple[str, str]]] = {}
+    imported_modules: dict[tuple[str, str], list[str]] = {}
+    pending_module_attribute_calls: list[tuple[str, str, str, str]] = []
+
+    def _python_import_target(relative: str, node: ast.ImportFrom) -> str | None:
+        source_key = module_key(relative)
+        is_package = relative == "__init__.py" or relative.endswith("/__init__.py")
+        package_parts = source_key.split(".") if is_package else source_key.split(".")[:-1]
+        if node.level:
+            trim = node.level - 1
+            if trim > len(package_parts):
+                return None
+            base = package_parts[:len(package_parts) - trim]
+        else:
+            base = []
+        if node.module:
+            base.extend(node.module.split("."))
+        candidate = ".".join(base)
+        return candidate if candidate in module_ids else None
+
+    for source_path in py_files:
+        relative = source_path.relative_to(root_path).as_posix()
+        tree = _parse_python(source_path)
+        if tree is None:
+            continue
+        source_id = module_ids[module_key(relative)]
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    target_key = alias.name
+                    bound_name = alias.asname or alias.name.split(".")[0]
+                    if alias.asname is None and "." in alias.name:
+                        target_key = alias.name.split(".")[0]
+                    target_id = module_ids.get(target_key)
+                    if target_id and target_id != source_id:
+                        imported_modules.setdefault((source_id, bound_name), []).append(target_id)
+                        graph.upsert_edge(source_id, target_id, "imports_module", version)
+                        counts["resolved_imports"] += 1
+                    else:
+                        counts["unresolved_imports"] += 1
+            elif isinstance(node, ast.ImportFrom):
+                target_key = _python_import_target(relative, node)
+                target_id = module_ids.get(target_key) if target_key else None
+                if target_id is None:
+                    for alias in node.names:
+                        child_key = ".".join(part for part in (target_key or "", alias.name) if part)
+                        child_id = module_ids.get(child_key)
+                        if child_id:
+                            imported_modules.setdefault((source_id, alias.asname or alias.name), []).append(child_id)
+                            graph.upsert_edge(source_id, child_id, "imports_module", version)
+                            counts["resolved_imports"] += 1
+                        else:
+                            counts["unresolved_imports"] += 1
+                    continue
+                graph.upsert_edge(source_id, target_id, "imports_module", version)
+                for alias in node.names:
+                    if alias.name == "*":
+                        counts["unresolved_imports"] += 1
+                        continue
+                    bound_name = alias.asname or alias.name
+                    definitions = symbol_definitions.get((target_id, (), alias.name), [])
+                    unique_defs = sorted({item[0]: item for item in definitions}.values())
+                    if len(definitions) == 1 and len(unique_defs) == 1:
+                        imported_symbols.setdefault((source_id, bound_name), []).append(unique_defs[0])
+                        graph.upsert_edge(source_id, unique_defs[0][0], "imports_symbol", version)
+                        counts["resolved_imports"] += 1
+                    elif len(definitions) > 1:
+                        counts["ambiguous_imports"] += 1
+                    else:
+                        child_key = ".".join(part for part in (target_key, alias.name) if part)
+                        child_id = module_ids.get(child_key)
+                        if child_id and child_id != source_id:
+                            imported_modules.setdefault((source_id, bound_name), []).append(child_id)
+                            graph.upsert_edge(source_id, child_id, "imports_module", version)
+                            counts["resolved_imports"] += 1
+                        else:
+                            counts["unresolved_imports"] += 1
+
+    for source_path in py_files:
+        relative = source_path.relative_to(root_path).as_posix()
+        tree = _parse_python(source_path)
+        if tree is None:
+            continue
+        source_id = module_ids[module_key(relative)]
+        class _ModuleAliasCallVisitor(ast.NodeVisitor):
+            def visit_Call(self, node: ast.Call) -> None:
+                func = node.func
+                if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
+                    pending_module_attribute_calls.append(
+                        (source_id, func.value.id, func.attr, source_id))
+                self.generic_visit(node)
+        _ModuleAliasCallVisitor().visit(tree)
+
+
     def _resolve_lexical(module_id: str, scope: tuple[str, ...],
                          name: str) -> tuple[list[tuple[str, str]], bool]:
         for depth in range(len(scope), -1, -1):
@@ -587,103 +685,6 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
             else:
                 counts["foreign_unresolved_imports"] += 1
 
-
-    # Cross-module Python import resolution. Only repository-indexed targets
-    # are resolved; third-party and ambiguous references remain unresolved.
-    counts.update({"resolved_imports": 0, "unresolved_imports": 0,
-                   "ambiguous_imports": 0, "cross_module_calls": 0})
-    imported_symbols: dict[tuple[str, str], list[tuple[str, str]]] = {}
-    imported_modules: dict[tuple[str, str], list[str]] = {}
-    pending_module_attribute_calls: list[tuple[str, str, str, str]] = []
-
-    def _python_import_target(relative: str, node: ast.ImportFrom) -> str | None:
-        source_key = module_key(relative)
-        is_package = relative == "__init__.py" or relative.endswith("/__init__.py")
-        package_parts = source_key.split(".") if is_package else source_key.split(".")[:-1]
-        if node.level:
-            trim = node.level - 1
-            if trim > len(package_parts):
-                return None
-            base = package_parts[:len(package_parts) - trim]
-        else:
-            base = []
-        if node.module:
-            base.extend(node.module.split("."))
-        candidate = ".".join(base)
-        return candidate if candidate in module_ids else None
-
-    for source_path in py_files:
-        relative = source_path.relative_to(root_path).as_posix()
-        tree = _parse_python(source_path)
-        if tree is None:
-            continue
-        source_id = module_ids[module_key(relative)]
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    target_key = alias.name
-                    bound_name = alias.asname or alias.name.split(".")[0]
-                    if alias.asname is None and "." in alias.name:
-                        target_key = alias.name.split(".")[0]
-                    target_id = module_ids.get(target_key)
-                    if target_id and target_id != source_id:
-                        imported_modules.setdefault((source_id, bound_name), []).append(target_id)
-                        graph.upsert_edge(source_id, target_id, "imports_module", version)
-                        counts["resolved_imports"] += 1
-                    else:
-                        counts["unresolved_imports"] += 1
-            elif isinstance(node, ast.ImportFrom):
-                target_key = _python_import_target(relative, node)
-                target_id = module_ids.get(target_key) if target_key else None
-                if target_id is None:
-                    for alias in node.names:
-                        child_key = ".".join(part for part in (target_key or "", alias.name) if part)
-                        child_id = module_ids.get(child_key)
-                        if child_id:
-                            imported_modules.setdefault((source_id, alias.asname or alias.name), []).append(child_id)
-                            graph.upsert_edge(source_id, child_id, "imports_module", version)
-                            counts["resolved_imports"] += 1
-                        else:
-                            counts["unresolved_imports"] += 1
-                    continue
-                graph.upsert_edge(source_id, target_id, "imports_module", version)
-                for alias in node.names:
-                    if alias.name == "*":
-                        counts["unresolved_imports"] += 1
-                        continue
-                    bound_name = alias.asname or alias.name
-                    definitions = symbol_definitions.get((target_id, (), alias.name), [])
-                    unique_defs = sorted({item[0]: item for item in definitions}.values())
-                    if len(definitions) == 1 and len(unique_defs) == 1:
-                        imported_symbols.setdefault((source_id, bound_name), []).append(unique_defs[0])
-                        graph.upsert_edge(source_id, unique_defs[0][0], "imports_symbol", version)
-                        counts["resolved_imports"] += 1
-                    elif len(definitions) > 1:
-                        counts["ambiguous_imports"] += 1
-                    else:
-                        child_key = ".".join(part for part in (target_key, alias.name) if part)
-                        child_id = module_ids.get(child_key)
-                        if child_id and child_id != source_id:
-                            imported_modules.setdefault((source_id, bound_name), []).append(child_id)
-                            graph.upsert_edge(source_id, child_id, "imports_module", version)
-                            counts["resolved_imports"] += 1
-                        else:
-                            counts["unresolved_imports"] += 1
-
-    for source_path in py_files:
-        relative = source_path.relative_to(root_path).as_posix()
-        tree = _parse_python(source_path)
-        if tree is None:
-            continue
-        source_id = module_ids[module_key(relative)]
-        class _ModuleAliasCallVisitor(ast.NodeVisitor):
-            def visit_Call(self, node: ast.Call) -> None:
-                func = node.func
-                if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
-                    pending_module_attribute_calls.append(
-                        (source_id, func.value.id, func.attr, source_id))
-                self.generic_visit(node)
-        _ModuleAliasCallVisitor().visit(tree)
 
     store.flush()
     graph.commit()
