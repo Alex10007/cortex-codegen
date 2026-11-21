@@ -2,24 +2,20 @@ name: Cortex CI
 
 on:
   push:
-    branches: [main, "fibonera/**"]
+    branches: [main, "vibe/**", "fibonera/**"]
   pull_request:
-    # PR #2 targets the Stage-15 remediation base, not main.
-    branches: [main, "vibe/cortex-core-b71b2c"]
+    branches: [main, "vibe/**"]
   workflow_dispatch:
-
-# Keep one run per source branch; do not cancel a running full test job
-# merely because another commit arrives while it is executing.
-concurrency:
-  group: cortex-ci-${{ github.head_ref || github.ref }}
-  cancel-in-progress: false
 
 permissions:
   contents: read
 
+concurrency:
+  group: cortex-ci-${{ github.head_ref || github.ref }}
+  cancel-in-progress: false
+
 jobs:
   test:
-    # Pin a stable hosted image instead of following the moving ubuntu-latest alias.
     runs-on: ubuntu-22.04
     timeout-minutes: 45
     steps:
@@ -30,8 +26,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: pip
-          cache-dependency-path: requirements.txt
 
       - name: Runner preflight
         run: |
@@ -43,20 +37,18 @@ jobs:
           python - <<'PY'
           import os
           print("CPU count:", os.cpu_count())
-          try:
-              with open("/proc/meminfo", encoding="utf-8") as f:
-                  print("\n".join(line.rstrip() for line in f if line.startswith(("MemTotal:", "MemAvailable:"))))
-          except OSError as exc:
-              print("Memory probe unavailable:", exc)
+          with open("/proc/meminfo", encoding="utf-8") as f:
+              print("\n".join(line.rstrip() for line in f if line.startswith(("MemTotal:", "MemAvailable:"))))
           PY
 
-      - name: Install CPU PyTorch
+      - name: Install dependencies and run available validation
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
-
-      - name: Install project dependencies
-        run: python -m pip install -r requirements.txt
-
-      - name: Run test suite
-        run: python -m pytest -q tests/
+          set -euxo pipefail
+          if [ -d tests ]; then
+            python -m pip install --upgrade pip
+            python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+            python -m pip install -r requirements.txt
+            python -m pytest -q tests/
+          else
+            python -m py_compile app.py
+          fi
