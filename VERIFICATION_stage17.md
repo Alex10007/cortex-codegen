@@ -295,3 +295,34 @@ shadowing, duplicate-name ambiguity, and Python type-annotation edges.
 Tests are committed but have not been executed; current-head CI has not
 provided a runtime result. No model training, checkpoint changes, benchmark
 promotion, or Stage 12 champion change occurred.
+
+
+## Stage 17M — Cross-module, import-aware Python symbol resolution
+
+Extended the existing Python AST indexer and canonical SQLite knowledge graph
+to resolve repository-local imports conservatively. It records
+imports_module and imports_symbol edges, resolves from-module imported
+aliases into the existing lexical call, inheritance, and type-reference
+resolver, and resolves simple module-alias calls such as module_alias.run().
+Relative imports use the importing file package context. A from-package
+submodule form is resolved when the child module is indexed locally.
+
+Resolution is limited to uniquely indexed local modules and uniquely
+declared top-level symbols. Third-party modules, star imports, missing files,
+duplicate exports, and ambiguous module aliases are reported as unresolved or
+ambiguous; they are not guessed. Import aliases are treated as bindings, so
+a nearer local assignment or parameter shadows an imported name.
+
+Limitations: this is static Python AST analysis, not full Python import-system
+emulation. Namespace packages without indexed files, dynamic imports, import
+hooks, runtime sys.path changes, conditional/platform-specific imports,
+__all__ semantics, arbitrary re-export chains, and circular initialization
+semantics are not modeled. Imported symbols are resolved only from direct
+top-level declarations; imported nested members and package-level implicit
+re-exports are not inferred. Cross-language regex inventories remain unchanged.
+
+Added tests for aliased imported functions/classes, type annotations,
+inheritance, relative imports, module-alias calls, ambiguous exports, and
+unresolved third-party imports. These tests are committed but have not been
+executed. No model training, checkpoint changes, benchmark promotion, or
+Stage 12 champion change occurred.
