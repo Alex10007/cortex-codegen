@@ -1295,13 +1295,13 @@ def test_stage17u_resolves_direct_factory_return_method_call(tmp_path):
     root = tmp_path / "factory-return"
     root.mkdir()
     (root / "mod.py").write_text(
-        "class Service:\\n"
-        "    def execute(self):\\n"
-        "        return 1\\n"
-        "def create_service():\\n"
-        "    return Service()\\n"
-        "def invoke():\\n"
-        "    return create_service().execute()\\n"
+        "class Service:\n"
+        "    def execute(self):\n"
+        "        return 1\n"
+        "def create_service():\n"
+        "    return Service()\n"
+        "def invoke():\n"
+        "    return create_service().execute()\n"
     )
     store = VectorStore(str(tmp_path / "stage17u-vector.db"))
     graph = KnowledgeGraph(str(tmp_path / "stage17u-graph.db"))
@@ -1317,13 +1317,13 @@ def test_stage17u_resolves_unique_annotated_factory_return(tmp_path):
     root = tmp_path / "annotated-factory-return"
     root.mkdir()
     (root / "mod.py").write_text(
-        "class Service:\\n"
-        "    def execute(self):\\n"
-        "        return 1\\n"
-        "def create_service() -> Service:\\n"
-        "    raise NotImplementedError\\n"
-        "def invoke():\\n"
-        "    return create_service().execute()\\n"
+        "class Service:\n"
+        "    def execute(self):\n"
+        "        return 1\n"
+        "def create_service() -> Service:\n"
+        "    raise NotImplementedError\n"
+        "def invoke():\n"
+        "    return create_service().execute()\n"
     )
     store = VectorStore(str(tmp_path / "stage17u-annotated-vector.db"))
     graph = KnowledgeGraph(str(tmp_path / "stage17u-annotated-graph.db"))
@@ -1339,23 +1339,23 @@ def test_stage17u_rejects_ambiguous_and_conditional_factory_returns(tmp_path):
     root = tmp_path / "ambiguous-factory-return"
     root.mkdir()
     (root / "mod.py").write_text(
-        "class First:\\n"
-        "    def execute(self):\\n"
-        "        return 1\\n"
-        "class Second:\\n"
-        "    def execute(self):\\n"
-        "        return 2\\n"
-        "def ambiguous(flag):\\n"
-        "    if flag:\\n"
-        "        return First()\\n"
-        "    return Second()\\n"
-        "def conditional(flag):\\n"
-        "    if flag:\\n"
-        "        return First()\\n"
-        "def invoke_ambiguous():\\n"
-        "    return ambiguous(True).execute()\\n"
-        "def invoke_conditional():\\n"
-        "    return conditional(True).execute()\\n"
+        "class First:\n"
+        "    def execute(self):\n"
+        "        return 1\n"
+        "class Second:\n"
+        "    def execute(self):\n"
+        "        return 2\n"
+        "def ambiguous(flag):\n"
+        "    if flag:\n"
+        "        return First()\n"
+        "    return Second()\n"
+        "def conditional(flag):\n"
+        "    if flag:\n"
+        "        return First()\n"
+        "def invoke_ambiguous():\n"
+        "    return ambiguous(True).execute()\n"
+        "def invoke_conditional():\n"
+        "    return conditional(True).execute()\n"
     )
     store = VectorStore(str(tmp_path / "stage17u-ambiguous-vector.db"))
     graph = KnowledgeGraph(str(tmp_path / "stage17u-ambiguous-graph.db"))
