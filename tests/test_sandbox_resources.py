@@ -1,5 +1,6 @@
 """Unit tests for fail-closed cgroup v2 resource enforcement."""
-import os\nfrom pathlib import Path
+import os
+from pathlib import Path
 
 import pytest
 
@@ -41,13 +42,14 @@ def test_probe_reports_missing_or_disabled_controllers(tmp_path, monkeypatch):
 
 def test_create_applies_cpu_memory_and_process_limits(tmp_path, monkeypatch):
     root = make_fake_cgroup_root(tmp_path / "delegated")
-    real_mkdir = Path.mkdir
-    def mkdir(path, *args, **kwargs):
-        result = real_mkdir(path, *args, **kwargs)
-        if path.parent == root:
-            make_fake_child(path)
+    real_mkdir = os.mkdir
+    def mkdir(name, mode=0o777, *, dir_fd=None):
+        result = real_mkdir(name, mode, dir_fd=dir_fd)
+        if isinstance(name, str) and name.startswith("cortex-") and dir_fd is not None:
+            parent = Path(os.readlink(f"/proc/self/fd/{dir_fd}"))
+            make_fake_child(parent / name)
         return result
-    monkeypatch.setattr(Path, "mkdir", mkdir)
+    monkeypatch.setattr(os, "mkdir", mkdir)
     group = CgroupV2.create(root, mem_mb=256, nproc=12, cpu_quota_us=50_000)
     assert (group.path / "cpu.max").read_text() == "50000 100000"
     assert (group.path / "memory.max").read_text() == str(256 * 1024 * 1024)
@@ -75,14 +77,16 @@ def test_create_applies_cpu_memory_and_process_limits(tmp_path, monkeypatch):
 
 def test_create_fails_closed_if_cgroup_kill_missing(tmp_path, monkeypatch):
     root = make_fake_cgroup_root(tmp_path / "delegated")
-    real_mkdir = Path.mkdir
-    def mkdir(path, *args, **kwargs):
-        result = real_mkdir(path, *args, **kwargs)
-        if path.parent == root:
-            for name in ("cpu.max", "memory.max", "pids.max", "cgroup.procs", "cgroup.events", "memory.swap.max", "memory.oom.group"):
-                (path / name).write_text("")
+    real_mkdir = os.mkdir
+    def mkdir(name, mode=0o777, *, dir_fd=None):
+        result = real_mkdir(name, mode, dir_fd=dir_fd)
+        if isinstance(name, str) and name.startswith("cortex-") and dir_fd is not None:
+            path = Path(os.readlink(f"/proc/self/fd/{dir_fd}")) / name
+            for control in ("cpu.max", "memory.max", "pids.max", "cgroup.procs",
+                            "cgroup.events", "memory.swap.max", "memory.oom.group"):
+                (path / control).write_text("")
         return result
-    monkeypatch.setattr(Path, "mkdir", mkdir)
+    monkeypatch.setattr(os, "mkdir", mkdir)
     with pytest.raises(CgroupUnavailable, match="cgroup.kill"):
         CgroupV2.create(root, mem_mb=128, nproc=4)
 
