@@ -262,3 +262,36 @@ path-prefix rules. Tests were added for multi-node cycles, self-loops,
 segment-aware boundary matching, and path-traversal rejection, but have not
 been executed. No model training, checkpoint change, or capability promotion
 occurred.
+
+
+
+## Stage 17L — Scope-aware Python symbol resolution and type relationships
+
+Extended the existing Python AST indexer and canonical knowledge graph with
+lexical-scope-aware resolution. Symbol declarations are keyed by module,
+lexical scope, and name. Calls are resolved only against declarations visible
+in the current lexical scope chain. Explicit `self.method()` and
+`cls.method()` references are resolved against the nearest enclosing class.
+Local parameters, assignments, and imports are treated as shadowing bindings;
+same-scope duplicate declarations are reported as ambiguous rather than
+collapsed into a false unique match.
+
+Python function argument, return, and annotated-assignment type names are
+connected to uniquely resolved local class/type declarations through
+`type_uses` edges. Existing `calls` and `inherits` edge types remain
+canonical and unchanged. New counts distinguish ambiguous calls,
+ambiguous inheritance/type references, and resolved type references.
+
+Scope of this increment: the new semantic resolution is Python-AST-based.
+It does not yet resolve imported aliases across modules, dynamic attributes,
+descriptor/metaclass behavior, runtime monkey-patching, generic type aliases
+with full typing semantics, or semantic relationships in the regex-indexed
+JavaScript/TypeScript/Rust/Go/Java inventories. Unresolved references are
+not guessed. This is static lexical resolution, not compiler-grade whole-
+program analysis or proof of runtime dispatch.
+
+Added tests for nested lexical calls, instance-method calls, parameter
+shadowing, duplicate-name ambiguity, and Python type-annotation edges.
+Tests are committed but have not been executed; current-head CI has not
+provided a runtime result. No model training, checkpoint changes, benchmark
+promotion, or Stage 12 champion change occurred.
