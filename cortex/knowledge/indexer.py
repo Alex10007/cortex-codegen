@@ -726,11 +726,16 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
         def __init__(self, source_id: str):
             self.source_id = source_id
             self.scope: list[str] = []
+            self.callers: list[str] = [source_id]
 
         def visit_ClassDef(self, node: ast.ClassDef) -> None:
+            qualified = ".".join([*self.scope, node.name])
+            class_id = self.source_id + ":class:" + qualified
             self.scope.append(node.name)
+            self.callers.append(class_id)
             for statement in node.body:
                 self.visit(statement)
+            self.callers.pop()
             self.scope.pop()
 
         def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
@@ -740,9 +745,13 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
             self._visit_function(node)
 
         def _visit_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+            qualified = ".".join([*self.scope, node.name])
+            function_id = self.source_id + ":func:" + qualified
             self.scope.append(node.name)
+            self.callers.append(function_id)
             for statement in node.body:
                 self.visit(statement)
+            self.callers.pop()
             self.scope.pop()
 
         def visit_Call(self, node: ast.Call) -> None:
@@ -756,7 +765,7 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                 value = value.value
             if isinstance(value, ast.Name) and attributes:
                 pending_module_attribute_calls.append(
-                    (self.source_id, tuple(self.scope), value.id,
+                    (self.callers[-1], tuple(self.scope), value.id,
                      tuple(reversed(attributes)), self.source_id))
             self.generic_visit(node)
 
