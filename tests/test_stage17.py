@@ -1023,3 +1023,61 @@ def test_stage17p_compiler_nonlocal_declaration_selects_nearest_enclosing_bindin
     assert targets == {outer_selected}
     assert module_selected not in targets
     assert counts["compiler_nonlocal_symbols"] >= 1
+
+
+def test_stage17q_resolves_nested_package_module_attribute_call_chains(tmp_path):
+    root = tmp_path / "nested-module-chain"
+    package = root / "pkg"
+    services = package / "services"
+    services.mkdir(parents=True)
+    (package / "__init__.py").write_text("")
+    (services / "__init__.py").write_text("")
+    (services / "worker.py").write_text(
+        "def run():\\n"
+        "    return 'ok'\\n"
+    )
+    (root / "consumer.py").write_text(
+        "import pkg as p\\n"
+        "def invoke():\\n"
+        "    return p.services.worker.run()\\n"
+    )
+    store = VectorStore(str(tmp_path / "nested-chain-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "nested-chain-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="stage17q-chain")
+    consumer = f"py:{root.name}/consumer.py:stage17q-chain:func:invoke"
+    worker_run = (
+        f"py:{root.name}/pkg/services/worker.py:stage17q-chain:func:run"
+    )
+    targets = {item["node"] for item in graph.neighbors(consumer, etype="calls")}
+    assert targets == {worker_run}
+    assert counts["cross_module_calls"] == 1
+
+
+def test_stage17q_resolves_scoped_nested_module_alias_without_leaking(tmp_path):
+    root = tmp_path / "scoped-module-chain"
+    root.mkdir()
+    (root / "service.py").write_text(
+        "def run():\\n"
+        "    return 1\\n"
+    )
+    (root / "consumer.py").write_text(
+        "def inside():\\n"
+        "    import service as selected\\n"
+        "    return selected.run()\\n"
+        "def outside():\\n"
+        "    return selected.run()\\n"
+    )
+    store = VectorStore(str(tmp_path / "scoped-chain-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "scoped-chain-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="stage17q-scoped")
+    consumer = f"py:{root.name}/consumer.py:stage17q-scoped"
+    service_run = f"py:{root.name}/service.py:stage17q-scoped:func:run"
+    inside_targets = {
+        item["node"] for item in graph.neighbors(
+            consumer + ":func:inside", etype="calls")
+    }
+    outside_targets = graph.neighbors(
+        consumer + ":func:outside", etype="calls")
+    assert inside_targets == {service_run}
+    assert outside_targets == []
+    assert counts["cross_module_calls"] == 1
