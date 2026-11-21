@@ -281,41 +281,41 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
 
     language_specs = {
         ".js": ("javascript", [
-            (r"\\b(?:export\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)", "function"),
-            (r"\\b(?:export\\s+)?class\\s+([A-Za-z_$][\\w$]*)", "class"),
-            (r"\\b(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*=", "value"),
+            (r"\b(?:export\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)", "function"),
+            (r"\b(?:export\s+)?class\s+([A-Za-z_$][\w$]*)", "class"),
+            (r"\b(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=", "value"),
         ]),
         ".jsx": ("javascript", [
-            (r"\\b(?:export\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)", "function"),
-            (r"\\b(?:export\\s+)?class\\s+([A-Za-z_$][\\w$]*)", "class"),
+            (r"\b(?:export\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)", "function"),
+            (r"\b(?:export\s+)?class\s+([A-Za-z_$][\w$]*)", "class"),
         ]),
         ".ts": ("typescript", [
-            (r"\\b(?:export\\s+)?(?:declare\\s+)?(?:abstract\\s+)?class\\s+([A-Za-z_$][\\w$]*)", "class"),
-            (r"\\b(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)", "interface"),
-            (r"\\b(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)", "type"),
-            (r"\\b(?:export\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)", "function"),
-            (r"\\b(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*=", "value"),
+            (r"\b(?:export\s+)?(?:declare\s+)?(?:abstract\s+)?class\s+([A-Za-z_$][\w$]*)", "class"),
+            (r"\b(?:export\s+)?interface\s+([A-Za-z_$][\w$]*)", "interface"),
+            (r"\b(?:export\s+)?type\s+([A-Za-z_$][\w$]*)", "type"),
+            (r"\b(?:export\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)", "function"),
+            (r"\b(?:export\s+)?(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=", "value"),
         ]),
         ".tsx": ("typescript", [
-            (r"\\b(?:export\\s+)?(?:declare\\s+)?(?:abstract\\s+)?class\\s+([A-Za-z_$][\\w$]*)", "class"),
-            (r"\\b(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)", "interface"),
-            (r"\\b(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)", "type"),
-            (r"\\b(?:export\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)", "function"),
+            (r"\b(?:export\s+)?(?:declare\s+)?(?:abstract\s+)?class\s+([A-Za-z_$][\w$]*)", "class"),
+            (r"\b(?:export\s+)?interface\s+([A-Za-z_$][\w$]*)", "interface"),
+            (r"\b(?:export\s+)?type\s+([A-Za-z_$][\w$]*)", "type"),
+            (r"\b(?:export\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)", "function"),
         ]),
         ".rs": ("rust", [
-            (r"\\b(?:pub\\s+)?(?:async\\s+)?fn\\s+([A-Za-z_][\\w]*)", "function"),
-            (r"\\b(?:pub\\s+)?struct\\s+([A-Za-z_][\\w]*)", "struct"),
-            (r"\\b(?:pub\\s+)?enum\\s+([A-Za-z_][\\w]*)", "enum"),
-            (r"\\b(?:pub\\s+)?trait\\s+([A-Za-z_][\\w]*)", "trait"),
+            (r"\b(?:pub\s+)?(?:async\s+)?fn\s+([A-Za-z_][\w]*)", "function"),
+            (r"\b(?:pub\s+)?struct\s+([A-Za-z_][\w]*)", "struct"),
+            (r"\b(?:pub\s+)?enum\s+([A-Za-z_][\w]*)", "enum"),
+            (r"\b(?:pub\s+)?trait\s+([A-Za-z_][\w]*)", "trait"),
         ]),
         ".go": ("go", [
-            (r"\\bfunc\\s+(?:\\([^)]*\\)\\s*)?([A-Za-z_][\\w]*)\\s*\\(", "function"),
-            (r"\\btype\\s+([A-Za-z_][\\w]*)\\s+(?:struct|interface)\\b", "type"),
+            (r"\bfunc\s+(?:\([^)]*\)\s*)?([A-Za-z_][\w]*)\s*\(", "function"),
+            (r"\btype\s+([A-Za-z_][\w]*)\s+(?:struct|interface)\b", "type"),
         ]),
         ".java": ("java", [
-            (r"\\b(?:public|protected|private)?\\s*(?:abstract\\s+)?class\\s+([A-Za-z_$][\\w$]*)", "class"),
-            (r"\\b(?:public|protected|private)?\\s*interface\\s+([A-Za-z_$][\\w$]*)", "interface"),
-            (r"\\b(?:public|protected|private)?\\s*enum\\s+([A-Za-z_$][\\w$]*)", "enum"),
+            (r"\b(?:public|protected|private)?\s*(?:abstract\s+)?class\s+([A-Za-z_$][\w$]*)", "class"),
+            (r"\b(?:public|protected|private)?\s*interface\s+([A-Za-z_$][\w$]*)", "interface"),
+            (r"\b(?:public|protected|private)?\s*enum\s+([A-Za-z_$][\w$]*)", "enum"),
         ]),
     }
     ignored_dirs = {".git", ".venv", "venv", "node_modules", "vendor",
@@ -373,14 +373,14 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
         import_specs = []
         if lang in {"javascript", "typescript"}:
             import_specs = re.findall(
-                r"""\\b(?:import|export)\\s+(?:[^;]*?\\s+from\\s+)?["'](\\.[^"']+)["']""",
+                r"""\b(?:import|export)\s+(?:[^;]*?\s+from\s+)?["'](\.[^"']+)["']""",
                 source)
-            import_specs += re.findall(r"""\\bimport\\s*\\(\\s*["'](\\.[^"']+)["']""", source)
+            import_specs += re.findall(r"""\bimport\s*\(\s*["'](\.[^"']+)["']""", source)
         elif lang == "rust":
             import_specs = ["::".join(parts.split("::")[:-1])
-                            for parts in re.findall(r"\\buse\\s+([A-Za-z_][\\w:]*)", source)
+                            for parts in re.findall(r"\buse\s+([A-Za-z_][\w:]*)", source)
                             if "::" in parts]
-            import_specs += re.findall(r"\\bmod\\s+([A-Za-z_][\\w]*)\\s*;", source)
+            import_specs += re.findall(r"\bmod\s+([A-Za-z_][\w]*)\s*;", source)
         for spec in sorted(set(import_specs)):
             if spec.startswith("."):
                 base = (source_path.parent / spec).relative_to(root_path).as_posix()
