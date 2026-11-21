@@ -814,6 +814,7 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                 role_methods = (
                     ("local", "is_local"),
                     ("global", "is_global"),
+                    ("declared_global", "is_declared_global"),
                     ("nonlocal", "is_nonlocal"),
                     ("free", "is_free"),
                     ("parameter", "is_parameter"),
