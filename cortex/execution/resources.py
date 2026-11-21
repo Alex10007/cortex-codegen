@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 import uuid
 import time
+import math
 from pathlib import Path
 
 
@@ -139,8 +140,9 @@ class CgroupV2:
         events = self.path / "cgroup.events"
         if not events.exists():
             raise CgroupUnavailable("cgroup.events is unavailable; cannot verify process-tree exit")
-        if type(timeout_s) not in (int, float) or timeout_s <= 0:
-            raise ValueError("timeout_s must be a positive number")
+        if (type(timeout_s) not in (int, float)
+                or not math.isfinite(timeout_s) or timeout_s <= 0):
+            raise ValueError("timeout_s must be a finite positive number")
         deadline = time.monotonic() + timeout_s
         while True:
             fields = self._read_events(events)
