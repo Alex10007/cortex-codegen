@@ -125,11 +125,11 @@ def test_indexer_adds_local_import_call_and_inheritance_edges(tmp_path):
     (root / "pkg").mkdir(parents=True)
     (root / "pkg" / "__init__.py").write_text("")
     (root / "pkg" / "base.py").write_text(
-        "class Base:\\n    pass\\n\\ndef helper():\\n    return 1\\n")
+        "class Base:\n    pass\n\ndef helper():\n    return 1\n")
     (root / "pkg" / "child.py").write_text(
-        "from .base import helper\\n\\n"
-        "class Child(Base):\\n    pass\\n\\n"
-        "def run():\\n    return helper()\\n")
+        "from .base import helper\n\n"
+        "class Child(Base):\n    pass\n\n"
+        "def run():\n    return helper()\n")
     store = VectorStore(str(tmp_path / "kg-vector.db"))
     graph = KnowledgeGraph(str(tmp_path / "kg-graph.db"))
     counts = index_code_root(str(root), store, graph, version="stage17-test")
