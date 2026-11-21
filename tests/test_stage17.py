@@ -185,3 +185,38 @@ def test_adaptive_divergent_budget_uses_existing_task_assessment(monkeypatch):
     assert all(row["adaptive_assessment"]["assessment_mode"] ==
                "deterministic_heuristic_not_model_confidence"
                for row in report["per_task"])
+
+
+
+def test_output_budget_is_bounded_and_policy_driven():
+    from cortex.planning.engine import allocate_output_budget
+
+    assert allocate_output_budget(100, {"compute_budget_fraction": 0.5}) == 50
+    assert allocate_output_budget(100, {"compute_budget_fraction": 0.75}) == 75
+    assert allocate_output_budget(100, {"compute_budget_fraction": 1.0}) == 100
+    assert allocate_output_budget(10, {"compute_budget_fraction": 0.5}) >= 1
+
+
+def test_retrieval_events_prioritize_verified_procedural_memory(tmp_path):
+    memory = MemoryEngine(str(tmp_path / "memory.sqlite"))
+    memory.record("p", "recent-observation", {"n": 1}, verified=True,
+                  tier="episodic", confidence=1.0, source="runtime")
+    memory.record("p", "tested-procedure", {"n": 2}, verified=True,
+                  tier="procedural", confidence=0.7, source="tests")
+    memory.record("p", "unverified-procedure", {"n": 3}, verified=False,
+                  tier="procedural", confidence=1.0, source="untrusted")
+    rows = memory.retrieval_events("p")
+    assert [row["kind"] for row in rows] == ["tested-procedure", "recent-observation"]
+    assert all(row["verified"] for row in rows)
+
+
+def test_verified_fact_records_expose_source_and_revision(tmp_path):
+    memory = MemoryEngine(str(tmp_path / "memory.sqlite"))
+    memory.put_fact("p", "framework", "FastAPI", verified=True,
+                    confidence=0.95, source="dependency-manifest")
+    rows = memory.verified_fact_records("p")
+    assert rows == [{
+        "key": "framework", "value": "FastAPI", "confidence": 0.95,
+        "source": "dependency-manifest", "revision": 1,
+        "updated_at": rows[0]["updated_at"],
+    }]

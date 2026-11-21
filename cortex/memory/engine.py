@@ -256,6 +256,35 @@ class MemoryEngine:
             "fact_history_by_disposition": {str(k): int(v) for k, v in history_rows},
         }
 
+    def retrieval_events(self, project: str,
+                         limit: int = 20) -> list[dict[str, Any]]:
+        """Return verified events ordered by procedural utility and confidence."""
+        rows = self._conn.execute(
+            """SELECT kind,payload,created_at,memory_tier,confidence,source
+               FROM events WHERE project=? AND verified=1
+               ORDER BY CASE memory_tier
+                   WHEN 'procedural' THEN 0
+                   WHEN 'semantic' THEN 1
+                   WHEN 'decision' THEN 2
+                   ELSE 3 END,
+                   confidence DESC, id DESC LIMIT ?""",
+            (project, limit)).fetchall()
+        return [{
+            "kind": r[0], "payload": json.loads(r[1]), "created_at": r[2],
+            "tier": r[3], "confidence": float(r[4]), "source": r[5],
+            "verified": True,
+        } for r in rows]
+
+    def verified_fact_records(self, project: str) -> list[dict[str, Any]]:
+        rows = self._conn.execute(
+            """SELECT key,value,confidence,source,revision,updated_at
+               FROM facts WHERE project=? AND verified=1 ORDER BY key""",
+            (project,)).fetchall()
+        return [{
+            "key": r[0], "value": r[1], "confidence": float(r[2]),
+            "source": r[3], "revision": int(r[4]), "updated_at": r[5],
+        } for r in rows]
+
     def verified_outcomes(self, project: str) -> list[dict[str, Any]]:
         return [e for e in self.events(project, limit=500)
                 if e["verified"] and e["kind"] == "outcome"]

@@ -113,3 +113,17 @@ This is adaptive candidate-count allocation, **not** dynamic neural-network
 compute scaling, learned confidence, or recursive general-purpose reasoning.
 A regression test verifies dispatch counts without invoking model inference;
 runtime model-quality improvement has not been measured.
+
+
+## Stage 17D — Memory-aware retrieval and bounded compute allocation
+
+The existing Cortex retrieval context now consumes verified memory through
+tier-prioritized retrieval (procedural, semantic, decision, episodic), and
+includes confidence/source/revision metadata for verified facts. Unverified
+events remain excluded from trusted retrieval.
+
+Generation now exposes opt-in `adaptive_compute`. It uses the existing
+assessment policy to cap output tokens at 50%, 75%, or 100% of the caller's
+requested maximum, while never exceeding the requested cap. The API exposes
+the same opt-in field. This is bounded output-token allocation, not dynamic
+GPU scheduling, adaptive attention depth, or learned compute control.

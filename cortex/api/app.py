@@ -44,6 +44,7 @@ class GenerateRequest(BaseModel):
     project: str | None = Field(default=None, max_length=256)
     max_new_tokens: int = Field(default=128, ge=1, le=2048)
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
+    adaptive_compute: bool = False
 
 
 class EvalRequest(BaseModel):
@@ -189,7 +190,8 @@ def create_app(agent=None, api_token: str | None = None, *,
         try:
             output = agent.generate_with_metadata(
                 req.prompt, max_new_tokens=req.max_new_tokens,
-                temperature=req.temperature, project=req.project)
+                temperature=req.temperature, project=req.project,
+                adaptive_compute=req.adaptive_compute)
         except FileNotFoundError as exc:
             raise HTTPException(status_code=503, detail=str(exc))
         except ValueError as exc:

@@ -152,19 +152,22 @@ class CortexAgent:
                           max_chars: int = 8000) -> str:
         """Retrieve only verified project facts, outcomes and code patterns."""
         sections = []
-        facts = self.memory.facts(project)
+        facts = self.memory.verified_fact_records(project)
         if facts:
             sections.append("VERIFIED PROJECT FACTS:\\n" + "\\n".join(
-                f"- {key}: {value}" for key, value in facts.items()))
-        events = [event for event in self.memory.events(project, limit=100)
-                  if event["verified"]]
+                f"- {row['key']}: {row['value']} "
+                f"[confidence={row['confidence']:.2f}; source={row['source']}; "
+                f"revision={row['revision']}]" for row in facts))
+        events = self.memory.retrieval_events(project, limit=40)
         if events:
             summaries = []
-            for event in events[:20]:
+            for event in events:
                 payload = event["payload"]
                 summaries.append(
-                    f"- {event['kind']}: {json.dumps(payload, sort_keys=True)[:500]}")
-            sections.append("VERIFIED PROJECT EVENTS:\\n" + "\\n".join(summaries))
+                    f"- [{event['tier']}; confidence={event['confidence']:.2f}; "
+                    f"source={event['source']}] {event['kind']}: "
+                    f"{json.dumps(payload, sort_keys=True)[:500]}")
+            sections.append("VERIFIED HIERARCHICAL MEMORY:\\n" + "\\n".join(summaries))
         hits = self.store.search(query, k=8)
         trusted = [hit for hit in hits if int(hit.get("verified", 0)) == 1]
         if trusted:
@@ -179,8 +182,16 @@ class CortexAgent:
 
     def generate_with_metadata(self, prompt: str, max_new_tokens: int = 64,
                                temperature: float = 0.8,
-                               project: str | None = None) -> dict[str, Any]:
+                               project: str | None = None,
+                               adaptive_compute: bool = False) -> dict[str, Any]:
         import torch
+
+        requested_max_new_tokens = max_new_tokens
+        compute_assessment = None
+        if adaptive_compute:
+            from cortex.planning.engine import assess_objective, allocate_output_budget
+            compute_assessment = assess_objective(prompt, {})
+            max_new_tokens = allocate_output_budget(max_new_tokens, compute_assessment)
 
         context_used = False
         if project:
@@ -203,15 +214,23 @@ class CortexAgent:
             out = self.model.generate(ids, max_new_tokens=max_new_tokens,
                                       temperature=temperature,
                                       eot_id=self.tokenizer.eot_id)
-        return {"text": self.tokenizer.decode(out[0].tolist()),
-                "project_context_used": context_used}
+        return {
+            "text": self.tokenizer.decode(out[0].tolist()),
+            "project_context_used": context_used,
+            "adaptive_compute": adaptive_compute,
+            "requested_max_new_tokens": requested_max_new_tokens,
+            "effective_max_new_tokens": max_new_tokens,
+            "compute_assessment": compute_assessment,
+        }
 
     def generate(self, prompt: str, max_new_tokens: int = 64,
-                 temperature: float = 0.8, project: str | None = None) -> str:
+                 temperature: float = 0.8, project: str | None = None,
+                 adaptive_compute: bool = False) -> str:
         """Backward-compatible text-only generation interface."""
         return self.generate_with_metadata(
             prompt, max_new_tokens=max_new_tokens,
-            temperature=temperature, project=project)["text"]
+            temperature=temperature, project=project,
+            adaptive_compute=adaptive_compute)["text"]
 
     # -- knowledge ---------------------------------------------------------
     def ingest_corpus(self, roots: list[str]) -> dict[str, int]:

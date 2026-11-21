@@ -170,6 +170,8 @@ def assess_objective(objective: str, repo_map: dict[str, Any]) -> dict[str, Any]
         "clarification_recommended": ambiguity >= 0.75,
         "recommended_hypotheses": 3 if reasoning_depth == "deep" else (
             2 if reasoning_depth == "expanded" or risk_level in ("high", "critical") else 1),
+        "compute_budget_fraction": 1.0 if reasoning_depth == "deep" else (
+            0.75 if reasoning_depth == "expanded" or risk_level in ("high", "critical") else 0.5),
         "repository_scale": (
             "large" if repo_map.get("file_count", 0) >= 5000 else
             "medium" if repo_map.get("file_count", 0) >= 500 else "small"),
@@ -221,3 +223,14 @@ def _suggest_test_command(repo_map: dict[str, Any]) -> list[str]:
 
 def plan_to_json(plan: Plan) -> str:
     return json.dumps(plan.to_dict(), indent=2)
+
+
+
+def allocate_output_budget(max_new_tokens: int, assessment: dict[str, Any]) -> int:
+    """Apply an assessment's bounded output-token budget to a caller's cap."""
+    if isinstance(max_new_tokens, bool) or max_new_tokens < 1:
+        raise ValueError("max_new_tokens must be a positive integer")
+    fraction = float(assessment.get("compute_budget_fraction", 1.0))
+    if not 0.0 < fraction <= 1.0:
+        raise ValueError("compute budget fraction must be in (0, 1]")
+    return max(1, min(max_new_tokens, int(max_new_tokens * fraction)))
