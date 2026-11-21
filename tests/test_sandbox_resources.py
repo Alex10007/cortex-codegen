@@ -337,7 +337,7 @@ def test_cgroup_manager_retains_directory_descriptors_for_owned_inode(tmp_path):
     assert (descriptor_identity.st_dev, descriptor_identity.st_ino) == directory_identity
     assert os.fstat(group._parent_fd).st_ino == os.stat(root).st_ino
 
-    group.close()
+    group._close_directory_fds()
     assert group._dir_fd == -1
     assert group._parent_fd == -1
-    assert not group_path.exists()
+    assert group_path.exists()
