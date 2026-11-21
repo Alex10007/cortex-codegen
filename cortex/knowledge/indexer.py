@@ -661,7 +661,14 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                     elif len(definitions) > 1:
                         counts["ambiguous_imports"] += 1
                     else:
-                        counts["unresolved_imports"] += 1
+                        child_key = ".".join(part for part in (target_key, alias.name) if part)
+                        child_id = module_ids.get(child_key)
+                        if child_id and child_id != source_id:
+                            imported_modules.setdefault((source_id, bound_name), []).append(child_id)
+                            graph.upsert_edge(source_id, child_id, "imports_module", version)
+                            counts["resolved_imports"] += 1
+                        else:
+                            counts["unresolved_imports"] += 1
 
     for source_path in py_files:
         relative = source_path.relative_to(root_path).as_posix()
