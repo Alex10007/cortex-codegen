@@ -217,3 +217,12 @@ The existing CortexAgent.run_pipeline now wraps the caller's existing patcher at
 The recommendation is advisory only. The existing configured test command and full-suite behavior are unchanged; the pipeline does not silently replace full-suite verification with a partial targeted run. If graph analysis fails, the pipeline records an explicit change_impact.status=unavailable result and continues under the unchanged test/security verification policy. No second impact engine, dependency graph, or test selector was introduced.
 
 Added integration tests for successful report propagation, audit metadata, unchanged full-suite command, and impact-analysis failure behavior. These tests are committed but have not yet been executed. The implementation does not claim complete dependency coverage, automatic test selection, or runtime qualification.
+
+
+## Stage 17J — Cross-language repository symbol inventory
+
+Extended the existing `cortex.knowledge.indexer` to add syntax-level module and declaration nodes for JavaScript (`.js`, `.jsx`), TypeScript (`.ts`, `.tsx`), Rust (`.rs`), Go (`.go`), and Java (`.java`) to the canonical SQLite knowledge graph. It records language-qualified module IDs and declaration types, and creates `defines` edges. Relative JavaScript/TypeScript imports and simple Rust module declarations are resolved only when the destination maps to one indexed source file; unresolved or ambiguous references are counted rather than guessed. Python AST indexing remains unchanged and no second graph or index was introduced.
+
+Important limitation: these additional language scanners use conservative regular expressions, not compiler-grade parsers. They do not provide complete scope resolution, call-graph construction, type inference, macro expansion, package-manager resolution, Java package/import resolution, or Go package dependency resolution. Comments and string literals can cause false declaration matches. The new counts distinguish foreign-language files/symbols/imports from existing Python counts. These are repository-navigation foundations, not complete multi-language semantic intelligence.
+
+Added tests covering symbol indexing across TypeScript, Rust, Go, and Java, unique relative TypeScript import resolution, and explicit unresolved-import accounting. Tests are committed but have not been executed; the configured GitHub Actions runner has not yet produced a run for the current branch head. No training, checkpoint changes, or capability promotion occurred.
