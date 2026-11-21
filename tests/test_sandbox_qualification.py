@@ -14,6 +14,7 @@ def test_qualification_reports_each_behavioral_boundary(monkeypatch):
         "runtime_readonly": True,
         "proc_dev_available": True,
         "network_unreachable": True,
+        "cgroup_filesystem_inaccessible": True,
         "process_cap_observed": True,
         "detached_child_pid": 12345,
     }
@@ -42,6 +43,7 @@ def test_qualification_fails_when_host_path_is_visible(monkeypatch):
         "workspace_writable": True, "host_path_inaccessible": False,
         "runtime_readonly": True, "proc_dev_available": True,
         "network_unreachable": True,
+        "cgroup_filesystem_inaccessible": True,
     }
     monkeypatch.setattr(qualification, "_supports_bwrap", lambda: True)
     monkeypatch.setattr(qualification, "probe_cgroup_v2", lambda: {"available": True})
@@ -90,3 +92,36 @@ def test_api_gate_requires_behavioral_qualification(monkeypatch):
         api_module._require_full_sandbox()
     assert exc.value.status_code == 503
     assert "qualification" in exc.value.detail.lower()
+
+
+def test_qualification_fails_when_cgroup_filesystem_is_visible(monkeypatch):
+    observed = {
+        "workspace_writable": True,
+        "host_path_inaccessible": True,
+        "runtime_readonly": True,
+        "proc_dev_available": True,
+        "network_unreachable": True,
+        "cgroup_filesystem_inaccessible": False,
+    }
+    monkeypatch.setattr(qualification, "_supports_bwrap", lambda: True)
+    monkeypatch.setattr(qualification, "probe_cgroup_v2", lambda: {"available": True})
+    def fake_run(**kwargs):
+        limits = {
+            "cgroup_v2_enforced": True,
+            "cgroup_empty_after_cleanup": True,
+            "aggregate_cpu_limit": True,
+            "aggregate_memory_limit": True,
+            "aggregate_process_limit": True,
+            "cgroup_metrics": {"pids_events": {"max": 1}},
+        }
+        if kwargs.get("cpu_quota_us") == 20_000:
+            limits["cgroup_metrics"] = {"cpu_stat": {"nr_throttled": 1, "throttled_usec": 10}}
+        elif kwargs.get("mem_mb") == 128:
+            limits["cgroup_metrics"] = {"memory_events": {"oom": 1, "oom_kill": 1}}
+        return SimpleNamespace(ok=True, stdout=json.dumps(observed), limits=limits)
+    monkeypatch.setattr(qualification, "run", fake_run)
+
+    report = qualification.qualify_sandbox()
+
+    assert report["passed"] is False
+    assert report["checks"]["cgroup_filesystem_inaccessible"] == "FAIL"
