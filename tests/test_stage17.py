@@ -720,7 +720,7 @@ def test_cross_module_python_import_aliases_resolve_calls_and_types(tmp_path):
     assert graph.neighbors(consume, etype="type_uses")[0]["node"] == model
     assert graph.neighbors(child, etype="inherits")[0]["node"] == model
     assert counts["resolved_imports"] >= 2
-    assert counts["cross_module_calls"] == 0
+    assert counts["cross_module_calls"] == 1
 
 
 def test_relative_python_imports_and_module_alias_calls_resolve(tmp_path):
