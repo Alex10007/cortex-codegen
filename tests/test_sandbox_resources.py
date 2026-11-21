@@ -345,3 +345,61 @@ def test_cgroup_manager_retains_directory_descriptors_for_owned_inode(tmp_path):
     assert group._dir_fd == -1
     assert group._parent_fd == -1
     assert group_path.exists()
+
+
+def test_create_uses_descriptor_relative_setup_and_rolls_back_failed_configuration(
+        tmp_path, monkeypatch):
+    from cortex.execution import resources
+
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    real_mkdir = os.mkdir
+    created = []
+
+    def mkdir(name, mode=0o777, *, dir_fd=None):
+        result = real_mkdir(name, mode, dir_fd=dir_fd)
+        if isinstance(name, str) and name.startswith("cortex-") and dir_fd is not None:
+            created.append(name)
+        return result
+
+    def fail_configuration(directory_fd, name, value):
+        raise CgroupUnavailable("injected descriptor-relative setup failure")
+
+    monkeypatch.setattr(os, "mkdir", mkdir)
+    monkeypatch.setattr(resources.CgroupV2, "_write_to_fd", staticmethod(fail_configuration))
+
+    with pytest.raises(CgroupUnavailable, match="injected descriptor-relative"):
+        CgroupV2.create(root, mem_mb=128, nproc=4)
+
+    assert len(created) == 1
+    assert not (root / created[0]).exists()
+
+
+def test_create_refuses_symlinked_initial_control_file_and_rolls_back(
+        tmp_path, monkeypatch):
+    from cortex.execution import resources
+
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    external = tmp_path / "external-memory-limit"
+    external.write_text("untouched")
+    real_mkdir = os.mkdir
+    created = []
+
+    def mkdir(name, mode=0o777, *, dir_fd=None):
+        result = real_mkdir(name, mode, dir_fd=dir_fd)
+        if isinstance(name, str) and name.startswith("cortex-") and dir_fd is not None:
+            child = Path(os.readlink(f"/proc/self/fd/{dir_fd}")) / name
+            created.append(child)
+            for control in ("cpu.max", "memory.max", "pids.max", "memory.swap.max",
+                            "memory.oom.group", "cgroup.procs", "cgroup.kill",
+                            "cgroup.events"):
+                (child / control).write_text("")
+            (child / "memory.max").unlink()
+            (child / "memory.max").symlink_to(external)
+        return result
+
+    monkeypatch.setattr(os, "mkdir", mkdir)
+    with pytest.raises(CgroupUnavailable, match="cannot configure memory.max"):
+        CgroupV2.create(root, mem_mb=128, nproc=4)
+
+    assert external.read_text() == "untouched"
+    assert len(created) == 1
