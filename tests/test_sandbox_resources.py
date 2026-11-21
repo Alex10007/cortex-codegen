@@ -68,9 +68,14 @@ def test_create_applies_cpu_memory_and_process_limits(tmp_path, monkeypatch):
     assert (group.path / "cgroup.kill").read_text() == "1"
     (group.path / "cgroup.events").write_text("populated 0\nfrozen 0\n")
     group.wait_empty()
-    # Regular files emulate cgroup virtual files in this unit test.
-    for item in group.path.iterdir():
-        item.unlink()
+    # Emulate cgroupfs pseudo-files, which disappear with the cgroup directory.
+    real_rmdir = os.rmdir
+    def rmdir(name, *, dir_fd=None):
+        if name == group.path.name:
+            for item in group.path.iterdir():
+                item.unlink()
+        return real_rmdir(name, dir_fd=dir_fd)
+    monkeypatch.setattr(os, "rmdir", rmdir)
     group.close()
     assert not group.path.exists()
 
