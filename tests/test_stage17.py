@@ -148,3 +148,40 @@ def test_indexer_adds_local_import_call_and_inheritance_edges(tmp_path):
     assert counts["local_imports"] >= 1
     assert counts["calls"] >= 1
     assert counts["inherits"] >= 1
+
+
+
+def test_adaptive_divergent_budget_uses_existing_task_assessment(monkeypatch):
+    from types import SimpleNamespace
+    from cortex.evaluation import divergent
+
+    dispatched = []
+
+    def fake_sample(_agent, task, temperatures, _max_tokens, _prefix, tag):
+        dispatched.append((task.task_id, tuple(temperatures), tag))
+        return [{
+            "round": tag,
+            "temperature": temperature,
+            "sha1": f"{task.task_id}-{temperature}",
+            "passed": False,
+            "grade": {"exit_code": 1, "stderr_tail": ""},
+        } for temperature in temperatures]
+
+    monkeypatch.setattr(divergent, "_sample_and_grade", fake_sample)
+    tasks = [
+        SimpleNamespace(task_id="focused", instruction=
+                        "fix parser indentation in cortex/parser.py"),
+        SimpleNamespace(task_id="critical", instruction=
+                        "delete production database"),
+    ]
+    report = divergent.divergent_eval(
+        agent=None, tasks=tasks, temperatures=(0.2, 0.7, 1.0),
+        repair_round=False, adaptive_budget=True)
+    counts = {row["task_id"]: row["n_hypotheses"] for row in report["per_task"]}
+    assert counts["focused"] == 1
+    assert counts["critical"] == 2
+    assert report["aggregate"]["adaptive_budget"] is True
+    assert report["aggregate"]["hypotheses_dispatched_total"] == 3
+    assert all(row["adaptive_assessment"]["assessment_mode"] ==
+               "deterministic_heuristic_not_model_confidence"
+               for row in report["per_task"])

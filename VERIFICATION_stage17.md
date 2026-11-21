@@ -99,3 +99,17 @@ These tests are committed but have **not yet been executed** because the
 configured GitHub Actions runner has not been shown to execute workflow steps.
 The graph remains Python-AST-based; full TypeScript, JavaScript, Rust, Go and
 cross-language semantic resolution is still outstanding.
+
+
+## Stage 17C — Adaptive divergent-evaluation budget
+
+The existing divergent evaluation can now opt into `adaptive_budget=True`.
+It reuses the planner's deterministic task assessment to select one, two, or
+three candidate hypotheses per task. High/critical-risk tasks receive at least
+two hypotheses; deeper tasks may receive three. The default remains the
+historical fixed three-hypothesis behavior, preserving benchmark comparability.
+
+This is adaptive candidate-count allocation, **not** dynamic neural-network
+compute scaling, learned confidence, or recursive general-purpose reasoning.
+A regression test verifies dispatch counts without invoking model inference;
+runtime model-quality improvement has not been measured.

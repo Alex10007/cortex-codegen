@@ -169,7 +169,7 @@ def assess_objective(objective: str, repo_map: dict[str, Any]) -> dict[str, Any]
         "requires_human_authorization": destructive,
         "clarification_recommended": ambiguity >= 0.75,
         "recommended_hypotheses": 3 if reasoning_depth == "deep" else (
-            2 if reasoning_depth == "expanded" else 1),
+            2 if reasoning_depth == "expanded" or risk_level in ("high", "critical") else 1),
         "repository_scale": (
             "large" if repo_map.get("file_count", 0) >= 5000 else
             "medium" if repo_map.get("file_count", 0) >= 500 else "small"),

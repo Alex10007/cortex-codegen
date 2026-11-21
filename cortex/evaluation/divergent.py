@@ -61,7 +61,8 @@ def _sample_and_grade(agent, task, temperatures, max_new_tokens: int,
 def divergent_eval(agent, tasks=None, n_hypotheses: int = 3,
                    temperatures: tuple[float, ...] | None = None,
                    max_new_tokens: int = 180,
-                   repair_round: bool = True) -> dict:
+                   repair_round: bool = True,
+                   adaptive_budget: bool = False) -> dict:
     """Full divergent + repair evaluation. Every candidate is graded by
     real sandbox execution; no score is derived from generation alone."""
     if tasks is None:
@@ -75,7 +76,15 @@ def divergent_eval(agent, tasks=None, n_hypotheses: int = 3,
     import time
     for task in tasks:
         t0 = time.time()
-        hyps = _sample_and_grade(agent, task, temperatures,
+        assessment = None
+        task_temperatures = temperatures
+        if adaptive_budget:
+            from cortex.planning.engine import assess_objective
+            assessment = assess_objective(task.instruction, {})
+            task_temperatures = temperatures[:assessment["recommended_hypotheses"]]
+            if not task_temperatures:
+                task_temperatures = temperatures[:1]
+        hyps = _sample_and_grade(agent, task, task_temperatures,
                                  max_new_tokens, "", "divergent")
         repair = []
         need_repair = repair_round and not any(h["passed"] for h in hyps)
@@ -127,8 +136,10 @@ def divergent_eval(agent, tasks=None, n_hypotheses: int = 3,
             "failure_breakdown_round1": failure_breakdown(
                 hyps) if repair_round else None,
             "seconds_elapsed": round(time.time() - t0, 2),
-            "tokens_used": len(temperatures) * max_new_tokens +
+            "tokens_used": len(task_temperatures) * max_new_tokens +
             len(repair) * max_new_tokens,
+            "n_hypotheses": len(task_temperatures),
+            "adaptive_assessment": assessment,
         })
 
     total = len(per_task)
@@ -142,6 +153,10 @@ def divergent_eval(agent, tasks=None, n_hypotheses: int = 3,
         "kind": "cortex-divergent-reasoning-eval",
         "n_tasks": total,
         "n_hypotheses_per_task": len(temperatures),
+        "adaptive_budget": adaptive_budget,
+        "hypotheses_dispatched_total": sum(t["n_hypotheses"] for t in per_task),
+        "mean_hypotheses_per_task": round(
+            sum(t["n_hypotheses"] for t in per_task) / max(1, total), 4),
         "temperatures": list(temperatures),
         "repair_round": repair_round,
         "pass_at_1_index0": round(
