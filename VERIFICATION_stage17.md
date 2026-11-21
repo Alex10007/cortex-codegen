@@ -426,3 +426,35 @@ nearest enclosing binding instead of a module-level name. Tests are committed
 but have **not been executed**; no current-head runtime verification is claimed.
 No model training, checkpoint modification, benchmark promotion, or Stage 12
 champion change occurred.
+
+
+## Stage 17Q — Nested imported-module call-chain resolution
+
+Extended the existing Python call-site resolver to retain complete attribute
+chains rooted at a lexically resolved imported-module alias. It can now resolve
+uniquely indexed package/module paths such as
+`import pkg as p; p.services.worker.run()`, including nested submodules,
+before resolving the final top-level function or uniquely resolved package
+re-export. The resolver uses the canonical module inventory, import-binding
+tables, symbol definitions, and existing `calls` edges; it does not create a
+second graph or dispatch engine.
+
+The chain is only followed while each intermediate component maps to one
+indexed local module. If the chain changes into an ordinary object/class
+attribute, the resolver declines to infer a target. Existing lexical import
+scope rules still apply, so a function-local module alias does not leak into
+sibling functions. Ambiguous module targets or final declarations remain
+unresolved rather than guessed.
+
+Limitations: this increment does not infer arbitrary object types, instance
+attributes, descriptors, metaclass behavior, dynamic `getattr`, monkey
+patching, conditional runtime import outcomes, or method dispatch through
+unknown intermediate objects. It resolves statically indexed module/package
+chains only; it is not compiler-grade whole-program call-graph completeness.
+
+Added regression tests for a multi-level package/module alias call and for
+function-local alias isolation. The test fixtures were reviewed for valid
+newline escaping. Tests are committed but have **not been executed**; the
+current branch still has no verified runtime test result. No model training,
+checkpoint modification, benchmark promotion, or Stage 12 champion change
+occurred.
