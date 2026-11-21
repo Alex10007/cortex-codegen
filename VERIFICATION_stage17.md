@@ -370,8 +370,9 @@ bindings are recorded according to the active interpreter's compiler model:
 some versions expose a dedicated comprehension scope, while newer versions
 may inline it into the containing scope. Scope nodes are connected to their
 parent scope (or the module node), and each compiler symbol is represented with typed relationships
-for the compiler-reported local, global, nonlocal, free, parameter, imported,
-assigned, referenced, and namespace classifications.
+for the compiler-reported local, global, explicitly declared-global,
+nonlocal, free, parameter, imported, assigned, referenced, and namespace
+classifications.
 
 The indexer returns additive counts for compiler scopes, compiler symbols,
 free/global/nonlocal symbols, and compiler scope parse failures. Scope IDs are
@@ -388,7 +389,8 @@ Python's static symbol classification for the source and interpreter version
 used during indexing; they do not prove runtime behavior.
 
 Added a regression test covering nested free/nonlocal/global bindings,
-lambda/comprehension scopes, and exception-target bindings. The test is
+lambda/comprehension scopes, explicit global declarations, and
+exception-target bindings. The test is
 committed but has **not been executed**; the current branch has no verified
 runtime test result. No model training, checkpoint modification, benchmark
 promotion, or Stage 12 champion change occurred.
