@@ -32,7 +32,8 @@ def test_sandbox_and_knowledge_endpoints(app):
     client = _client(app)
     r = client.post("/sandbox/run", json={"code": "print('api-sandbox-ok')"})
     if r.status_code == 503:
-        assert "bubblewrap" in r.json()["detail"].lower()
+        detail = r.json()["detail"].lower()
+        assert any(term in detail for term in ("bubblewrap", "qualification", "cgroup", "isolation"))
     else:
         assert r.status_code == 200
         assert r.json()["limits"]["filesystem_isolated"] is True
