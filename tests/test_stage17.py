@@ -973,15 +973,15 @@ def test_stage17p_compiler_global_declaration_bypasses_enclosing_shadow(tmp_path
     root = tmp_path / "compiler-global-resolution"
     root.mkdir()
     (root / "mod.py").write_text(
-        "def selected():\\n"
-        "    return 'module'\\n"
-        "def outer():\\n"
-        "    def selected():\\n"
-        "        return 'outer'\\n"
-        "    def inner():\\n"
-        "        global selected\\n"
-        "        return selected()\\n"
-        "    return inner()\\n"
+        "def selected():\n"
+        "    return 'module'\n"
+        "def outer():\n"
+        "    def selected():\n"
+        "        return 'outer'\n"
+        "    def inner():\n"
+        "        global selected\n"
+        "        return selected()\n"
+        "    return inner()\n"
     )
     store = VectorStore(str(tmp_path / "global-resolution-vector.db"))
     graph = KnowledgeGraph(str(tmp_path / "global-resolution-graph.db"))
@@ -1000,17 +1000,17 @@ def test_stage17p_compiler_nonlocal_declaration_selects_nearest_enclosing_bindin
     root = tmp_path / "compiler-nonlocal-resolution"
     root.mkdir()
     (root / "mod.py").write_text(
-        "def selected():\\n"
-        "    return 'module'\\n"
-        "def outer():\\n"
-        "    def selected():\\n"
-        "        return 'outer'\\n"
-        "    def middle():\\n"
-        "        def inner():\\n"
-        "            nonlocal selected\\n"
-        "            return selected()\\n"
-        "        return inner()\\n"
-        "    return middle()\\n"
+        "def selected():\n"
+        "    return 'module'\n"
+        "def outer():\n"
+        "    def selected():\n"
+        "        return 'outer'\n"
+        "    def middle():\n"
+        "        def inner():\n"
+        "            nonlocal selected\n"
+        "            return selected()\n"
+        "        return inner()\n"
+        "    return middle()\n"
     )
     store = VectorStore(str(tmp_path / "nonlocal-resolution-vector.db"))
     graph = KnowledgeGraph(str(tmp_path / "nonlocal-resolution-graph.db"))
