@@ -622,3 +622,12 @@ Verification status:
 - The first run remains a CPU-only software test. It does not qualify GPU training, production sandbox security, distributed training, or model capability.
 
 **Stage 16A.29 status: implemented in source; NOT RUNTIME-VERIFIED.** No training, checkpoint mutation, benchmark promotion, PR merge, or main-branch change occurred.
+
+
+## Stage 16A.30 — CI workspace cleanliness gate
+
+- The post-test integrity step now checks tracked-file diffs, staged changes, and untracked non-ignored files. A test that leaves a new repository file behind cannot silently pass the workspace-integrity gate.
+- Ignored runtime outputs remain governed by the repository ignore rules; tracked benchmark and verification evidence remains protected by the before/after SHA-256 check.
+- This is a repository cleanliness check, not a complete filesystem snapshot and not a security boundary against privileged host modification.
+
+**Status:** workflow source committed; runtime execution remains pending. No test result is inferred from the workflow definition.
