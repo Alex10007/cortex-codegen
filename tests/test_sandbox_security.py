@@ -226,3 +226,15 @@ def test_unlaunched_cgroup_cleanup_attempts_all_steps_after_failure():
     assert group.events == ["kill", "wait_empty", "close"]
     assert len(failures) == 1
     assert "injected kill failure" in failures[0]
+
+
+
+def test_launch_fd_close_failure_is_reported_without_raising(monkeypatch):
+    from cortex.execution import sandbox
+
+    def fail_close(fd):
+        raise OSError("injected close failure")
+
+    monkeypatch.setattr(sandbox.os, "close", fail_close)
+    assert "injected close failure" in sandbox._close_launch_fd(42, "gate-read")
+    assert sandbox._close_launch_fd(None, "gate-write") is None
