@@ -924,7 +924,11 @@ def test_compiler_scope_graph_captures_nested_free_global_and_special_scopes(tmp
     assert any("function:outer@" in label for label in labels)
     assert any("function:inner@" in label for label in labels)
     assert any("function:lambda@" in label for label in labels)
-    assert any("listcomp" in label for label in labels)
+    # Python 3.12+ may inline comprehensions (PEP 709); earlier interpreters
+    # expose a dedicated listcomp compiler scope.
+    has_dedicated_comprehension = any("listcomp" in label for label in labels)
+    assert has_dedicated_comprehension or any(
+        "function:with_comprehension@" in label for label in labels)
 
     def scope_id(fragment):
         matches = [node_id for node_id, label in scopes if fragment in label]
@@ -943,6 +947,11 @@ def test_compiler_scope_graph_captures_nested_free_global_and_special_scopes(tmp
                for row in inner_nonlocals)
     assert any(binding_labels[row["node"]].endswith("::module_global")
                for row in inner_globals)
+
+    comprehension = scope_id("function:with_comprehension@")
+    comprehension_locals = graph.neighbors(comprehension, etype="compiler_local")
+    assert any(binding_labels[row["node"]].endswith("::entry")
+               for row in comprehension_locals)
 
     handler = scope_id("function:with_exception_target@")
     handler_locals = graph.neighbors(handler, etype="compiler_local")
