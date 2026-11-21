@@ -177,12 +177,12 @@ def test_create_rejects_cpu_quota_below_kernel_minimum(tmp_path):
 
 
 @pytest.mark.parametrize("contents, message", [
-    ("frozen 0\\n", "missing required populated"),
-    ("populated 0\\npopulated 1\\n", "duplicate event"),
-    ("populated\\n", "malformed event"),
-    ("populated 2\\n", "invalid boolean event"),
-    ("populated -1\\n", "malformed event"),
-    ("populated 0 extra\\n", "malformed event"),
+    ("frozen 0\n", "missing required populated"),
+    ("populated 0\npopulated 1\n", "duplicate event"),
+    ("populated\n", "malformed event"),
+    ("populated 2\n", "invalid boolean event"),
+    ("populated -1\n", "malformed event"),
+    ("populated 0 extra\n", "malformed event"),
 ])
 def test_cgroup_events_reject_ambiguous_or_invalid_records(tmp_path, contents, message):
     path = tmp_path / "cgroup.events"
@@ -195,11 +195,11 @@ def test_wait_empty_requires_explicit_valid_populated_zero(tmp_path):
     group_path = tmp_path / "cortex-test"
     group_path.mkdir()
     events = group_path / "cgroup.events"
-    events.write_text("frozen 0\\n")
+    events.write_text("frozen 0\n")
     group = CgroupV2(group_path)
     with pytest.raises(CgroupUnavailable, match="missing required populated"):
         group.wait_empty(timeout_s=0.01)
-    events.write_text("populated 0\\nfrozen 0\\n")
+    events.write_text("populated 0\nfrozen 0\n")
     group.wait_empty(timeout_s=0.01)
 
 
@@ -207,6 +207,6 @@ def test_wait_empty_requires_explicit_valid_populated_zero(tmp_path):
 def test_wait_empty_rejects_invalid_timeout_values(tmp_path, timeout):
     group_path = tmp_path / "cortex-test"
     group_path.mkdir()
-    (group_path / "cgroup.events").write_text("populated 0\\n")
+    (group_path / "cgroup.events").write_text("populated 0\n")
     with pytest.raises(ValueError, match="finite positive"):
         CgroupV2(group_path).wait_empty(timeout_s=timeout)
