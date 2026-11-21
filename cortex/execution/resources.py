@@ -10,6 +10,7 @@ import os
 import uuid
 import time
 import math
+import stat
 from pathlib import Path
 
 
@@ -20,7 +21,8 @@ class CgroupUnavailable(RuntimeError):
 class CgroupV2:
     REQUIRED_CONTROLLERS = frozenset({"cpu", "memory", "pids"})
 
-    def __init__(self, path: Path, *, expected_identity: tuple[int, int] | None = None):
+    def __init__(self, path: Path, *, expected_identity: tuple[int, int] | None = None,
+                 parent_fd: int | None = None, directory_fd: int | None = None):
         self.path = path
         self._closed = False
         self._identity = expected_identity or self._path_identity(path)
@@ -29,12 +31,11 @@ class CgroupV2:
         directory_flags = (os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
                            | getattr(os, "O_CLOEXEC", 0))
         try:
-            self._parent_fd = os.open(path.parent, directory_flags)
-            self._dir_fd = os.open(
-                path.name,
-                directory_flags | getattr(os, "O_NOFOLLOW", 0),
-                dir_fd=self._parent_fd,
-            )
+            self._parent_fd = (parent_fd if parent_fd is not None
+                               else os.open(path.parent, directory_flags))
+            self._dir_fd = (directory_fd if directory_fd is not None else os.open(
+                path.name, directory_flags | getattr(os, "O_NOFOLLOW", 0),
+                dir_fd=self._parent_fd))
             info = os.fstat(self._dir_fd)
             if (info.st_dev, info.st_ino) != self._identity:
                 raise CgroupUnavailable(
@@ -108,75 +109,125 @@ class CgroupV2:
                 "CORTEX_CGROUP_ROOT must not traverse symlink aliases and must be a directory")
         return resolved_base
 
+    @staticmethod
+    def _read_from_fd(directory_fd: int, name: str) -> str:
+        flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+        try:
+            descriptor = os.open(name, flags, dir_fd=directory_fd)
+            with os.fdopen(descriptor, "r", encoding="ascii") as stream:
+                return stream.read()
+        except OSError as exc:
+            raise CgroupUnavailable(f"cannot read delegated cgroup file {name}: {exc}") from exc
+
+    @staticmethod
+    def _write_to_fd(directory_fd: int, name: str, value: str) -> None:
+        flags = os.O_WRONLY | getattr(os, "O_CLOEXEC", 0) | getattr(os, "O_NOFOLLOW", 0)
+        try:
+            descriptor = os.open(name, flags, dir_fd=directory_fd)
+            with os.fdopen(descriptor, "w", encoding="ascii") as stream:
+                stream.write(value)
+        except OSError as exc:
+            raise CgroupUnavailable(f"cannot configure {name}: {exc}") from exc
+
+    @staticmethod
+    def _require_control_file(directory_fd: int, name: str) -> None:
+        try:
+            info = os.stat(name, dir_fd=directory_fd, follow_symlinks=False)
+        except OSError as exc:
+            raise CgroupUnavailable(f"required cgroup control {name} is unavailable: {exc}") from exc
+        if not stat.S_ISREG(info.st_mode):
+            raise CgroupUnavailable(f"required cgroup control {name} is not a regular control file")
+
     @classmethod
     def create(cls, root: str | os.PathLike[str], *, mem_mb: int,
                nproc: int, cpu_quota_us: int = 100_000,
                cpu_period_us: int = 100_000) -> "CgroupV2":
         base = cls._resolve_delegated_root(root)
-        controllers_file = base / "cgroup.controllers"
-        subtree_file = base / "cgroup.subtree_control"
-        if not controllers_file.is_file() or not subtree_file.is_file():
-            raise CgroupUnavailable("configured cgroup root is not a cgroup v2 directory")
-        available = set(controllers_file.read_text(encoding="ascii").split())
-        enabled = set(subtree_file.read_text(encoding="ascii").split())
-        missing = cls.REQUIRED_CONTROLLERS - available
-        disabled = cls.REQUIRED_CONTROLLERS - enabled
-        if missing or disabled:
-            raise CgroupUnavailable(
-                f"cgroup controllers unavailable={sorted(missing)} disabled={sorted(disabled)}; "
-                "administrator must delegate and enable cpu,memory,pids")
         limits = {
             "mem_mb": mem_mb,
             "nproc": nproc,
             "cpu_quota_us": cpu_quota_us,
             "cpu_period_us": cpu_period_us,
         }
-        if any(type(value) is not int or value < 1
-               for value in limits.values()):
+        if any(type(value) is not int or value < 1 for value in limits.values()):
             raise ValueError("cgroup resource limits must be positive integers")
-        # The CFS bandwidth controller requires a quota and period of at
-        # least 1ms; cgroup v2 documents a 1ms–1s period range.
         if cpu_quota_us < 1_000:
             raise ValueError("cpu_quota_us must be at least 1000 microseconds")
         if not 1_000 <= cpu_period_us <= 1_000_000:
             raise ValueError("cpu_period_us must be between 1000 and 1000000 microseconds")
 
-        path = base / ("cortex-" + uuid.uuid4().hex)
+        directory_flags = (os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+                           | getattr(os, "O_CLOEXEC", 0))
+        nofollow = getattr(os, "O_NOFOLLOW", 0)
+        parent_fd = -1
+        child_fd = -1
+        child_name = "cortex-" + uuid.uuid4().hex
+        path = base / child_name
+        child_identity: tuple[int, int] | None = None
+        transferred = False
         try:
-            path.mkdir(mode=0o700)
-        except OSError as exc:
-            raise CgroupUnavailable(f"cannot create delegated execution cgroup: {exc}") from exc
-        created_identity = cls._path_identity(path)
+            # Pin the delegated root before reading controllers or creating the child.
+            parent_fd = os.open(base, directory_flags | nofollow)
+            parent_info = os.fstat(parent_fd)
+            if not stat.S_ISDIR(parent_info.st_mode):
+                raise CgroupUnavailable("delegated cgroup root is not a directory")
 
-        try:
-            cls._write(path / "cpu.max", f"{cpu_quota_us} {cpu_period_us}")
-            cls._write(path / "memory.max", str(mem_mb * 1024 * 1024))
-            cls._write(path / "pids.max", str(nproc))
-            swap_file = path / "memory.swap.max"
-            if not swap_file.exists():
-                raise CgroupUnavailable("memory.swap.max is unavailable; swap cannot be bounded")
-            cls._write(swap_file, "0")
-            oom_group = path / "memory.oom.group"
-            if not oom_group.exists():
-                raise CgroupUnavailable("memory.oom.group is unavailable")
-            cls._write(oom_group, "1")
-            if not (path / "cgroup.procs").exists():
-                raise CgroupUnavailable("cgroup.procs is unavailable")
-            if not (path / "cgroup.kill").exists():
-                raise CgroupUnavailable("cgroup.kill is unavailable; process-tree cleanup cannot be guaranteed")
-            if not (path / "cgroup.events").exists():
-                raise CgroupUnavailable("cgroup.events is unavailable; process-tree exit cannot be verified")
-            return cls(path, expected_identity=created_identity)
+            available = set(cls._read_from_fd(parent_fd, "cgroup.controllers").split())
+            enabled = set(cls._read_from_fd(parent_fd, "cgroup.subtree_control").split())
+            missing = cls.REQUIRED_CONTROLLERS - available
+            disabled = cls.REQUIRED_CONTROLLERS - enabled
+            if missing or disabled:
+                raise CgroupUnavailable(
+                    f"cgroup controllers unavailable={sorted(missing)} disabled={sorted(disabled)}; "
+                    "administrator must delegate and enable cpu,memory,pids")
+
+            # mkdirat semantics: collision fails without following or reusing an existing entry.
+            os.mkdir(child_name, mode=0o700, dir_fd=parent_fd)
+            child_fd = os.open(child_name, directory_flags | nofollow, dir_fd=parent_fd)
+            child_info = os.fstat(child_fd)
+            if not __import__("stat").S_ISDIR(child_info.st_mode):
+                raise CgroupUnavailable("new execution cgroup is not a directory")
+            child_identity = (child_info.st_dev, child_info.st_ino)
+
+            cls._write_to_fd(child_fd, "cpu.max", f"{cpu_quota_us} {cpu_period_us}")
+            cls._write_to_fd(child_fd, "memory.max", str(mem_mb * 1024 * 1024))
+            cls._write_to_fd(child_fd, "pids.max", str(nproc))
+            cls._write_to_fd(child_fd, "memory.swap.max", "0")
+            cls._write_to_fd(child_fd, "memory.oom.group", "1")
+            for required in ("cgroup.procs", "cgroup.kill", "cgroup.events"):
+                cls._require_control_file(child_fd, required)
+
+            manager = cls(path, expected_identity=child_identity,
+                          parent_fd=parent_fd, directory_fd=child_fd)
+            transferred = True
+            return manager
+        except FileExistsError as exc:
+            raise CgroupUnavailable(
+                f"cannot create delegated execution cgroup without reusing an existing entry: {exc}") from exc
         except Exception as setup_error:
-            try:
-                if cls._path_identity(path) != created_identity:
-                    raise CgroupUnavailable(
-                        "partially configured cgroup path identity changed; refusing removal")
-                path.rmdir()
-            except (OSError, CgroupUnavailable) as cleanup_error:
-                setup_error.add_note(
-                    f"failed to safely remove partially configured cgroup {path}: {cleanup_error}")
+            if child_fd >= 0:
+                try:
+                    os.close(child_fd)
+                except OSError as cleanup_error:
+                    setup_error.add_note(f"failed to close partially created cgroup descriptor: {cleanup_error}")
+                child_fd = -1
+            if parent_fd >= 0 and child_identity is not None:
+                try:
+                    current = os.stat(child_name, dir_fd=parent_fd, follow_symlinks=False)
+                    if (current.st_dev, current.st_ino) != child_identity:
+                        raise CgroupUnavailable(
+                            "partially configured cgroup identity changed; refusing rollback removal")
+                    os.rmdir(child_name, dir_fd=parent_fd)
+                except (OSError, CgroupUnavailable) as cleanup_error:
+                    setup_error.add_note(
+                        f"failed to safely remove partially configured cgroup {path}: {cleanup_error}")
             raise
+        finally:
+            if not transferred:
+                if child_fd >= 0:
+                    os.close(child_fd)
+                if parent_fd >= 0:
+                    os.close(parent_fd)
 
     @staticmethod
     def _write(path: Path, value: str) -> None:
