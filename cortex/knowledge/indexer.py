@@ -391,8 +391,8 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
         if receiver in {"self", "cls"}:
             class_scope = next(
                 (scope[:index + 1] for index in range(len(scope) - 2, -1, -1)
-                 if symbol_definitions.get(
-                     (module_id, scope[:index], scope[index]))),
+                 if any(kind == "class" for _, kind in symbol_definitions.get(
+                     (module_id, scope[:index], scope[index]), []))),
                 None)
             if class_scope is None:
                 counts["unresolved_calls"] += 1
