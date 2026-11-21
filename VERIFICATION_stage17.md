@@ -512,3 +512,33 @@ precedence, conditional alias rejection, and ambiguous multiple-inheritance
 refusal. Tests are committed but have not been executed; no current-head runtime
 or CI result is claimed. No model training, checkpoint changes, benchmark
 promotion, or Stage 12 champion change occurred.
+
+
+## Stage 17T — Evidence-based instance-type and attribute dispatch
+
+Extended the existing Python resolver to record a bounded set of receiver-type
+evidence: direct local constructor assignments (for example,
+`service = Service()`), simple parameter annotations (for example,
+`def run(service: Service)`), simple local annotations, and direct instance
+attribute constructor/annotation assignments (for example,
+`self.worker = Worker()`). Calls through `service.method()` and
+`self.worker.method()` are linked only when the receiver has exactly one
+non-conditional, non-conflicting local class fact and the method is uniquely
+resolved on that class or its indexed ancestors. Existing subclass override
+precedence and ambiguity handling are reused.
+
+Any receiver with multiple assignments, a conditional assignment, a
+non-constructor reassignment, an unresolved class name, or multiple possible
+class declarations remains unresolved. This is not general Python type
+inference: it does not infer factory return types, unions, generics, protocols,
+container element types, arbitrary attribute chains, descriptor behavior,
+metaclasses, dynamic mutation, or runtime dispatch. Imported local class names
+are supported only insofar as the existing lexical/import resolver resolves
+them uniquely.
+
+Added tests for direct constructor assignment, `self` attribute construction,
+annotated parameters, and conflicting reassignment. Also corrected the Stage
+17S fixture newline escaping so those regression fixtures write valid Python
+source. Tests are committed but have not been executed; no runtime or CI pass
+is claimed. No model training, checkpoint changes, benchmark promotion, or
+Stage 12 champion change occurred.
