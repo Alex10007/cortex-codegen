@@ -577,3 +577,27 @@ Verification:
 - Tests have NOT been executed. No CI pass is claimed and no live cgroupfs behavior is established.
 - Strict sandbox remains NOT RUNTIME-VERIFIED pending full test execution and live delegated cgroup v2 + Bubblewrap qualification.
 - No model training, checkpoint/dataset changes, benchmark promotion, PR merge, or main-branch update occurred.
+
+
+## Stage 16A.26 — delegated cgroup filesystem isolation gate
+
+Stage 16A.25 documented that descriptor-bound cleanup still has a name-based removal race if an actor with write access to the delegated parent can replace a sibling entry. The service's untrusted execution path runs through Bubblewrap with `--unshare-all` and does not intentionally bind `/sys` or the host cgroup hierarchy into the sandbox. However, that design assumption was not part of behavioral qualification.
+
+Changes:
+- Extended the actual Bubblewrap qualification payload to inspect its own `/proc/self/mountinfo` and fail if any cgroup v1 or v2 filesystem mount is visible inside the untrusted execution namespace.
+- The payload also attempts to open `/sys/fs/cgroup/cgroup.procs` for read/write and records failure if that control surface is accessible.
+- Added `cgroup_filesystem_inaccessible` as a required qualification check. The API's existing fail-closed qualification gate therefore refuses strict API execution when untrusted code can see a cgroup filesystem.
+- Added a regression test proving that qualification fails when the cgroup filesystem visibility check fails.
+
+Security boundary:
+- This gate tests the namespace/mount view of the actual Bubblewrap-launched process; it does not infer safety from host directory mode bits or assume a particular systemd ownership/GID arrangement.
+- If the check passes on the deployment host, ordinary filesystem-based access to cgroup v1/v2 control files is absent from the untrusted process's mount namespace, reducing the ability to rename or replace sibling cgroups through that interface.
+- It does not prove the delegated parent is safe against the Cortex service identity itself, a privileged host actor, kernel vulnerabilities, cgroup migration through privileged mechanisms, or an unexpected writable cgroup mount introduced by future sandbox changes. The parent must remain administratively controlled; service and workload identity separation is still a stronger defense-in-depth option.
+- The probe conservatively rejects any visible cgroup v1/v2 mount, even if it might be read-only. This is intentional for the strict execution profile.
+
+Verification:
+- Source, tests, and report are committed as source changes only. **No Python tests were executed** and no live Bubblewrap/cgroup qualification was performed in this increment.
+- GitHub Actions has not yet provided a usable runner result for the current branch; no CI pass is claimed.
+- Strict sandbox remains **NOT RUNTIME-VERIFIED** until the full suite runs and this new behavioral check passes on a real deployment host with delegated cgroup v2.
+
+No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or `main` update occurred.
