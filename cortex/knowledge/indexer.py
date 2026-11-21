@@ -411,6 +411,8 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
         if len(definitions) == 1 and len(unique) == 1 and unique[0] != caller_id:
             graph.upsert_edge(caller_id, unique[0], "calls", version)
             counts["calls"] += 1
+            if unique[0].split(":class:", 1)[0].split(":func:", 1)[0] != module_id:
+                counts["cross_module_calls"] += 1
         elif len(definitions) > 1:
             counts["ambiguous_calls"] += 1
             counts["unresolved_calls"] += 1
@@ -419,15 +421,17 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
 
     for caller_id, alias_name, member_name, module_id in pending_module_attribute_calls:
         targets = sorted(set(imported_modules.get((module_id, alias_name), [])))
+        if not targets:
+            # Most attribute calls are ordinary object/member calls, not
+            # imported-module calls. Do not misclassify them as import failures.
+            continue
         if len(targets) != 1:
-            if targets:
-                counts["ambiguous_calls"] += 1
-            else:
-                counts["unresolved_calls"] += 1
+            counts["ambiguous_calls"] += 1
+            counts["unresolved_calls"] += 1
             continue
         definitions = symbol_definitions.get((targets[0], (), member_name), [])
         unique_defs = sorted({item[0]: item for item in definitions}.values())
-        if len(unique_defs) == 1 and unique_defs[0][0] != caller_id:
+        if len(definitions) == 1 and len(unique_defs) == 1 and unique_defs[0][0] != caller_id:
             graph.upsert_edge(caller_id, unique_defs[0][0], "calls", version)
             counts["calls"] += 1
             counts["cross_module_calls"] += 1
@@ -650,11 +654,11 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                     bound_name = alias.asname or alias.name
                     definitions = symbol_definitions.get((target_id, (), alias.name), [])
                     unique_defs = sorted({item[0]: item for item in definitions}.values())
-                    if len(unique_defs) == 1:
+                    if len(definitions) == 1 and len(unique_defs) == 1:
                         imported_symbols.setdefault((source_id, bound_name), []).append(unique_defs[0])
                         graph.upsert_edge(source_id, unique_defs[0][0], "imports_symbol", version)
                         counts["resolved_imports"] += 1
-                    elif len(unique_defs) > 1:
+                    elif len(definitions) > 1:
                         counts["ambiguous_imports"] += 1
                     else:
                         counts["unresolved_imports"] += 1
