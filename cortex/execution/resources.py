@@ -167,11 +167,12 @@ class CgroupV2:
                             or (opened.st_dev, opened.st_ino) != (entry.st_dev, entry.st_ino)):
                         raise CgroupUnavailable(
                             f"delegated-root component {component} changed identity while opening")
-                except Exception:
+                except Exception as acquisition_error:
                     close_error = CgroupV2._close_fd(
                         next_fd, f"new delegated-root component {component}")
                     if close_error:
-                        raise CgroupUnavailable(close_error)
+                        acquisition_error.add_note(
+                            f"descriptor cleanup failed: {close_error}")
                     raise
                 previous_fd = current_fd
                 current_fd = next_fd
@@ -511,7 +512,12 @@ def probe_cgroup_v2() -> dict[str, object]:
                 root_fd, "cgroup.controllers").split())
             enabled = set(CgroupV2._read_from_fd(
                 root_fd, "cgroup.subtree_control").split())
-        finally:
+        except Exception as probe_error:
+            close_error = CgroupV2._close_fd(root_fd, "delegated-root probe")
+            if close_error:
+                probe_error.add_note(f"descriptor cleanup failed: {close_error}")
+            raise
+        else:
             close_error = CgroupV2._close_fd(root_fd, "delegated-root probe")
             if close_error:
                 raise CgroupUnavailable(
