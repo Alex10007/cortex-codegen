@@ -358,3 +358,23 @@ Verification:
 - Strict sandbox remains **NOT RUNTIME-VERIFIED** pending a functioning Linux runner with delegated cgroup v2 and Bubblewrap.
 
 No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or `main` update occurred.
+
+
+
+## Stage 16A.17 — cgroup lifecycle event integrity
+
+Static review found that `CgroupV2.wait_empty()` previously built a dictionary from whatever event lines happened to parse as two fields. Malformed lines were silently ignored, duplicate keys overwrote earlier values, and a missing `populated` field was indistinguishable from a cgroup that remained populated until timeout.
+
+Changes:
+- Added strict `cgroup.events` parsing. Every line must contain exactly a key and a non-negative ASCII decimal value; duplicate keys are rejected.
+- Require an explicit `populated` field. Its value, and the documented `frozen` boolean when present, must be 0 or 1.
+- `wait_empty()` now returns success only for a structurally valid record with `populated 0`; malformed or incomplete evidence fails immediately.
+- Reject non-positive, boolean, non-finite, and non-numeric timeout values before polling.
+- Added regression cases for missing/duplicate/malformed fields, invalid boolean values, valid empty evidence, and invalid timeout values.
+
+Verification:
+- Source and tests are committed. **No Python tests have been executed**; GitHub Actions continues to fail before producing usable step records/logs.
+- These are parser and control-flow regression specifications, not live kernel-cgroup qualification.
+- Strict sandbox remains **NOT RUNTIME-VERIFIED** pending an actual Linux runner with delegated cgroup v2 and Bubblewrap.
+
+No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or `main` update occurred.
