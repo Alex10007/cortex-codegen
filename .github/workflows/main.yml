@@ -1,25 +1,25 @@
-name: Cortex CI
+name: Cortex CI (isolated self-hosted)
 
 on:
   push:
     branches: [main, "vibe/**", "fibonera/**"]
-  pull_request:
-    branches: [main, "vibe/**"]
-  workflow_dispatch:
 
+# This workflow intentionally does not run for pull_request events.
+# The self-hosted laptop runner must never execute code from arbitrary forks.
 permissions:
   contents: read
 
 concurrency:
-  group: cortex-ci-${{ github.head_ref || github.ref }}
+  group: cortex-self-hosted-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   test:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 45
+    # Register the ephemeral WSL runner with the exact cortex-wsl label.
+    runs-on: [self-hosted, linux, x64, cortex-wsl]
+    timeout-minutes: 90
     steps:
-      - name: Checkout code
+      - name: Checkout trusted repository push
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -41,14 +41,13 @@ jobs:
               print("\n".join(line.rstrip() for line in f if line.startswith(("MemTotal:", "MemAvailable:"))))
           PY
 
-      - name: Install dependencies and run available validation
+      - name: Install CPU PyTorch
         run: |
-          set -euxo pipefail
-          if [ -d tests ]; then
-            python -m pip install --upgrade pip
-            python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
-            python -m pip install -r requirements.txt
-            python -m pytest -q tests/
-          else
-            python -m py_compile app.py
-          fi
+          python -m pip install --upgrade pip
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run complete test suite
+        run: python -m pytest -q tests/
