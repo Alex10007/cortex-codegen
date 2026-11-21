@@ -209,6 +209,8 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
     scope_bindings: dict[tuple[str, tuple[str, ...]], set[str]] = {}
     pending_calls: list[tuple[str, str, tuple[str, ...], str, str | None]] = []
     pending_callable_aliases: list[tuple[str, tuple[str, ...], str, str, bool]] = []
+    pending_instance_assignments: list[tuple[str, tuple[str, ...], tuple[str, ...], str | None, bool]] = []
+    pending_instance_calls: list[tuple[str, str, tuple[str, ...], tuple[str, ...], str]] = []
     pending_inheritance: list[tuple[str, tuple[str, ...], str]] = []
     pending_type_refs: list[tuple[str, tuple[str, ...], str]] = []
 
@@ -418,6 +420,10 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                 for argument in arguments:
                     if argument.annotation:
                         self._record_type_names(argument.annotation, function_id)
+                        if isinstance(argument.annotation, ast.Name):
+                            pending_instance_assignments.append((
+                                source_id, tuple([*self.scope_names, node.name]),
+                                (argument.arg,), argument.annotation.id, False))
                 if node.returns:
                     self._record_type_names(node.returns, function_id)
                 function_scope = tuple([*self.scope_names, node.name])
@@ -438,7 +444,27 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                             (owner_id or self.scope_ids[-1],
                              tuple(self.scope_names), item.id))
 
+            def _instance_target(self, target: ast.AST) -> tuple[str, ...] | None:
+                if isinstance(target, ast.Name):
+                    return (target.id,)
+                if (isinstance(target, ast.Attribute) and
+                        isinstance(target.value, ast.Name) and
+                        target.value.id == "self"):
+                    return ("self", target.attr)
+                return None
+
+            def _instance_class(self, value: ast.AST | None) -> str | None:
+                if (isinstance(value, ast.Call) and
+                        isinstance(value.func, ast.Name)):
+                    return value.func.id
+                return None
+
             def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
+                target_key = self._instance_target(node.target)
+                if target_key and isinstance(node.annotation, ast.Name):
+                    pending_instance_assignments.append((
+                        source_id, tuple(self.scope_names), target_key,
+                        node.annotation.id, self.conditional_depth > 0))
                 self._record_type_names(node.annotation)
                 if (isinstance(node.target, ast.Name) and
                         isinstance(node.value, ast.Name)):
@@ -449,6 +475,13 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                 self.generic_visit(node)
 
             def visit_Assign(self, node: ast.Assign) -> None:
+                if len(node.targets) == 1:
+                    target_key = self._instance_target(node.targets[0])
+                    if target_key:
+                        pending_instance_assignments.append((
+                            source_id, tuple(self.scope_names), target_key,
+                            self._instance_class(node.value),
+                            self.conditional_depth > 0))
                 if (len(node.targets) == 1 and
                         isinstance(node.targets[0], ast.Name) and
                         isinstance(node.value, ast.Name)):
@@ -467,6 +500,19 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                 self.generic_visit(node)
 
             def visit_Call(self, node: ast.Call) -> None:
+                if isinstance(node.func, ast.Attribute):
+                    receiver_node = node.func.value
+                    receiver_key = None
+                    if isinstance(receiver_node, ast.Name) and receiver_node.id not in {"self", "cls"}:
+                        receiver_key = (receiver_node.id,)
+                    elif (isinstance(receiver_node, ast.Attribute) and
+                          isinstance(receiver_node.value, ast.Name) and
+                          receiver_node.value.id == "self"):
+                        receiver_key = ("self", receiver_node.attr)
+                    if receiver_key:
+                        pending_instance_calls.append((
+                            self.scope_ids[-1], source_id, tuple(self.scope_names),
+                            receiver_key, node.func.attr))
                 target_name = None
                 receiver = None
                 if isinstance(node.func, ast.Name):
@@ -982,6 +1028,78 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                 return [], True
             frontier = sorted(set(next_frontier))
         return [], False
+
+    # Resolve calls through explicitly evidenced local instance types. Only
+    # direct constructor assignments and simple class annotations are accepted.
+    # Reassignment, conditional binding, or conflicting evidence invalidates a
+    # receiver rather than selecting whichever assignment appears last.
+    instance_facts: dict[tuple[str, tuple[str, ...], tuple[str, ...]], list[tuple[str | None, bool]]] = {}
+    for module_id, scope, receiver_key, class_name, conditional in pending_instance_assignments:
+        effective_scope = _effective_resolution_scope(module_id, scope, receiver_key[0])
+        if effective_scope is None:
+            continue
+        if receiver_key[0] == "self":
+            class_scope = next((
+                scope[:index + 1] for index in range(len(scope) - 2, -1, -1)
+                if any(kind == "class" for _, kind in symbol_definitions.get(
+                    (module_id, scope[:index], scope[index]), []))), None)
+            if class_scope is None:
+                continue
+            effective_scope = class_scope
+        key = (module_id, effective_scope, receiver_key)
+        instance_facts.setdefault(key, []).append((class_name, conditional))
+
+    def _resolve_instance_class(module_id: str, scope: tuple[str, ...],
+                                receiver_key: tuple[str, ...]):
+        effective_scope = _effective_resolution_scope(module_id, scope, receiver_key[0])
+        if effective_scope is None:
+            return [], False
+        if receiver_key[0] == "self":
+            effective_scope = next((
+                scope[:index + 1] for index in range(len(scope) - 2, -1, -1)
+                if any(kind == "class" for _, kind in symbol_definitions.get(
+                    (module_id, scope[:index], scope[index]), []))), None)
+            if effective_scope is None:
+                return [], False
+        key = (module_id, effective_scope, receiver_key)
+        facts = instance_facts.get(key, [])
+        if len(facts) != 1 or facts[0][1] or not facts[0][0]:
+            return [], bool(facts)
+        class_name = facts[0][0]
+        definitions, _ = _resolve_lexical(module_id, effective_scope, class_name)
+        classes = [item for item in definitions if item[1] == "class"]
+        unique = sorted({item[0]: item for item in classes}.values())
+        if len(classes) == 1 and len(unique) == 1:
+            return unique, False
+        return [], len(classes) > 1
+
+    def _method_for_class(class_id: str, method_name: str):
+        module_id = class_id.split(":class:", 1)[0]
+        class_scope = tuple(class_id.split(":class:", 1)[1].split("."))
+        direct = symbol_definitions.get((module_id, class_scope, method_name), [])
+        if direct:
+            return direct, False
+        return _resolve_inherited_method(class_id, method_name)
+
+    for caller_id, module_id, scope, receiver_key, method_name in pending_instance_calls:
+        classes, ambiguous_type = _resolve_instance_class(module_id, scope, receiver_key)
+        if len(classes) != 1:
+            if ambiguous_type:
+                counts["ambiguous_calls"] += 1
+            counts["unresolved_calls"] += 1
+            continue
+        definitions, ambiguous_method = _method_for_class(classes[0][0], method_name)
+        unique = sorted({item[0] for item in definitions})
+        if len(definitions) == 1 and len(unique) == 1 and unique[0] != caller_id:
+            graph.upsert_edge(caller_id, unique[0], "calls", version)
+            counts["calls"] += 1
+            if not unique[0].startswith(module_id + ":"):
+                counts["cross_module_calls"] += 1
+        elif ambiguous_method or len(definitions) > 1:
+            counts["ambiguous_calls"] += 1
+            counts["unresolved_calls"] += 1
+        else:
+            counts["unresolved_calls"] += 1
 
     for caller_id, module_id, scope, target_name, receiver in pending_calls:
         if receiver is None:
