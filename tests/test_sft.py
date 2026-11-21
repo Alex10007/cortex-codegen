@@ -16,7 +16,7 @@ from cortex.training.sft import (
     make_batch,
 )
 
-STD_SUBSET = str(Path(sysconfig.get_paths()["stdlib"]) / "json"
+STD_SUBSET = str(Path(sysconfig.get_paths()["stdlib"]) / "json")
 
 
 def _pair(code, name="fn", license_="Python-2.0 / PSF", instruction="Implement something"):
