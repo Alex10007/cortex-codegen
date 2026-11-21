@@ -203,6 +203,202 @@ class KnowledgeGraph:
             "max_depth": max_depth,
         }
 
+    def dependency_cycles(self, repo_root: str, relationship_types: tuple[str, ...] = ("imports_local",), max_nodes: int = 10000) -> dict[str, Any]:
+        """Return strongly connected dependency components from canonical graph edges.
+
+        Edges are interpreted as source/dependent -> destination/dependency.
+        Only provenance-backed nodes inside repo_root are considered. This is
+        bounded graph analysis, not a complete language-level dependency proof.
+        """
+        if not relationship_types or any(
+                not isinstance(item, str) or not item for item in relationship_types):
+            raise ValueError("relationship_types must contain non-empty strings")
+        if not 1 <= max_nodes <= 10000:
+            raise ValueError("max_nodes must be between 1 and 10000")
+        root = Path(repo_root).resolve(strict=True)
+        if not root.is_dir():
+            raise ValueError("repo_root must be an existing directory")
+        rows = self._conn.execute(
+            "SELECT id,provenance FROM nodes").fetchall()
+        path_by_id: dict[str, str] = {}
+        for node_id, provenance_json in rows:
+            try:
+                provenance = json.loads(provenance_json)
+                parsed = urlparse(provenance.get("source_uri", ""))
+                source_path = (Path(unquote(parsed.path)).resolve(strict=False)
+                               if parsed.scheme == "file" else None)
+                relative = source_path.relative_to(root).as_posix() if source_path else None
+            except (TypeError, ValueError, json.JSONDecodeError):
+                relative = None
+            if relative is not None:
+                path_by_id[node_id] = relative
+        truncated = len(path_by_id) > max_nodes
+        allowed = set(sorted(path_by_id)[:max_nodes])
+        placeholders = ",".join("?" for _ in relationship_types)
+        edge_rows = self._conn.execute(
+            f"SELECT src,dst,type FROM edges WHERE type IN ({placeholders})",
+            relationship_types).fetchall()
+        adjacency: dict[str, list[str]] = {node: [] for node in allowed}
+        for src, dst, _kind in edge_rows:
+            if src in allowed and dst in allowed:
+                adjacency[src].append(dst)
+        for node in adjacency:
+            adjacency[node] = sorted(set(adjacency[node]))
+
+        # Iterative Kosaraju avoids recursion-depth failures on large repositories.
+        visited: set[str] = set()
+        finish: list[str] = []
+        for start in sorted(adjacency):
+            if start in visited:
+                continue
+            stack: list[tuple[str, bool]] = [(start, False)]
+            while stack:
+                node, exiting = stack.pop()
+                if exiting:
+                    finish.append(node)
+                    continue
+                if node in visited:
+                    continue
+                visited.add(node)
+                stack.append((node, True))
+                for neighbor in reversed(adjacency[node]):
+                    if neighbor not in visited:
+                        stack.append((neighbor, False))
+        reverse: dict[str, list[str]] = {node: [] for node in allowed}
+        for src, targets in adjacency.items():
+            for dst in targets:
+                reverse[dst].append(src)
+        assigned: set[str] = set()
+        components: list[list[str]] = []
+        for start in reversed(finish):
+            if start in assigned:
+                continue
+            component: list[str] = []
+            stack = [start]
+            assigned.add(start)
+            while stack:
+                node = stack.pop()
+                component.append(node)
+                for neighbor in sorted(reverse[node], reverse=True):
+                    if neighbor not in assigned:
+                        assigned.add(neighbor)
+                        stack.append(neighbor)
+            component.sort()
+            if len(component) > 1 or (component and component[0] in adjacency[component[0]]):
+                components.append(component)
+        components.sort(key=lambda item: (path_by_id.get(item[0], ""), item[0]))
+        return {
+            "kind": "cortex-dependency-cycles",
+            "repo_root": str(root),
+            "relationship_types": list(relationship_types),
+            "cycle_count": len(components),
+            "cycles": [{
+                "node_ids": component,
+                "paths": sorted({path_by_id[node] for node in component}),
+            } for component in components],
+            "indexed_node_count": len(allowed),
+            "truncated": truncated,
+            "limitations": [
+                "Only selected graph relationships are analyzed.",
+                "Unresolved imports and dependencies absent from the index are not inferred.",
+                "A strongly connected component may contain more than one distinct simple cycle.",
+            ],
+        }
+
+    def architecture_boundary_violations(
+            self, repo_root: str, rules: list[dict[str, str]],
+            relationship_types: tuple[str, ...] = ("imports_local",),
+            max_nodes: int = 10000) -> dict[str, Any]:
+        """Evaluate explicit path-prefix dependency rules against graph edges.
+
+        Each rule has source_prefix and forbidden_target_prefix. Prefixes are
+        repository-relative directory/file prefixes, not glob or regex syntax.
+        """
+        if not isinstance(rules, list) or not rules:
+            raise ValueError("rules must be a non-empty list")
+        normalized: list[dict[str, str]] = []
+        for rule in rules:
+            if not isinstance(rule, dict):
+                raise ValueError("each rule must be an object")
+            source = rule.get("source_prefix")
+            target = rule.get("forbidden_target_prefix")
+            if not isinstance(source, str) or not source or not isinstance(target, str) or not target:
+                raise ValueError("rules require source_prefix and forbidden_target_prefix")
+            for prefix in (source, target):
+                candidate = Path(prefix)
+                if candidate.is_absolute() or ".." in candidate.parts:
+                    raise ValueError("rule prefixes must be repository-relative")
+            normalized.append({
+                "source_prefix": Path(source).as_posix().strip("./"),
+                "forbidden_target_prefix": Path(target).as_posix().strip("./"),
+            })
+        if not 1 <= max_nodes <= 10000:
+            raise ValueError("max_nodes must be between 1 and 10000")
+        if not relationship_types or any(
+                not isinstance(item, str) or not item for item in relationship_types):
+            raise ValueError("relationship_types must contain non-empty strings")
+        root = Path(repo_root).resolve(strict=True)
+        if not root.is_dir():
+            raise ValueError("repo_root must be an existing directory")
+        rows = self._conn.execute(
+            "SELECT id,provenance FROM nodes").fetchall()
+        path_by_id: dict[str, str] = {}
+        for node_id, provenance_json in rows:
+            try:
+                provenance = json.loads(provenance_json)
+                parsed = urlparse(provenance.get("source_uri", ""))
+                source_path = (Path(unquote(parsed.path)).resolve(strict=False)
+                               if parsed.scheme == "file" else None)
+                relative = source_path.relative_to(root).as_posix() if source_path else None
+            except (TypeError, ValueError, json.JSONDecodeError):
+                relative = None
+            if relative is not None:
+                path_by_id[node_id] = relative
+        truncated = len(path_by_id) > max_nodes
+        allowed = set(sorted(path_by_id)[:max_nodes])
+        placeholders = ",".join("?" for _ in relationship_types)
+        edges = self._conn.execute(
+            f"SELECT src,dst,type FROM edges WHERE type IN ({placeholders})",
+            relationship_types).fetchall()
+        violations = []
+        for src, dst, edge_type in edges:
+            if src not in allowed or dst not in allowed:
+                continue
+            source_path, target_path = path_by_id[src], path_by_id[dst]
+            for rule_index, rule in enumerate(normalized):
+                source_prefix = rule["source_prefix"]
+                target_prefix = rule["forbidden_target_prefix"]
+                source_matches = (source_path == source_prefix or
+                                  source_path.startswith(source_prefix.rstrip("/") + "/"))
+                target_matches = (target_path == target_prefix or
+                                  target_path.startswith(target_prefix.rstrip("/") + "/"))
+                if source_matches and target_matches:
+                    violations.append({
+                        "rule_index": rule_index,
+                        "source_node": src,
+                        "target_node": dst,
+                        "source_path": source_path,
+                        "target_path": target_path,
+                        "relationship": edge_type,
+                    })
+        violations.sort(key=lambda row: (
+            row["rule_index"], row["source_path"], row["target_path"],
+            row["source_node"], row["target_node"]))
+        return {
+            "kind": "cortex-architecture-boundaries",
+            "repo_root": str(root),
+            "rules": normalized,
+            "violation_count": len(violations),
+            "violations": violations,
+            "indexed_node_count": len(allowed),
+            "truncated": truncated,
+            "limitations": [
+                "Rules are caller-supplied path-prefix constraints, not inferred architecture policy.",
+                "Only selected graph relationships with repository-local provenance are checked.",
+                "Missing, unresolved, or unindexed dependencies cannot be reported.",
+            ],
+        }
+
     def nodes_by_type(self, ntype: str, limit: int = 1000) -> list[dict[str, Any]]:
         rows = self._conn.execute(
             "SELECT id,label,version FROM nodes WHERE type=? LIMIT ?", (ntype, limit)
