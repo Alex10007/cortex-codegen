@@ -524,3 +524,28 @@ Verification:
 - Latest Actions run status must be checked after this commit; earlier runs failed before job steps and provided no Python test evidence.
 
 No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or `main` branch update occurred.
+
+
+## Stage 16A.24 — cgroup descriptor lifecycle cleanup
+
+Static lifecycle review found that descriptor cleanup could itself short-circuit: the directory-descriptor cleanup helper stopped after the first os.close() error, delegated-root traversal could lose the newly opened descriptor if releasing the previous one failed, and create() finalization could skip closing the parent descriptor after a child-descriptor close error. Some cleanup failures could also replace the primary acquisition/setup exception.
+
+Changes:
+- The directory-descriptor cleanup helper now invalidates each owned descriptor exactly once, attempts child and parent closure independently, and returns all close failures. It is safe to call repeatedly; it does not retry a possibly-interrupted close() against a descriptor number that may already have been released and reused.
+- Constructor failure records secondary descriptor-cleanup errors on the original exception while still attempting both closes.
+- Delegated-root component traversal transfers ownership to the newly opened descriptor before releasing the previous descriptor. If previous-descriptor release fails, the traversal descriptor is still cleaned up; if component inspection fails, cleanup errors are attached to the primary error.
+- create() independently attempts child and parent descriptor release in finalization, and preserves cleanup failures as notes on an active setup exception rather than masking it. Owned-directory rollback remains identity-checked and is attempted even if closing the child descriptor reports an error.
+- probe_cgroup_v2() now preserves a controller-inspection exception if closing the pinned root descriptor also fails; on an otherwise successful probe, a close failure is surfaced as a failed probe.
+- Successful close() marks the cgroup removed before reporting descriptor-close failures. A repeated close is therefore idempotent and will not attempt a second removal.
+
+Regression coverage added:
+- First descriptor close fails while the second is still attempted; both descriptor attributes are invalidated.
+- Constructor identity failure attempts closure of both transferred descriptors.
+- Delegated-root traversal closes the newly opened descriptor when releasing the previous descriptor fails.
+- Repeated close() after successful removal performs only one directory removal.
+
+Verification status:
+- Source and four new fault-injection tests are committed on this branch.
+- The new tests have NOT been executed. No CI pass is claimed; prior GitHub Actions failures before step execution remain a runner/workflow issue, not Python test evidence.
+- These filesystem tests do not establish live cgroupfs compatibility or kernel enforcement. Strict sandbox remains NOT RUNTIME-VERIFIED pending full test execution and live delegated cgroup v2 + Bubblewrap qualification.
+- No model training, checkpoint/dataset changes, benchmark promotion, PR merge, or main update occurred.
