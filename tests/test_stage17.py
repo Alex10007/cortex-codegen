@@ -948,7 +948,8 @@ def test_compiler_scope_graph_captures_nested_free_global_and_special_scopes(tmp
     assert any(binding_labels[row["node"]].endswith("::module_global")
                for row in inner_globals)
 
-    comprehension = scope_id("function:with_comprehension@")
+    comprehension = (scope_id("listcomp") if has_dedicated_comprehension
+                    else scope_id("function:with_comprehension@"))
     comprehension_locals = graph.neighbors(comprehension, etype="compiler_local")
     assert any(binding_labels[row["node"]].endswith("::entry")
                for row in comprehension_locals)
