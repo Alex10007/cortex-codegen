@@ -55,6 +55,8 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
               "unresolved_calls": 0, "ambiguous_calls": 0, "inherits": 0,
               "ambiguous_inheritance": 0, "type_references": 0,
               "ambiguous_type_references": 0,
+              "factory_return_facts": 0, "factory_return_resolutions": 0,
+              "ambiguous_factory_returns": 0,
               "compiler_scopes": 0, "compiler_symbols": 0,
               "compiler_free_symbols": 0, "compiler_global_symbols": 0,
               "compiler_nonlocal_symbols": 0, "compiler_scope_parse_errors": 0}
@@ -211,6 +213,8 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
     pending_callable_aliases: list[tuple[str, tuple[str, ...], str, str, bool]] = []
     pending_instance_assignments: list[tuple[str, tuple[str, ...], tuple[str, ...], str | None, bool]] = []
     pending_instance_calls: list[tuple[str, str, tuple[str, ...], tuple[str, ...], str]] = []
+    pending_factory_returns: list[tuple[str, str, tuple[str, ...], str | None, bool]] = []
+    pending_factory_calls: list[tuple[str, str, tuple[str, ...], str, str]] = []
     pending_inheritance: list[tuple[str, tuple[str, ...], str]] = []
     pending_type_refs: list[tuple[str, tuple[str, ...], str]] = []
 
@@ -426,6 +430,10 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                                 (argument.arg,), argument.annotation.id, False))
                 if node.returns:
                     self._record_type_names(node.returns, function_id)
+                    if isinstance(node.returns, ast.Name):
+                        pending_factory_returns.append((
+                            function_id, source_id, tuple(self.scope_names),
+                            node.returns.id, False))
                 function_scope = tuple([*self.scope_names, node.name])
                 scope_bindings[(source_id, function_scope)] = _bindings_for(node)
                 _record_scope_declarations(source_id, function_scope, node)
@@ -528,9 +536,22 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                         self.conditional_depth > 0))
                 self.generic_visit(node)
 
+            def visit_Return(self, node: ast.Return) -> None:
+                value = node.value
+                class_name = self._instance_class(value)
+                pending_factory_returns.append((
+                    self.scope_ids[-1], source_id, tuple(self.scope_names),
+                    class_name, self.conditional_depth > 0))
+                self.generic_visit(node)
+
             def visit_Call(self, node: ast.Call) -> None:
                 if isinstance(node.func, ast.Attribute):
                     receiver_node = node.func.value
+                    if (isinstance(receiver_node, ast.Call) and
+                            isinstance(receiver_node.func, ast.Name)):
+                        pending_factory_calls.append((
+                            self.scope_ids[-1], source_id, tuple(self.scope_names),
+                            receiver_node.func.id, node.func.attr))
                     receiver_key = None
                     if isinstance(receiver_node, ast.Name) and receiver_node.id not in {"self", "cls"}:
                         receiver_key = (receiver_node.id,)
@@ -1057,6 +1078,61 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                 return [], True
             frontier = sorted(set(next_frontier))
         return [], False
+
+    # Resolve factory-return calls using one canonical callable and one
+    # unambiguous class result. Any conditional or unsupported explicit return
+    # invalidates the factory evidence; no flow-sensitive guess is made.
+    factory_facts: dict[str, list[tuple[str | None, str, tuple[str, ...], bool]]] = {}
+    for function_id, module_id, function_scope, class_name, conditional in pending_factory_returns:
+        factory_facts.setdefault(function_id, []).append(
+            (class_name, module_id, function_scope, conditional))
+        counts["factory_return_facts"] += 1
+
+    for caller_id, module_id, caller_scope, factory_name, method_name in pending_factory_calls:
+        definitions, _ = _resolve_lexical(module_id, caller_scope, factory_name)
+        functions = [item for item in definitions if item[1] == "func"]
+        unique_functions = sorted({item[0]: item for item in functions}.values())
+        if len(functions) != 1 or len(unique_functions) != 1:
+            if len(functions) > 1:
+                counts["ambiguous_factory_returns"] += 1
+            else:
+                counts["unresolved_calls"] += 1
+            continue
+        factory_id = unique_functions[0][0]
+        facts = factory_facts.get(factory_id, [])
+        if not facts or any(conditional or not class_name for
+                            class_name, _mid, _scope, conditional in facts):
+            counts["unresolved_calls"] += 1
+            continue
+        class_names = {class_name for class_name, _mid, _scope, _conditional in facts}
+        if len(class_names) != 1:
+            counts["ambiguous_factory_returns"] += 1
+            counts["unresolved_calls"] += 1
+            continue
+        _class_name, return_module, return_scope, _conditional = facts[0]
+        return_definitions, _ = _resolve_lexical(
+            return_module, return_scope, next(iter(class_names)))
+        return_classes = [item for item in return_definitions if item[1] == "class"]
+        unique_classes = sorted({item[0]: item for item in return_classes}.values())
+        if len(return_classes) != 1 or len(unique_classes) != 1:
+            counts["ambiguous_factory_returns"] += 1
+            counts["unresolved_calls"] += 1
+            continue
+        method_definitions, ambiguous_method = _method_for_class(
+            unique_classes[0][0], method_name)
+        unique_methods = sorted({item[0]: item for item in method_definitions}.values())
+        if len(method_definitions) == 1 and len(unique_methods) == 1:
+            if unique_methods[0][0] != caller_id:
+                graph.upsert_edge(caller_id, unique_methods[0][0], "calls", version)
+                counts["calls"] += 1
+                counts["factory_return_resolutions"] += 1
+                if not unique_methods[0][0].startswith(module_id + ":"):
+                    counts["cross_module_calls"] += 1
+        elif ambiguous_method or len(method_definitions) > 1:
+            counts["ambiguous_calls"] += 1
+            counts["unresolved_calls"] += 1
+        else:
+            counts["unresolved_calls"] += 1
 
     # Resolve calls through explicitly evidenced local instance types. Only
     # direct constructor assignments and simple class annotations are accepted.
