@@ -67,7 +67,7 @@ jobs:
       - name: Install dependencies and run complete verification
         run: |
           set -euxo pipefail
-          test_count="$(find tests -type f \\( -name 'test_*.py' -o -name '*_test.py' \\) | wc -l)"
+          test_count="$(find tests -type f \( -name 'test_*.py' -o -name '*_test.py' \) | wc -l)"
           test "$test_count" -gt 0
           python -m pip install --upgrade pip
           python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
