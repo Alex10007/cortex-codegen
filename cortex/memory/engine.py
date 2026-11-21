@@ -32,10 +32,16 @@ class MemoryEngine:
                 project TEXT NOT NULL,
                 key TEXT NOT NULL,
                 value TEXT NOT NULL,
+                verified INTEGER NOT NULL DEFAULT 0,
                 updated_at TEXT NOT NULL,
                 UNIQUE(project, key)
             )"""
         )
+        columns = {row[1] for row in self._conn.execute(
+            "PRAGMA table_info(facts)").fetchall()}
+        if "verified" not in columns:
+            self._conn.execute(
+                "ALTER TABLE facts ADD COLUMN verified INTEGER NOT NULL DEFAULT 0")
         self._conn.commit()
 
     def record(self, project: str, kind: str, payload: dict[str, Any],
@@ -48,19 +54,30 @@ class MemoryEngine:
         self._conn.commit()
         return int(cur.lastrowid)
 
-    def put_fact(self, project: str, key: str, value: str) -> None:
+    def put_fact(self, project: str, key: str, value: str,
+                 verified: bool = False) -> None:
+        """Store a project fact; facts are excluded from model context by default."""
         self._conn.execute(
-            """INSERT INTO facts (project, key, value, updated_at) VALUES (?,?,?,?)
+            """INSERT INTO facts
+               (project, key, value, verified, updated_at) VALUES (?,?,?,?,?)
                ON CONFLICT(project, key) DO UPDATE SET
-                 value=excluded.value, updated_at=excluded.updated_at""",
-            (project, key, value, _now()),
+                 value=excluded.value, verified=excluded.verified,
+                 updated_at=excluded.updated_at""",
+            (project, key, value, int(verified), _now()),
         )
         self._conn.commit()
 
-    def get_fact(self, project: str, key: str) -> str | None:
-        row = self._conn.execute(
-            "SELECT value FROM facts WHERE project=? AND key=?", (project, key)
-        ).fetchone()
+    def get_fact(self, project: str, key: str,
+                 verified_only: bool = True) -> str | None:
+        if verified_only:
+            row = self._conn.execute(
+                "SELECT value FROM facts WHERE project=? AND key=? AND verified=1",
+                (project, key))
+        else:
+            row = self._conn.execute(
+                "SELECT value FROM facts WHERE project=? AND key=?",
+                (project, key))
+        row = row.fetchone()
         return row[0] if row else None
 
     def events(self, project: str, kind: str | None = None,
@@ -82,6 +99,18 @@ class MemoryEngine:
             out.append({"kind": r[0], "verified": bool(r[1]),
                         "payload": json.loads(r[2]), "created_at": r[3]})
         return out
+
+    def facts(self, project: str,
+              verified_only: bool = True) -> dict[str, str]:
+        if verified_only:
+            rows = self._conn.execute(
+                "SELECT key, value FROM facts WHERE project=? AND verified=1 "
+                "ORDER BY key", (project,)).fetchall()
+        else:
+            rows = self._conn.execute(
+                "SELECT key, value FROM facts WHERE project=? ORDER BY key",
+                (project,)).fetchall()
+        return {str(key): str(value) for key, value in rows}
 
     def verified_outcomes(self, project: str) -> list[dict[str, Any]]:
         return [e for e in self.events(project, limit=500)

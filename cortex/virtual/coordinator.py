@@ -215,6 +215,11 @@ class JointTrainer:
         for slot in active_slots:
             slot.A.grad = None
             slot.B.grad = None
+        self._before_values = {
+            (slot.bank, slot.row): (
+                slot.A.detach().clone(), slot.B.detach().clone())
+            for slot in active_slots
+        }
         logits, loss = self.model(x, y, pad_mask=pad)
         n_tok = int((y != -100).sum())
         self.phys_opt.zero_grad(set_to_none=True)
@@ -249,26 +254,29 @@ class JointTrainer:
         entry["virtual_grad_params"] = int(sum(
             self.store._slots[br].A.numel() + self.store._slots[br].B.numel()
             for br in distinct))
-        # scalar-level update distribution over the actually-updated slots
-        deltas: list[float] = []
+        # Exact scalar-level update distribution for this optimizer step.
+        max_abs_delta = 0.0
+        abs_delta_sum = 0.0
         nonzero = 0
         total_scalars = 0
         for br in sorted(distinct):
-            s = self.store._slots[br]
+            slot = self.store._slots[br]
             before = self._before_values.get(br)
             if before is not None:
-                for cur, prev in ((s.A, before[0]), (s.B, before[1])):
-                    d = float((cur.detach() - prev).abs().max())
-                    moved = ((cur.detach() - prev).abs() > 1e-12).float().mean()
-                    deltas.append(d)
-                    nonzero += int(round(float(moved) * cur.numel()))
-                    total_scalars += cur.numel()
-        if deltas:
-            entry["update_scalar_max_abs_delta"] = round(max(deltas), 8)
+                for cur, prev in ((slot.A, before[0]), (slot.B, before[1])):
+                    delta = (cur.detach() - prev).abs()
+                    max_abs_delta = max(
+                        max_abs_delta, float(delta.max().item()))
+                    abs_delta_sum += float(delta.sum().item())
+                    nonzero += int(torch.count_nonzero(delta).item())
+                    total_scalars += delta.numel()
+        if total_scalars:
+            entry["update_scalar_max_abs_delta"] = round(max_abs_delta, 8)
             entry["update_scalar_mean_abs_delta"] = round(
-                float(sum(abs(d) for d in deltas) / len(deltas)), 8)
+                abs_delta_sum / total_scalars, 8)
             entry["update_scalars_moved"] = nonzero
             entry["update_scalars_total"] = total_scalars
+        self._before_values.clear()
         if log:
             self.participation.append(entry)
         self._save_progress()
@@ -278,16 +286,33 @@ class JointTrainer:
 
     def checkpoint(self, checkpoint_dir: str | Path, txid: str,
                    extra: dict[str, Any] | None = None) -> dict[str, Any]:
+        reserved_lineage_keys = {
+            "kind", "step", "transaction_id", "physical_checkpoint",
+            "physical_sha256", "virtual_committed_step",
+            "virtual_integrity_ok", "virtual_rows_committed",
+            "virtual_routes", "virtual_rank", "virtual_seed",
+            "virtual_store_root", "virtual_store_manifest_sha256", "owned_by",
+        }
+        overlap = reserved_lineage_keys.intersection(extra or {})
+        if overlap:
+            raise ValueError(
+                "checkpoint extra metadata cannot override reserved lineage "
+                f"keys: {sorted(overlap)}")
         cdir = Path(checkpoint_dir)
         cdir.mkdir(parents=True, exist_ok=True)
         phys_path = cdir / f"joint-step-{self.step_count:06d}.pt"
+        tmp_phys = phys_path.with_suffix(
+            phys_path.suffix + f".tmp{os.getpid()}")
         torch.save({
             "model": self.cfg.name,
             "model_state": self.model.state_dict(),
             "phys_opt_state": self.phys_opt.state_dict(),
             "arch": "CortexMoETransformer",
             "step": self.step_count,
-        }, phys_path)
+        }, tmp_phys)
+        with open(tmp_phys, "rb") as fh:
+            os.fsync(fh.fileno())
+        os.replace(tmp_phys, phys_path)
         sha = hashlib.sha256(phys_path.read_bytes()).hexdigest()
         commits = self.store.commit(self.step_count, txid)
         integrity = self.store.verify_integrity()
@@ -310,6 +335,9 @@ class JointTrainer:
                                in self.active_routes.items()},
             "virtual_rank": self.virtual_rank,
             "virtual_seed": self.seed,
+            "virtual_store_root": str(self.store.root.resolve()),
+            "virtual_store_manifest_sha256": hashlib.sha256(
+                self.store.manifest_path.read_bytes()).hexdigest(),
             "owned_by": "Fibonera",
         }
         if extra:

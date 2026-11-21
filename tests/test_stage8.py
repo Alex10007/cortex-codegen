@@ -123,9 +123,8 @@ def test_optimizer_state_restore_guards_shape_mismatch(small_store):
     store.commit(step=1, txid="tx-shape")
     store._slots.clear()
     store._pages.clear()
-    st2 = store.slot_state(0, 3, dim=32, rank=8, seed=13)
-    assert st2.step_count == 0
-    assert not st2.m and not st2.v
+    with pytest.raises(ValueError, match="persisted slot"):
+        store.slot_state(0, 3, dim=32, rank=8, seed=13)
 
 
 def test_evict_keeps_dirty_and_commit_before_evict_preserves_state(

@@ -78,42 +78,74 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
             ), defer_commit=True)
             counts["docs"] += 1
 
-        for node in ast.walk(tree):
-            if isinstance(node, ast.ClassDef):
-                cid = mid + ":class:" + node.name
-                cdoc = ast.get_docstring(node) or node.name
+        class ScopedIndexer(ast.NodeVisitor):
+            def __init__(self):
+                self.scope: list[str] = []
+                self.parents: list[str] = [mid]
+
+            def visit_ClassDef(self, node: ast.ClassDef) -> None:
+                qual = ".".join([*self.scope, node.name])
+                cid = mid + ":class:" + qual
+                cdoc = ast.get_docstring(node) or qual
                 store.add(KnowledgeItem(
                     item_id=cid, kind="class", language=language, text=cdoc,
-                    provenance=prov, tags={"path": rel, "name": node.name},
+                    provenance=prov,
+                    tags={"path": rel, "name": qual,
+                          "short_name": node.name, "scope": list(self.scope)},
                 ), defer_commit=True)
-                graph.upsert_node(cid, "class", f"{rel}::{node.name}", prov)
-                graph.upsert_edge(mid, cid, "defines", version)
+                graph.upsert_node(cid, "class", f"{rel}::{qual}", prov)
+                graph.upsert_edge(self.parents[-1], cid, "defines", version)
                 counts["classes"] += 1
                 counts["edges"] += 1
-            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                fid = mid + ":func:" + node.name
-                fdoc = ast.get_docstring(node) or node.name
+                self.scope.append(node.name)
+                self.parents.append(cid)
+                self.generic_visit(node)
+                self.parents.pop()
+                self.scope.pop()
+
+            def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+                self._visit_function(node)
+
+            def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+                self._visit_function(node)
+
+            def _visit_function(self, node) -> None:
+                qual = ".".join([*self.scope, node.name])
+                fid = mid + ":func:" + qual
+                fdoc = ast.get_docstring(node) or qual
                 args = [a.arg for a in node.args.args]
                 store.add(KnowledgeItem(
                     item_id=fid, kind="function", language=language, text=fdoc,
                     provenance=prov,
-                    tags={"path": rel, "name": node.name, "args": args},
+                    tags={"path": rel, "name": qual,
+                          "short_name": node.name, "scope": list(self.scope),
+                          "args": args},
                 ), defer_commit=True)
-                graph.upsert_node(fid, "function", f"{rel}::{node.name}", prov)
-                graph.upsert_edge(mid, fid, "defines", version)
+                graph.upsert_node(fid, "function", f"{rel}::{qual}", prov)
+                graph.upsert_edge(self.parents[-1], fid, "defines", version)
                 counts["functions"] += 1
                 counts["edges"] += 1
-            elif isinstance(node, ast.Import):
+                self.scope.append(node.name)
+                self.parents.append(fid)
+                self.generic_visit(node)
+                self.parents.pop()
+                self.scope.pop()
+
+            def visit_Import(self, node: ast.Import) -> None:
                 for alias in node.names:
                     graph.upsert_edge(mid, "pymod:" + alias.name, "imports", version)
                     graph.upsert_node("pymod:" + alias.name, "external_module",
                                       alias.name, prov)
                     counts["edges"] += 1
-            elif isinstance(node, ast.ImportFrom) and node.module:
-                graph.upsert_edge(mid, "pymod:" + node.module, "imports", version)
-                graph.upsert_node("pymod:" + node.module, "external_module",
-                                  node.module, prov)
-                counts["edges"] += 1
+
+            def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+                if node.module:
+                    graph.upsert_edge(mid, "pymod:" + node.module, "imports", version)
+                    graph.upsert_node("pymod:" + node.module, "external_module",
+                                      node.module, prov)
+                    counts["edges"] += 1
+
+        ScopedIndexer().visit(tree)
 
     store.flush()
     graph.commit()

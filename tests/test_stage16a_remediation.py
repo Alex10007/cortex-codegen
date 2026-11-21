@@ -90,6 +90,9 @@ def test_joint_trainer_updates_shared_virtual_slot_once_and_clears_gradients(
           "code": "def add(a, b):\n    return a + b\n"}],
         seq_len=256)
     assert rec is not None
+    assert rec["update_scalars_moved"] > 0
+    assert rec["update_scalars_total"] >= rec["update_scalars_moved"]
+    assert rec["update_scalar_max_abs_delta"] > 0
     updated = {tuple(x) for x in rec["virtual_slots_updated"]}
     assert len(updated) == len(rec["virtual_slots_updated"])
     for key, slot in small_store._slots.items():
@@ -135,7 +138,459 @@ def test_legacy_slot_without_shape_or_optimizer_is_reported_unknown(small_store)
     manifest.pop("initialized_slot_shapes")
     small_store.manifest_path.write_text(json.dumps(manifest))
     small_store.manifest = manifest
+    # Simulate a fresh process with no live tensor object to establish shape.
+    small_store._slots.clear()
     accounting = small_store.accounting()
     assert accounting["initialized"] == 0
     assert accounting["initialized_unknown_rows"] == 1
     assert accounting["initialized_exact"] is False
+
+def test_fsdp_planner_refuses_2b_until_attention_fits_cluster_matrix():
+    from scripts.train_2b_fsdp import required_gpus
+
+    # The current explicit attention implementation materializes quadratic
+    # sequence matrices; even the largest validated 80-GB device plan must
+    # refuse rather than claim the old under-estimated 2B memory requirement.
+    with pytest.raises(RuntimeError, match="no cluster size"):
+        required_gpus("cortex-2b", batch_size=8, gpu_memory_gb=80.0)
+
+
+
+def test_cluster_plans_never_emit_zero_microbatch():
+    from cortex.model.configs import CORTEX_2B
+    from cortex.training.scaling import cluster_plans
+
+    plans = cluster_plans(CORTEX_2B, batch_size=4, seq_len=128)
+    assert plans["plans"]
+    assert all(p["micro_batch"] >= 1 for p in plans["plans"])
+    assert all(4 % p["world_size"] == 0 for p in plans["plans"])
+
+
+
+def test_agent_loads_joint_moe_checkpoint_with_virtual_lineage(
+        small_store, tmp_path, monkeypatch):
+    from cortex.core import CortexAgent
+    from cortex.model.configs import CORTEX_DEMO
+    from cortex.tokenizer.cortex_tokenizer import load_tokenizer
+    from cortex.virtual.coordinator import JointTrainer, coverage_plan
+
+    tokenizer_path = str(TOKENIZER)
+    tok = load_tokenizer(tokenizer_path)
+    trainer = JointTrainer(
+        CORTEX_DEMO, tok, small_store, tmp_path / "trainer",
+        virtual_rank=8, seed=29)
+    groups, _ = coverage_plan(small_store, trainer.model.n_virtual, 1)
+    trainer.attach_partition_group(groups[0])
+    checkpoint_dir = tmp_path / "joint-checkpoint"
+    with pytest.raises(ValueError, match="reserved lineage keys"):
+        trainer.checkpoint(
+            checkpoint_dir, "stage16a-test",
+            extra={"owned_by": "untrusted-override"})
+    trainer.checkpoint(checkpoint_dir, "stage16a-test")
+    checkpoint_path = checkpoint_dir / "joint-step-000000.pt"
+
+    agent = CortexAgent(
+        state_dir=str(tmp_path / "agent-state"),
+        tokenizer_path=tokenizer_path,
+        checkpoint_path=str(checkpoint_path),
+        virtual_store_path=str(small_store.root))
+    model = agent.model
+    from cortex.model.moe import CortexMoETransformer
+    assert isinstance(model, CortexMoETransformer)
+    assert model.virtual_param_count() > 0
+    assert model.moe_param_count()["physical_total_parameters"] == (
+        model.actual_param_count())
+
+def test_legacy_committed_slot_restores_from_optimizer_shape_witness(small_store):
+    from cortex.model.virtual_slot import VirtualAdamW
+
+    slot = small_store.slot_state(3, 4, dim=32, rank=4)
+    ((torch.randn(2, 32) @ slot.A) @ slot.B).sum().backward()
+    VirtualAdamW().step(slot)
+    expected_a = slot.A.detach().clone()
+    expected_b = slot.B.detach().clone()
+    expected_masks = {
+        name: mask.detach().clone()
+        for name, mask in slot.changed_mask.items()
+    }
+    small_store.commit(step=1, txid="legacy-optimizer-witness")
+    manifest = json.loads(small_store.manifest_path.read_text())
+    manifest.pop("initialized_slot_shapes")
+    small_store.manifest_path.write_text(json.dumps(manifest))
+
+    restored_store = vstore.VirtualParameterStore.open(small_store.root)
+    restored = restored_store.slot_state(3, 4, dim=32, rank=4)
+    assert torch.equal(restored.A.detach(), expected_a)
+    assert torch.equal(restored.B.detach(), expected_b)
+    assert restored.step_count == 1
+    assert restored.changed_evidence_known is True
+    for name, expected_mask in expected_masks.items():
+        assert torch.equal(restored.changed_mask[name], expected_mask)
+
+
+def test_orphan_optimizer_state_is_not_counted_as_trained(small_store):
+    from cortex.model.virtual_slot import VirtualAdamW, slot_adam_states
+    from cortex.virtual.coverage import measure
+
+    slot = small_store.slot_state(4, 5, dim=32, rank=4)
+    ((torch.randn(2, 32) @ slot.A) @ slot.B).sum().backward()
+    VirtualAdamW().step(slot)
+    npz_path = small_store.root / "adam-00004-000005.npz"
+    import numpy as np
+    np.savez(npz_path, **slot_adam_states(slot))
+    small_store._slots.clear()
+    small_store.dirty.clear()
+
+    accounting = small_store.accounting()
+    coverage = measure(small_store)
+    assert accounting["orphan_optimizer_state_slots"] == 1
+    assert accounting["optimizer_updated"] == 0
+    assert accounting["invariants_hold"] is False
+    assert coverage["persisted_optimizer_scan"]["orphan_optimizer_slots"] == 1
+    assert coverage["scalars"]["optimizer_updated"] == 0
+    assert coverage["invariants_hold"] is False
+    with pytest.raises(RuntimeError, match="orphan optimizer state"):
+        small_store.slot_state(4, 5, dim=32, rank=4)
+
+def test_moe_physical_parameter_ledger_separates_dense_reference():
+    from cortex.model.configs import CORTEX_DEMO
+    from cortex.model.moe import (
+        CortexMoETransformer, estimate_moe_physical_parameters)
+
+    model = CortexMoETransformer(CORTEX_DEMO)
+    ledger = model.moe_param_count()
+    estimate = estimate_moe_physical_parameters(CORTEX_DEMO)
+    assert estimate["physical_total_parameters"] == (
+        ledger["physical_total_parameters"])
+    assert ledger["dense_reference_parameters"] == (
+        CORTEX_DEMO.theoretical_param_count())
+    assert ledger["physical_total_parameters"] == model.actual_param_count()
+    assert ledger["physical_total_parameters"] > (
+        ledger["dense_reference_parameters"])
+    assert ledger["total_with_virtual"] == (
+        ledger["physical_total_parameters"] + ledger["virtual_slot_parameters"])
+
+
+def test_persisted_slot_shape_cannot_be_reinterpreted(small_store):
+    store = small_store
+    store.slot_state(0, 6, dim=64, rank=8)
+    store.commit(step=0, txid="persisted-shape")
+    store._slots.clear()
+    with pytest.raises(ValueError, match="persisted slot"):
+        store.slot_state(0, 6, dim=64, rank=4)
+
+
+
+def test_generation_context_uses_only_verified_project_memory(tmp_path):
+    from cortex.core import CortexAgent
+    from cortex.interfaces import Provenance
+
+    agent = CortexAgent(state_dir=str(tmp_path / "agent"))
+    project = "sample-project"
+    agent.memory.put_fact(project, "language", "Python", verified=True)
+    agent.memory.put_fact(project, "untrusted-note", "do not trust", verified=False)
+    agent.memory.record(
+        project, "pipeline", {"status": "verified-change"},
+        verified=True)
+    agent.memory.record(
+        project, "pipeline", {"status": "unverified-change"},
+        verified=False)
+    provenance = Provenance(
+        source_uri="file:///verified.py", license="project-local",
+        version="1", content_sha256="abc", collected_at="now",
+        collector="test")
+    agent.learning.ingest_verified_outcome(
+        "def add(a, b):\\n    return a + b\\n",
+        execution_ok=True, tests_passed=True, provenance=provenance)
+    context = agent.retrieval_context(project, "add function")
+    assert "language: Python" in context
+    assert "untrusted-note" not in context
+    assert "verified-change" in context
+    assert "unverified-change" not in context
+    assert "def add" in context
+
+
+def test_moe_masks_unbound_virtual_routes_until_slots_are_attached():
+    from cortex.model.moe import MoEFFN
+
+    moe = MoEFFN(dim=4, n_physical=4, n_virtual=2, top_k=2,
+                 expert_ffn=4)
+    moe.experts = torch.nn.ModuleList([torch.nn.Identity() for _ in range(4)])
+    # Force the raw router to prefer virtual experts. They are not attached,
+    # so routing must mask them and select only the available physical experts.
+    with torch.no_grad():
+        moe.router.weight.fill_(-10.0)
+        moe.router.weight[4:].fill_(10.0)
+    x = torch.ones(2, 3, 4)
+    y = moe(x)
+    assert torch.allclose(y, x, atol=1e-6, rtol=1e-6)
+    assert int(moe.last_counts[4:].sum()) == 0
+    diag = moe.routing_diagnostics()
+    assert diag["active_experts"] == 4
+    assert diag["utilization_fraction"] <= 1.0
+
+
+def test_moe_refuses_when_active_experts_cannot_fill_topk():
+    from cortex.model.moe import MoEFFN
+
+    moe = MoEFFN(dim=4, n_physical=1, n_virtual=2, top_k=2,
+                 expert_ffn=4)
+    with pytest.raises(RuntimeError, match="active experts"):
+        moe(torch.ones(1, 2, 4))
+
+
+
+def test_agent_generation_uses_inference_mode(tmp_path):
+    from types import SimpleNamespace
+    from cortex.core import CortexAgent
+
+    class Tokenizer:
+        EOT = "<eot>"
+        eot_id = 2
+
+        def encode(self, text):
+            return [1, 3]
+
+        def decode(self, tokens):
+            return "generated"
+
+    class Model:
+        cfg = SimpleNamespace(max_seq_len=128)
+
+        def generate(self, tokens, **kwargs):
+            assert torch.is_inference_mode_enabled()
+            return tokens
+
+    agent = CortexAgent(state_dir=str(tmp_path / "agent"))
+    agent._tokenizer = Tokenizer()
+    agent._model = Model()
+    assert agent.generate("hello") == "generated"
+
+
+
+def test_project_facts_are_excluded_until_explicitly_verified(tmp_path):
+    from cortex.memory.engine import MemoryEngine
+
+    memory = MemoryEngine(str(tmp_path / "memory.db"))
+    memory.put_fact("project", "draft", "unverified value")
+    assert memory.get_fact("project", "draft") is None
+    assert memory.facts("project") == {}
+    memory.put_fact("project", "accepted", "verified value", verified=True)
+    assert memory.get_fact("project", "accepted") == "verified value"
+    assert memory.facts("project") == {"accepted": "verified value"}
+
+
+
+def test_moe_topk_load_balance_is_normalized():
+    from cortex.model.moe import MoEFFN
+
+    moe = MoEFFN(dim=4, n_physical=4, n_virtual=0, top_k=2,
+                 expert_ffn=4)
+    moe.experts = torch.nn.ModuleList([torch.nn.Identity() for _ in range(4)])
+    with torch.no_grad():
+        moe.router.weight.zero_()
+    moe(torch.ones(2, 3, 4))
+    assert float(moe.last_aux) == pytest.approx(1.0, abs=1e-6)
+
+
+
+def test_generation_metadata_reports_actual_context_usage(tmp_path):
+    from types import SimpleNamespace
+    from cortex.core import CortexAgent
+
+    class Tokenizer:
+        EOT = "<eot>"
+        eot_id = 2
+
+        def encode(self, text):
+            return [1, 3]
+
+        def decode(self, tokens):
+            return "generated"
+
+    class Model:
+        cfg = SimpleNamespace(max_seq_len=32)
+
+        def generate(self, tokens, **kwargs):
+            assert torch.is_inference_mode_enabled()
+            return tokens
+
+    agent = CortexAgent(state_dir=str(tmp_path / "agent"))
+    agent._tokenizer = Tokenizer()
+    agent._model = Model()
+    agent.retrieval_context = lambda project, query: ""
+    without = agent.generate_with_metadata("hello", project="empty-project")
+    assert without["project_context_used"] is False
+    agent.retrieval_context = lambda project, query: "verified project fact"
+    with_context = agent.generate_with_metadata("hello", project="known-project")
+    assert with_context["project_context_used"] is True
+
+
+
+def test_multi_slot_commit_publishes_one_manifest_transaction(
+        small_store, monkeypatch):
+    before = json.loads(small_store.manifest_path.read_text())
+    slot_a = small_store.slot_state(0, 0, dim=32, rank=4, seed=7)
+    slot_b = small_store.slot_state(0, 1, dim=32, rank=4, seed=8)
+    expected_a = (slot_a.A.detach().clone(), slot_a.B.detach().clone())
+    expected_b = (slot_b.A.detach().clone(), slot_b.B.detach().clone())
+
+    def fail_manifest_write(*args, **kwargs):
+        raise OSError("simulated manifest publish failure")
+
+    monkeypatch.setattr(vstore, "_atomic_json", fail_manifest_write)
+    with pytest.raises(OSError, match="manifest publish"):
+        small_store.commit(step=1, txid="atomic-test")
+
+    after = json.loads(small_store.manifest_path.read_text())
+    assert after == before
+    assert small_store.dirty == {(0, 0), (0, 1)}
+
+    # Raw bank bytes written before the manifest boundary are not accepted as
+    # committed state; a fresh process deterministically reinitializes them.
+    reopened = vstore.VirtualParameterStore.open(small_store.root)
+    restored_a = reopened.slot_state(0, 0, dim=32, rank=4, seed=7)
+    restored_b = reopened.slot_state(0, 1, dim=32, rank=4, seed=8)
+    assert torch.equal(restored_a.A.detach(), expected_a[0])
+    assert torch.equal(restored_a.B.detach(), expected_a[1])
+    assert torch.equal(restored_b.A.detach(), expected_b[0])
+    assert torch.equal(restored_b.B.detach(), expected_b[1])
+
+
+
+def test_2b_moe_parameter_estimate_is_separate_from_dense_2b():
+    from cortex.model.configs import CORTEX_2B
+    from cortex.model.moe import estimate_moe_physical_parameters
+
+    report = estimate_moe_physical_parameters(CORTEX_2B)
+    assert report["dense_reference_parameters"] == 2_056_012_800
+    assert report["physical_total_parameters"] == 5_832_545_280
+    assert report["physical_total_parameters"] > (
+        report["dense_reference_parameters"])
+    assert report["physical_total_parameters"] == (
+        report["backbone_parameters"]
+        + report["physical_expert_parameters"]
+        + report["router_parameters"])
+
+
+
+def test_multi_slot_commit_publishes_manifest_once(small_store, monkeypatch):
+    real_atomic_json = vstore._atomic_json
+    calls = []
+
+    def counted_atomic_json(*args, **kwargs):
+        calls.append(1)
+        return real_atomic_json(*args, **kwargs)
+
+    monkeypatch.setattr(vstore, "_atomic_json", counted_atomic_json)
+    small_store.slot_state(0, 10, dim=16, rank=4)
+    small_store.slot_state(0, 11, dim=16, rank=4)
+    commits = small_store.commit(step=3, txid="single-publish")
+    manifest = json.loads(small_store.manifest_path.read_text())
+    assert len(commits) == 2
+    assert len(calls) == 1
+    assert manifest["committed_step"] == 3
+    assert set(manifest["initialized_rows"]["0"]) >= {"10", "11"}
+
+
+def test_committed_virtual_row_digest_is_verified_before_load(small_store):
+    slot = small_store.slot_state(0, 12, dim=16, rank=4)
+    small_store.commit(step=1, txid="digest-check")
+    page = small_store.page(0)
+    page[12, 0] += 1.0
+    page.flush()
+    small_store._slots.clear()
+    with pytest.raises(RuntimeError, match="digest mismatch"):
+        small_store.slot_state(0, 12, dim=16, rank=4)
+
+
+
+def test_demonstrably_trained_counts_only_scalars_that_changed(small_store):
+    from cortex.model.virtual_slot import VirtualAdamW
+    from cortex.virtual.coverage import measure
+
+    slot = small_store.slot_state(5, 6, dim=32, rank=4)
+    ((torch.randn(3, 32) @ slot.A) @ slot.B).sum().backward()
+    VirtualAdamW().step(slot)
+    expected = sum(int(mask.sum()) for mask in slot.changed_mask.values())
+    assert expected > 0
+    small_store.commit(step=1, txid="changed-scalar-evidence")
+    accounting = small_store.accounting()
+    coverage = measure(small_store)
+    assert accounting["demonstrably_trained"] == expected
+    assert accounting["demonstrably_trained_exact"] is True
+    assert coverage["scalars"]["demonstrably_trained"] == expected
+    assert coverage["scalars"]["demonstrably_trained_exact"] is True
+    assert expected <= accounting["optimizer_updated"]
+
+
+def test_legacy_optimizer_without_change_masks_is_not_claimed_as_trained(
+        small_store):
+    import numpy as np
+    from cortex.model.virtual_slot import VirtualAdamW, slot_adam_states
+
+    slot = small_store.slot_state(5, 7, dim=32, rank=4)
+    ((torch.randn(3, 32) @ slot.A) @ slot.B).sum().backward()
+    VirtualAdamW().step(slot)
+    state = slot_adam_states(slot)
+    legacy_state = {k: v for k, v in state.items()
+                    if not k.endswith("_changed_mask")
+                    and k != "changed_evidence_known"}
+    small_store.commit(step=1, txid="legacy-no-change-mask")
+    np.savez(small_store.root / "adam-00005-000007.npz", **legacy_state)
+
+    restored_store = vstore.VirtualParameterStore.open(small_store.root)
+    restored_store.slot_state(5, 7, dim=32, rank=4)
+    accounting = restored_store.accounting()
+    from cortex.virtual.coverage import measure
+    coverage = measure(restored_store)
+    assert accounting["optimizer_updated"] == 2 * 32 * 4
+    assert accounting["demonstrably_trained"] == 0
+    assert accounting["demonstrably_trained_unknown_slots"] == 1
+    assert accounting["demonstrably_trained_exact"] is False
+    assert coverage["scalars"]["optimizer_updated"] == 2 * 32 * 4
+    assert coverage["scalars"]["demonstrably_trained"] == 0
+    assert coverage["scalars"]["demonstrably_trained_unknown_slots"] == 1
+    assert coverage["scalars"]["demonstrably_trained_exact"] is False
+
+
+
+def test_agent_rejects_virtual_store_ahead_of_physical_checkpoint(
+        small_store, tmp_path):
+    import hashlib
+    from cortex.model.configs import CORTEX_DEMO
+    from cortex.tokenizer.cortex_tokenizer import load_tokenizer
+    from cortex.virtual.coordinator import JointTrainer, coverage_plan
+    from cortex.core import CortexAgent
+
+    tok = load_tokenizer(str(TOKENIZER))
+    trainer = JointTrainer(CORTEX_DEMO, tok, small_store,
+                           tmp_path / "ahead-trainer",
+                           virtual_rank=8, seed=23)
+    groups, _ = coverage_plan(small_store, trainer.model.n_virtual, 1)
+    trainer.attach_partition_group(groups[0])
+    checkpoint_dir = tmp_path / "ahead-checkpoints"
+    trainer.checkpoint(str(checkpoint_dir), step=0)
+    checkpoint_path = checkpoint_dir / "joint-step-000000.pt"
+
+    agent = CortexAgent(checkpoint_path=str(checkpoint_path),
+                        virtual_store_path=str(small_store.root),
+                        state_dir=str(tmp_path / "agent-first"))
+    assert agent.model.__class__.__name__ == "CortexMoETransformer"
+
+    slot = next(iter(small_store._slots.values()))
+    small_store.slot_state(slot.bank, slot.row, CORTEX_DEMO.dim, 8)
+    small_store.commit(step=1, txid="store-ahead")
+
+    lineage_path = checkpoint_dir / "lineage.json"
+    lineage = json.loads(lineage_path.read_text())
+    lineage["virtual_store_manifest_sha256"] = hashlib.sha256(
+        small_store.manifest_path.read_bytes()).hexdigest()
+    lineage_path.write_text(json.dumps(lineage))
+
+    stale_agent = CortexAgent(
+        checkpoint_path=str(checkpoint_path),
+        virtual_store_path=str(small_store.root),
+        state_dir=str(tmp_path / "agent-stale"))
+    with pytest.raises(RuntimeError, match="committed step does not match"):
+        _ = stale_agent.model

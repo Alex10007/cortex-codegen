@@ -112,3 +112,80 @@ def test_learning_accepts_verified_code_and_dedups(tmp_path):
     again = eng.ingest_verified_outcome(code, execution_ok=True, tests_passed=True,
                                         provenance=_prov(sha="cc"))
     assert again.item_id == item.item_id
+
+
+
+def test_indexer_uses_qualified_names_for_nested_symbols(tmp_path):
+    source = tmp_path / "nested.py"
+    source.write_text(
+        "def outer():\\n"
+        "    def same():\\n"
+        "        return 1\\n"
+        "    return same()\\n"
+        "class A:\\n"
+        "    def same(self):\\n"
+        "        return 2\\n"
+        "class B:\\n"
+        "    def same(self):\\n"
+        "        return 3\\n")
+    store = VectorStore(str(tmp_path / "kv.db"))
+    graph = KnowledgeGraph(str(tmp_path / "kg.db"))
+    index_code_root(str(tmp_path), store, graph)
+    function_ids = {
+        item_id for item_id, _text in store.iter_texts()
+        if ":func:" in item_id
+    }
+    assert any(":func:outer.same" in item_id for item_id in function_ids)
+    assert any(":func:A.same" in item_id for item_id in function_ids)
+    assert any(":func:B.same" in item_id for item_id in function_ids)
+
+
+
+def test_knowledge_add_cannot_self_assert_verification_or_preserve_stale_trust(
+        tmp_path):
+    store = VectorStore(str(tmp_path / "kv.db"))
+    item = KnowledgeItem(
+        item_id="trusted-replacement",
+        kind="pattern",
+        language="python",
+        text="initial unverified content",
+        provenance=_prov(),
+        tags={"verified": True},
+    )
+    store.add(item)
+    assert store.get(item.item_id)["verified"] == 0
+    store.mark_verified(item.item_id, "execution+tests")
+    assert store.get(item.item_id)["verified"] == 1
+
+    replacement = KnowledgeItem(
+        item_id=item.item_id,
+        kind="pattern",
+        language="python",
+        text="replacement content not yet tested",
+        provenance=_prov(sha="replacement"),
+        tags={"verified": True},
+    )
+    store.add(replacement)
+    updated = store.get(item.item_id)
+    assert updated["text"] == "replacement content not yet tested"
+    assert updated["verified"] == 0
+    assert updated["verified_by"] is None
+
+
+
+def test_known_pattern_requires_verified_record(tmp_path):
+    store = VectorStore(str(tmp_path / "kv.db"))
+    engine = LearningEngine(store)
+    code = "def multiply(a, b): return a * b"
+    item = KnowledgeItem(
+        item_id=engine._pid(code),
+        kind="pattern",
+        language="python",
+        text=code,
+        provenance=_prov(),
+        tags={"verified": True},
+    )
+    store.add(item)
+    assert engine.is_known_pattern(code) is False
+    store.mark_verified(item.item_id, "execution+tests")
+    assert engine.is_known_pattern(code) is True

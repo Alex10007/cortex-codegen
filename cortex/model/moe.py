@@ -33,6 +33,33 @@ AUX_COEF = 0.01
 Z_COEF = 0.001
 
 
+def estimate_moe_physical_parameters(
+        cfg: ModelConfig, n_physical: int = PHYS_EXPERTS,
+        n_virtual: int = VIRTUAL_ROUTES, expert_ffn: int | None = None,
+        expert_every: int = 1) -> dict[str, int]:
+    """Compute MoE physical parameter count without allocating the model."""
+    if n_physical < 1 or n_virtual < 0 or expert_every < 1:
+        raise ValueError("invalid MoE expert configuration")
+    ff = expert_ffn or cfg.d_ff
+    dense_mlp = 2 * cfg.dim * cfg.d_ff + cfg.d_ff + cfg.dim
+    expert_mlp = 2 * cfg.dim * ff + ff + cfg.dim
+    router = cfg.dim * (n_physical + n_virtual)
+    moe_layers = len(range(0, cfg.n_layers, expert_every))
+    dense_reference = cfg.theoretical_param_count()
+    physical_total = (
+        dense_reference
+        + moe_layers * (n_physical * expert_mlp + router - dense_mlp))
+    return {
+        "dense_reference_parameters": int(dense_reference),
+        "moe_layers": int(moe_layers),
+        "backbone_parameters": int(physical_total
+                                   - moe_layers * (n_physical * expert_mlp + router)),
+        "physical_expert_parameters": int(moe_layers * n_physical * expert_mlp),
+        "router_parameters": int(moe_layers * router),
+        "physical_total_parameters": int(physical_total),
+    }
+
+
 class MoEFFN(nn.Module):
     """Physical experts + virtual routes behind one shared top-k router."""
 
@@ -75,6 +102,20 @@ class MoEFFN(nn.Module):
         B, T, D = x.shape
         h = x.reshape(-1, D)
         logits = self.router(h)
+        # Virtual routes are optional until their external SlotState objects
+        # have been attached. Never allow an unbound route to win top-k and
+        # fail later with a KeyError in _virtual_apply.
+        active = torch.ones(self.n_experts, dtype=torch.bool, device=h.device)
+        for route in range(self.n_virtual):
+            if route not in self.virtual_slots:
+                active[self.n_physical + route] = False
+        n_active = int(active.sum())
+        if n_active < self.top_k:
+            raise RuntimeError(
+                f"MoE has {n_active} active experts but top_k={self.top_k}; "
+                "attach the required virtual slots or reduce top_k")
+        logits = logits.masked_fill(~active.unsqueeze(0),
+                                    torch.finfo(logits.dtype).min)
         probs = F.softmax(logits, dim=-1)
         top_vals, top_idx = torch.topk(probs, self.top_k, dim=-1)
         gate = top_vals / top_vals.sum(-1, keepdim=True).clamp_min(1e-9)
@@ -96,11 +137,15 @@ class MoEFFN(nn.Module):
             y.index_add_(0, rows.nonzero(as_tuple=True)[0], w[rows, None] * out)
 
         n = h.size(0)
-        f = counts.to(probs.dtype) / max(n, 1)
+        # With top-k dispatch, each token contributes k assignments. Normalize
+        # by N*k so expert fractions sum to one, matching the load-balancing
+        # objective's probability mass convention.
+        f = counts.to(probs.dtype) / max(n * self.top_k, 1)
         p_mean = probs.mean(0)
         self.last_counts = counts.detach()
         self.last_probs = p_mean.detach()
-        self.last_aux = self.n_experts * torch.sum(f * p_mean)
+        self.last_active_mask = active.detach()
+        self.last_aux = n_active * torch.sum(f * p_mean)
         self.last_z = torch.mean(
             torch.logsumexp(logits, dim=-1) ** 2).clamp_min(0.0)
         return y.view(B, T, D)
@@ -114,7 +159,10 @@ class MoEFFN(nn.Module):
             "counts": counts,
             "tokens_routed": total,
             "utilization_fraction": (
-                sum(1 for c in counts if c > 0) / self.n_experts),
+                sum(1 for i, c in enumerate(counts)
+                    if c > 0 and bool(self.last_active_mask[i]))
+                / max(1, int(self.last_active_mask.sum()))),
+            "active_experts": int(self.last_active_mask.sum()),
             "max_expert_fraction": round(max_frac, 4),
             "collapsed": max_frac > collapse_threshold,
             "physical": counts[:self.n_physical],
@@ -149,6 +197,8 @@ class CortexMoETransformer(CortexTransformer):
                  n_virtual: int = VIRTUAL_ROUTES, top_k: int = TOP_K,
                  aux_coef: float = AUX_COEF, z_coef: float = Z_COEF,
                  expert_ffn: int | None = None, expert_every: int = 1):
+        if expert_every < 1:
+            raise ValueError("expert_every must be at least one")
         super().__init__(cfg)
         expert_ffn = expert_ffn or cfg.d_ff
         self.aux_coef = aux_coef
@@ -197,16 +247,28 @@ class CortexMoETransformer(CortexTransformer):
                    for slot in slots.values())
 
     def moe_param_count(self) -> dict[str, int]:
-        phys = sum(
-            p.numel() for layer in self.moe_layers for p in layer.experts.parameters())
-        phys += sum(layer.router.weight.numel() for layer in self.moe_layers)
+        """Report dense reference, physical MoE components and virtual slots
+        as separate ledgers; never label the MoE model as the dense 2B model."""
+        physical_experts = sum(
+            p.numel() for layer in self.moe_layers
+            for p in layer.experts.parameters())
+        routers = sum(layer.router.weight.numel() for layer in self.moe_layers)
+        physical_total = self.actual_param_count()
+        backbone = physical_total - physical_experts - routers
+        virtual = self.virtual_param_count()
         return {
-            "backbone_and_dense_mlp": self.actual_param_count() - phys,
-            "physical_experts_routers": phys,
-            "virtual_parameters": self.virtual_param_count(),
-            "total_actual": self.actual_param_count(),
-            "total_with_virtual": (
-                self.actual_param_count() + self.virtual_param_count()),
+            "dense_reference_parameters": self.cfg.theoretical_param_count(),
+            "backbone_parameters": backbone,
+            "physical_expert_parameters": physical_experts,
+            "router_parameters": routers,
+            "physical_total_parameters": physical_total,
+            "virtual_slot_parameters": virtual,
+            "total_with_virtual": physical_total + virtual,
+            # Backward-compatible field names retained for existing reports.
+            "total_actual": physical_total,
+            "physical_experts_routers": physical_experts + routers,
+            "virtual_parameters": virtual,
+            "backbone_and_dense_mlp": backbone,
         }
 
     # -- loss ----------------------------------------------------------------

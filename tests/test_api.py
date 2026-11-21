@@ -9,7 +9,7 @@ from cortex.core import CortexAgent
 @pytest.fixture(scope="module")
 def app():
     agent = CortexAgent(state_dir=None)  # default .cortex-state in repo dir
-    return create_app(agent)
+    return create_app(agent, api_token="test-token")
 
 
 def test_health(app):
@@ -31,8 +31,13 @@ def test_profile_and_services(app):
 def test_sandbox_and_knowledge_endpoints(app):
     client = _client(app)
     r = client.post("/sandbox/run", json={"code": "print('api-sandbox-ok')"})
-    assert r.status_code == 200
-    assert "api-sandbox-ok" in r.json()["stdout"]
+    if r.status_code == 503:
+        detail = r.json()["detail"].lower()
+        assert any(term in detail for term in ("bubblewrap", "qualification", "cgroup", "isolation"))
+    else:
+        assert r.status_code == 200
+        assert r.json()["limits"]["filesystem_isolated"] is True
+        assert "api-sandbox-ok" in r.json()["stdout"]
 
     r = client.post("/knowledge/query", json={"query": "anything", "k": 3})
     assert r.status_code == 200
@@ -42,4 +47,43 @@ def test_sandbox_and_knowledge_endpoints(app):
 def _client(app):
     from fastapi.testclient import TestClient
 
-    return TestClient(app)
+    return TestClient(app, headers={"Authorization": "Bearer test-token"})
+
+
+
+def test_protected_endpoint_rejects_missing_token(app):
+    from fastapi.testclient import TestClient
+
+    client = TestClient(app)
+    r = client.get("/system/profile")
+    assert r.status_code == 401
+
+
+def test_eval_requires_candidate_unless_reference(app):
+    client = _client(app)
+    r = client.post("/eval/run", json={"reference": False})
+    assert r.status_code == 422
+
+
+def test_repo_endpoint_requires_configured_allowlist(app, monkeypatch):
+    client = _client(app)
+    monkeypatch.delenv("CORTEX_ALLOWED_REPO_ROOTS", raising=False)
+    r = client.post("/repo/analyze", json={"repo_path": "."})
+    assert r.status_code == 503
+
+
+def test_all_api_code_execution_routes_fail_closed_without_bwrap(
+        app, monkeypatch, tmp_path):
+    from cortex.execution import sandbox
+
+    monkeypatch.setattr(sandbox, "_supports_bwrap", lambda: False)
+    client = _client(app)
+    r = client.post("/eval/run", json={"candidate": "print('unsafe')"})
+    assert r.status_code == 503
+    r = client.post("/pipeline/run", json={
+        "repo_path": str(tmp_path),
+        "objective": "inspect this repository",
+    })
+    assert r.status_code == 503
+    r = client.post("/sandbox/run", json={"code": "print('unsafe')"})
+    assert r.status_code == 503

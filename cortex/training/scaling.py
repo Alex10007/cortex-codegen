@@ -26,10 +26,14 @@ def hardware_profile() -> dict[str, Any]:
     from pathlib import Path
 
     ram_bytes = 0
+    ram_available_bytes = 0
     for line in Path("/proc/meminfo").read_text(encoding="utf-8").splitlines():
         if line.startswith("MemTotal:"):
             ram_bytes = int(line.split()[1]) * 1024
-            break
+        elif line.startswith("MemAvailable:"):
+            ram_available_bytes = int(line.split()[1]) * 1024
+    if not ram_available_bytes:
+        ram_available_bytes = ram_bytes
     device_count = torch.cuda.device_count() if torch.cuda.is_available() else 0
     gpu = {
         "available": torch.cuda.is_available(),
@@ -63,7 +67,9 @@ def hardware_profile() -> dict[str, Any]:
     return {
         "cores": os.cpu_count(),
         "ram_bytes": ram_bytes,
+        "ram_available_bytes": ram_available_bytes,
         "ram_gb": round(ram_bytes / 1e9, 2),
+        "ram_available_gb": round(ram_available_bytes / 1e9, 2),
         "disk_free_gb": round(statvfs_ok / 1e9, 2) if statvfs_ok else None,
         "cuda": gpu,
         "cpu_bf16_autocast_executed_ok": cpu_bf16,
@@ -107,7 +113,7 @@ def training_plan(cfg: ModelConfig, batch_size: int = 8,
     seq_len = seq_len or cfg.max_seq_len
     mem = estimate_memory_bytes(cfg, batch_size, seq_len, amp=amp)
     host = hardware_profile()
-    fits_slow = mem["total_bytes_est"] <= host["ram_bytes"]
+    fits_slow = mem["total_bytes_est"] <= host["ram_available_bytes"]
     minimal = estimate_memory_bytes(cfg, 1, seq_len, amp=True)
     fits_single_gpu = any(
         minimal["total_bytes_est"] <= free_bytes
@@ -117,9 +123,11 @@ def training_plan(cfg: ModelConfig, batch_size: int = 8,
     elif fits_single_gpu:
         strategy = "single-GPU bf16, gradient accumulation via micro-batching"
     else:
-        n_gpu_shards = max(2, math.ceil(
-            (mem["param_bytes"] + mem["grad_bytes"] + mem["optimizer_bytes"])
-            / 40e9))
+        # FSDP shards parameter/gradient/optimizer state and data-parallel
+        # microbatches distribute activation memory. Include both terms;
+        # sizing from optimizer state alone materially undercounts the
+        # current explicit quadratic-attention implementation.
+        n_gpu_shards = max(2, math.ceil(mem["total_bytes_est"] / 40e9))
         strategy = (f"multi-GPU: ZeRO-3 / FSDP full sharding across "
                     f"~{n_gpu_shards} x 40GB devices (DDP world); CPU-offload "
                     f"optimizer optional")
@@ -233,7 +241,7 @@ def validate_scalable_path(config_name: str, tokenizer_path: str,
 
 
 def cluster_plans(cfg: ModelConfig, batch_size: int,
-                  seq_len: int | None = None) -> list[dict[str, Any]]:
+                  seq_len: int | None = None) -> dict[str, Any]:
     """Per-world-size requirement matrix for the declared 2B config.
 
     ZeRO-3/FSDP full sharding: parameters, grads and optimizer states split
@@ -247,6 +255,8 @@ def cluster_plans(cfg: ModelConfig, batch_size: int,
                    + mem["optimizer_bytes"])
     plans = []
     for world in (2, 4, 8):
+        if world > batch_size or batch_size % world:
+            continue
         per_dev_state = state_bytes / world
         per_dev_act = mem["activation_bytes_est"] / world
         per_dev_total = per_dev_state + per_dev_act
