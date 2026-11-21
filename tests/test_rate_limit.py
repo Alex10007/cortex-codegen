@@ -116,3 +116,35 @@ def test_rate_limit_buckets_are_isolated_by_principal(tmp_path):
     assert limiter.consume("principal-a", 1)[0] is True
     assert limiter.consume("principal-b", 1)[0] is True
     assert limiter.consume("principal-a", 1)[0] is False
+
+def test_rate_limiter_closes_each_connection(tmp_path, monkeypatch):
+    limiter = SQLiteRateLimiter(tmp_path / "connection-lifecycle.sqlite3")
+    real_connect = limiter._connect
+    opened = []
+
+    class TrackedConnection:
+        def __init__(self, connection):
+            self.connection = connection
+            self.closed = False
+
+        def __getattr__(self, name):
+            return getattr(self.connection, name)
+
+        def close(self):
+            self.closed = True
+            self.connection.close()
+
+    def tracked_connect():
+        connection = TrackedConnection(real_connect())
+        opened.append(connection)
+        return connection
+
+    monkeypatch.setattr(limiter, "_connect", tracked_connect)
+
+    assert limiter.consume("principal", 1)[0] is True
+    assert opened[-1].closed is True
+
+    assert limiter.consume("principal", 1)[0] is False
+    assert opened[-1].closed is True
+    assert len(opened) == 2
+
