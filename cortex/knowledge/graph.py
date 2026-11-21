@@ -328,9 +328,19 @@ class KnowledgeGraph:
                 candidate = Path(prefix)
                 if candidate.is_absolute() or ".." in candidate.parts:
                     raise ValueError("rule prefixes must be repository-relative")
+            source_normalized = Path(source).as_posix()
+            target_normalized = Path(target).as_posix()
+            if source_normalized.startswith("./"):
+                source_normalized = source_normalized[2:]
+            if target_normalized.startswith("./"):
+                target_normalized = target_normalized[2:]
+            source_normalized = source_normalized.rstrip("/")
+            target_normalized = target_normalized.rstrip("/")
+            if not source_normalized or not target_normalized:
+                raise ValueError("rule prefixes must identify repository paths")
             normalized.append({
-                "source_prefix": Path(source).as_posix().strip("./"),
-                "forbidden_target_prefix": Path(target).as_posix().strip("./"),
+                "source_prefix": source_normalized,
+                "forbidden_target_prefix": target_normalized,
             })
         if not 1 <= max_nodes <= 10000:
             raise ValueError("max_nodes must be between 1 and 10000")
