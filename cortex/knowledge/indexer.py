@@ -208,6 +208,7 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
     symbol_definitions: dict[tuple[str, tuple[str, ...], str], list[tuple[str, str]]] = {}
     scope_bindings: dict[tuple[str, tuple[str, ...]], set[str]] = {}
     pending_calls: list[tuple[str, str, tuple[str, ...], str, str | None]] = []
+    pending_callable_aliases: list[tuple[str, tuple[str, ...], str, str]] = []
     pending_inheritance: list[tuple[str, tuple[str, ...], str]] = []
     pending_type_refs: list[tuple[str, tuple[str, ...], str]] = []
 
@@ -385,6 +386,27 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
 
             def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
                 self._record_type_names(node.annotation)
+                if (isinstance(node.target, ast.Name) and
+                        isinstance(node.value, ast.Name)):
+                    pending_callable_aliases.append((
+                        source_id, tuple(self.scope_names),
+                        node.target.id, node.value.id))
+                self.generic_visit(node)
+
+            def visit_Assign(self, node: ast.Assign) -> None:
+                if (len(node.targets) == 1 and
+                        isinstance(node.targets[0], ast.Name) and
+                        isinstance(node.value, ast.Name)):
+                    pending_callable_aliases.append((
+                        source_id, tuple(self.scope_names),
+                        node.targets[0].id, node.value.id))
+                self.generic_visit(node)
+
+            def visit_NamedExpr(self, node: ast.NamedExpr) -> None:
+                if isinstance(node.target, ast.Name) and isinstance(node.value, ast.Name):
+                    pending_callable_aliases.append((
+                        source_id, tuple(self.scope_names),
+                        node.target.id, node.value.id))
                 self.generic_visit(node)
 
             def visit_Call(self, node: ast.Call) -> None:
@@ -824,7 +846,64 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                 return []
         return []
 
+    # Resolve only single-assignment, simple-name callable aliases. Multiple
+    # assignments invalidate the alias rather than relying on source-order or
+    # branch assumptions. The canonical lexical/import resolver supplies the
+    # target; no independent symbol table is introduced.
+    alias_assignments: dict[tuple[str, tuple[str, ...], str], list[str]] = {}
+    for module_id, scope, alias_name, source_name in pending_callable_aliases:
+        effective_scope = _effective_resolution_scope(module_id, scope, alias_name)
+        if effective_scope is None:
+            continue
+        key = (module_id, effective_scope, alias_name)
+        alias_assignments.setdefault(key, []).append(source_name)
+
+    callable_aliases: dict[tuple[str, tuple[str, ...], str],
+                            list[tuple[str, str]]] = {}
+    for key, source_names in alias_assignments.items():
+        if len(source_names) != 1:
+            continue
+        module_id, scope, _alias_name = key
+        definitions, _ = _resolve_lexical(module_id, scope, source_names[0])
+        unique = sorted({item[0]: item for item in definitions}.values())
+        if len(definitions) == 1 and len(unique) == 1:
+            callable_aliases[key] = unique
+
+    def _resolve_callable_alias(module_id: str, scope: tuple[str, ...],
+                                name: str) -> tuple[list[tuple[str, str]], bool]:
+        effective_scope = _effective_resolution_scope(module_id, scope, name)
+        if effective_scope is None:
+            return [], False
+        for depth in range(len(effective_scope), -1, -1):
+            current_scope = effective_scope[:depth]
+            if current_scope and (module_id, current_scope) in class_scopes and depth < len(scope):
+                continue
+            key = (module_id, current_scope, name)
+            if key in alias_assignments:
+                return callable_aliases.get(key, []), key not in callable_aliases
+            if name in scope_bindings.get((module_id, current_scope), set()):
+                return [], False
+        return [], False
+
     for caller_id, module_id, scope, target_name, receiver in pending_calls:
+        if receiver is None:
+            alias_definitions, alias_blocked = _resolve_callable_alias(
+                module_id, scope, target_name)
+            if alias_definitions:
+                unique_aliases = sorted({item[0] for item in alias_definitions})
+                if len(alias_definitions) == 1 and len(unique_aliases) == 1:
+                    if unique_aliases[0] != caller_id:
+                        graph.upsert_edge(caller_id, unique_aliases[0], "calls", version)
+                        counts["calls"] += 1
+                        if not unique_aliases[0].startswith(module_id + ":"):
+                            counts["cross_module_calls"] += 1
+                else:
+                    counts["ambiguous_calls"] += 1
+                    counts["unresolved_calls"] += 1
+                continue
+            if alias_blocked:
+                counts["unresolved_calls"] += 1
+                continue
         if receiver in {"self", "cls"}:
             class_scope = next(
                 (scope[:index + 1] for index in range(len(scope) - 2, -1, -1)
