@@ -829,6 +829,9 @@ def test_stage17n_package_reexports_resolve_consumer_import(tmp_path):
     service_run = f"py:{root.name}/pkg/service.py:stage17n-reexport:func:run"
     assert graph.neighbors(consumer, etype="calls")[0]["node"] == service_run
     assert counts["resolved_reexports"] >= 1
+    consumer_module = f"py:{root.name}/consumer.py:stage17n-reexport"
+    package_module = f"py:{root.name}/pkg/__init__.py:stage17n-reexport"
+    assert graph.neighbors(consumer_module, etype="imports_module")[0]["node"] == package_module
 
 
 def test_stage17n_conditional_import_is_distinguished(tmp_path):
