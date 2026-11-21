@@ -759,10 +759,26 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
         if tree is not None:
             ModuleAliasCallVisitor(module_ids[module_key(relative)]).visit(tree)
 
+    def _effective_resolution_scope(module_id: str, scope: tuple[str, ...],
+                                     name: str) -> tuple[str, ...] | None:
+        if name in scope_global_names.get((module_id, scope), set()):
+            return ()
+        if name in scope_nonlocal_names.get((module_id, scope), set()):
+            for depth in range(len(scope) - 1, -1, -1):
+                candidate = scope[:depth]
+                if candidate and (module_id, candidate) not in class_scopes:
+                    if name in scope_bindings.get((module_id, candidate), set()):
+                        return candidate
+            return None
+        return scope
+
     def _resolve_lexical(module_id: str, scope: tuple[str, ...],
                          name: str) -> tuple[list[tuple[str, str]], bool]:
-        for depth in range(len(scope), -1, -1):
-            current_scope = scope[:depth]
+        effective_scope = _effective_resolution_scope(module_id, scope, name)
+        if effective_scope is None:
+            return [], False
+        for depth in range(len(effective_scope), -1, -1):
+            current_scope = effective_scope[:depth]
             if current_scope and (module_id, current_scope) in class_scopes and depth < len(scope):
                 continue
             key = (module_id, current_scope, name)
@@ -778,8 +794,11 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
 
     def _resolve_imported_module(module_id: str, scope: tuple[str, ...],
                                  name: str) -> list[str]:
-        for depth in range(len(scope), -1, -1):
-            current_scope = scope[:depth]
+        effective_scope = _effective_resolution_scope(module_id, scope, name)
+        if effective_scope is None:
+            return []
+        for depth in range(len(effective_scope), -1, -1):
+            current_scope = effective_scope[:depth]
             if current_scope and (module_id, current_scope) in class_scopes and depth < len(scope):
                 continue
             targets = imported_modules.get((module_id, current_scope, name), [])
