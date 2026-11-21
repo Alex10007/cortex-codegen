@@ -351,3 +351,23 @@ def test_regression_selector_falls_back_to_full_suite_when_unresolved(tmp_path):
     assert selected["mode"] == "full_suite_fallback"
     assert selected["targets"] == ["tests/test_one.py"]
     assert selected["fallback_to_full_suite"] is True
+
+
+
+def test_regression_selector_never_returns_partial_targeted_suite_when_over_limit(tmp_path):
+    from cortex.testing.engine import select_regression_tests
+
+    root = tmp_path / "repo"
+    (root / "pkg").mkdir(parents=True)
+    (root / "tests").mkdir()
+    (root / "pkg" / "module.py").write_text("def work():\n    return 1\n")
+    for name in ("test_one.py", "test_two.py"):
+        (root / "tests" / name).write_text(
+            "from pkg.module import work\ndef test_work():\n    assert work() == 1\n")
+    selected = select_regression_tests(
+        str(root), {"changed_paths": ["pkg/module.py"], "impacted_nodes": []},
+        max_tests=1)
+    assert selected["mode"] == "full_suite_fallback"
+    assert selected["targets"] == []
+    assert selected["truncated"] is True
+    assert selected["full_suite_command"] == ["python", "-m", "pytest", "-q"]

@@ -90,16 +90,15 @@ def select_regression_tests(workspace: str, impact_report: dict[str, Any],
     # A test that cannot be parsed is not safe to omit from a targeted set.
     selected.update(root / rel for rel in parse_failures)
     all_tests = [p.relative_to(root).as_posix() for p in test_files]
-    if selected and not discovery_truncated:
-        chosen = sorted(p.relative_to(root).as_posix() for p in selected)
-        truncated = len(chosen) > max_tests
+    chosen = sorted(p.relative_to(root).as_posix() for p in selected)
+    if selected and not discovery_truncated and len(chosen) <= max_tests:
         return {
             "kind": "cortex-regression-test-selection",
             "mode": "targeted_static_recommendation",
-            "targets": chosen[:max_tests],
+            "targets": chosen,
             "candidate_test_count": len(all_tests),
-            "selected_test_count": min(len(chosen), max_tests),
-            "truncated": truncated,
+            "selected_test_count": len(chosen),
+            "truncated": False,
             "parse_failures": parse_failures,
             "fallback_to_full_suite": False,
             "limitations": [
@@ -111,17 +110,20 @@ def select_regression_tests(workspace: str, impact_report: dict[str, Any],
     return {
         "kind": "cortex-regression-test-selection",
         "mode": "full_suite_fallback",
-        "targets": all_tests[:max_tests],
+        "targets": all_tests if len(all_tests) <= max_tests and not discovery_truncated else [],
+        "full_suite_command": ["python", "-m", "pytest", "-q"],
         "candidate_test_count": len(all_tests),
-        "selected_test_count": min(len(all_tests), max_tests),
+        "selected_test_count": len(all_tests) if len(all_tests) <= max_tests else 0,
         "truncated": discovery_truncated or len(all_tests) > max_tests,
         "parse_failures": parse_failures,
         "fallback_to_full_suite": True,
         "limitations": [
-            "No test-to-change relationship could be resolved confidently.",
+            "No complete, confident bounded test selection was possible.",
+            "Execute the full pytest suite; an empty targets list means do not pass target files to pytest.",
             "Static import/name matching is not proof of complete test coverage.",
         ],
     }
+
 
 
 def run_test_command(argv: list[str], workspace: str,
