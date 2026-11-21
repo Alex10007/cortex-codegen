@@ -52,7 +52,7 @@ REQUIRED = {
     "cortex/knowledge/graph.py": ("class KnowledgeGraph", "def impact_analysis"),
     "cortex/knowledge/indexer.py": ("imports_local", "calls", "inherits"),
     "cortex/knowledge/learning.py": ("ingest_verified_pipeline_outcome",),
-    "cortex/testing/engine.py": ("require_full_isolation", "limits"),
+    "cortex/testing/engine.py": ("require_full_isolation", "limits", "select_regression_tests"),
     "cortex/pipeline/engineer.py": ("require_full_isolation",),
     "cortex/evaluation/divergent.py": ("def divergent_eval", "adaptive_budget: bool = False"),
     "cortex/core.py": ("retrieval_events", "adaptive_compute",

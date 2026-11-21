@@ -318,3 +318,39 @@ def test_impact_request_enforces_bounded_input():
     with pytest.raises(ValidationError):
         ImpactRequest(repo_path="/tmp/repo", changed_paths=["src/main.py"],
                       max_depth=11)
+
+
+
+def test_regression_selector_targets_importing_tests_and_reports_limitations(tmp_path):
+    from cortex.testing.engine import select_regression_tests
+
+    root = tmp_path / "repo"
+    (root / "pkg").mkdir(parents=True)
+    (root / "tests").mkdir()
+    (root / "pkg" / "base.py").write_text("def helper():\n    return 1\n")
+    (root / "tests" / "test_base.py").write_text(
+        "from pkg.base import helper\n\ndef test_helper():\n    assert helper() == 1\n")
+    (root / "tests" / "test_unrelated.py").write_text(
+        "def test_other():\n    assert True\n")
+    report = {
+        "changed_paths": ["pkg/base.py"],
+        "impacted_nodes": [],
+    }
+    selected = select_regression_tests(str(root), report)
+    assert selected["mode"] == "targeted_static_recommendation"
+    assert selected["targets"] == ["tests/test_base.py"]
+    assert selected["fallback_to_full_suite"] is False
+    assert selected["limitations"]
+
+
+def test_regression_selector_falls_back_to_full_suite_when_unresolved(tmp_path):
+    from cortex.testing.engine import select_regression_tests
+
+    root = tmp_path / "repo"
+    (root / "tests").mkdir(parents=True)
+    (root / "tests" / "test_one.py").write_text("def test_one():\n    assert True\n")
+    selected = select_regression_tests(
+        str(root), {"changed_paths": ["src/no_match.py"], "impacted_nodes": []})
+    assert selected["mode"] == "full_suite_fallback"
+    assert selected["targets"] == ["tests/test_one.py"]
+    assert selected["fallback_to_full_suite"] is True

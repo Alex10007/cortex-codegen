@@ -175,3 +175,17 @@ paths rather than guessing when source provenance is missing.
 This endpoint reports impact; it does not modify files, run tests, or claim
 that affected tests were selected automatically. API tests and runtime
 qualification remain pending.
+
+
+## Stage 17H — Conservative regression-test recommendation
+
+The existing `cortex.testing.engine` now maps changed and impacted Python
+modules to likely pytest files using import relationships and test naming.
+The `CortexAgent.analyze_change_impact` response includes this recommendation.
+If no confident match exists, it explicitly falls back to the discovered full
+test suite. Parse failures, truncation, and limitations are reported.
+
+This is static test-target recommendation, not dependency-complete coverage
+analysis. The engineering pipeline continues to run its full configured suite;
+no tests are silently skipped and no release gate has been weakened.
+Regression-selector tests were added but not executed.

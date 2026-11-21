@@ -321,8 +321,12 @@ class CortexAgent:
                               max_depth: int = 3,
                               max_nodes: int = 500) -> dict[str, Any]:
         """Use the canonical repository graph to identify affected dependents."""
-        return self.graph.impact_analysis(
+        report = self.graph.impact_analysis(
             changed_paths, repo_root, max_depth=max_depth, max_nodes=max_nodes)
+        from cortex.testing.engine import select_regression_tests
+        report["regression_test_selection"] = select_regression_tests(
+            repo_root, report)
+        return report
 
     def security_scan(self, root: str) -> dict[str, Any]:
         from cortex.security.analyzer import analyze_tree, summarize
