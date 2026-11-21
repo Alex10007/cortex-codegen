@@ -210,3 +210,32 @@ def test_wait_empty_rejects_invalid_timeout_values(tmp_path, timeout):
     (group_path / "cgroup.events").write_text("populated 0\n")
     with pytest.raises(ValueError, match="finite positive"):
         CgroupV2(group_path).wait_empty(timeout_s=timeout)
+
+
+
+def test_create_rejects_delegated_root_reached_through_symlink(tmp_path):
+    real_root = make_fake_cgroup_root(tmp_path / "delegated-real")
+    alias = tmp_path / "delegated-alias"
+    alias.symlink_to(real_root, target_is_directory=True)
+    with pytest.raises(CgroupUnavailable, match="symlink aliases"):
+        CgroupV2.create(alias, mem_mb=128, nproc=4)
+
+
+def test_uuid_collision_does_not_reuse_or_remove_existing_cgroup(tmp_path, monkeypatch):
+    from cortex.execution import resources
+
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    existing = root / "cortex-fixed"
+    existing.mkdir()
+    sentinel = existing / "owner-sentinel"
+    sentinel.write_text("owned by another execution")
+    monkeypatch.setattr(
+        resources.uuid, "uuid4",
+        lambda: type("FixedUUID", (), {"hex": "fixed"})(),
+    )
+
+    with pytest.raises(CgroupUnavailable, match="cannot create delegated execution cgroup"):
+        CgroupV2.create(root, mem_mb=128, nproc=4)
+
+    assert sentinel.read_text() == "owned by another execution"
+    assert existing.is_dir()
