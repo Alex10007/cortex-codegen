@@ -401,10 +401,10 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
         else:
             definitions, _ = _resolve_lexical(module_id, scope, target_name)
         unique = sorted({item[0] for item in definitions})
-        if len(unique) == 1 and unique[0] != caller_id:
+        if len(definitions) == 1 and len(unique) == 1 and unique[0] != caller_id:
             graph.upsert_edge(caller_id, unique[0], "calls", version)
             counts["calls"] += 1
-        elif len(unique) > 1:
+        elif len(definitions) > 1:
             counts["ambiguous_calls"] = counts.get("ambiguous_calls", 0) + 1
             counts["unresolved_calls"] += 1
         else:
@@ -413,22 +413,24 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
     for child_id, scope, base_name in pending_inheritance:
         module_id = child_id.split(":class:", 1)[0]
         definitions, _ = _resolve_lexical(module_id, scope, base_name)
-        targets = sorted({item[0] for item in definitions if item[1] == "class"})
-        if len(targets) == 1 and targets[0] != child_id:
+        class_definitions = [item for item in definitions if item[1] == "class"]
+        targets = sorted({item[0] for item in class_definitions})
+        if len(class_definitions) == 1 and len(targets) == 1 and targets[0] != child_id:
             graph.upsert_edge(child_id, targets[0], "inherits", version)
             counts["inherits"] += 1
-        elif len(targets) > 1:
+        elif len(class_definitions) > 1:
             counts["ambiguous_inheritance"] = counts.get("ambiguous_inheritance", 0) + 1
 
     for source_id, scope, type_name in pending_type_refs:
         module_id = source_id.split(":func:", 1)[0].split(":class:", 1)[0]
         definitions, _ = _resolve_lexical(module_id, scope, type_name)
-        targets = sorted({item[0] for item in definitions
-                          if item[1] in {"class", "type"}})
-        if len(targets) == 1 and targets[0] != source_id:
+        type_definitions = [item for item in definitions
+                            if item[1] in {"class", "type"}]
+        targets = sorted({item[0] for item in type_definitions})
+        if len(type_definitions) == 1 and len(targets) == 1 and targets[0] != source_id:
             graph.upsert_edge(source_id, targets[0], "type_uses", version)
             counts["type_references"] = counts.get("type_references", 0) + 1
-        elif len(targets) > 1:
+        elif len(type_definitions) > 1:
             counts["ambiguous_type_references"] = (
                 counts.get("ambiguous_type_references", 0) + 1)
 
