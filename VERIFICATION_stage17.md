@@ -277,8 +277,8 @@ same-scope duplicate declarations are reported as ambiguous rather than
 collapsed into a false unique match.
 
 Python function argument, return, and annotated-assignment type names are
-connected to uniquely resolved local class/type declarations through
-`type_uses` edges. Existing `calls` and `inherits` edge types remain
+connected to uniquely resolved local class declarations through `type_uses`
+edges. Existing `calls` and `inherits` edge types remain
 canonical and unchanged. New counts distinguish ambiguous calls,
 ambiguous inheritance/type references, and resolved type references.
 
