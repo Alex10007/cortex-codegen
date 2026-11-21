@@ -236,8 +236,10 @@ class KnowledgeGraph:
         allowed = set(sorted(path_by_id)[:max_nodes])
         placeholders = ",".join("?" for _ in relationship_types)
         edge_rows = self._conn.execute(
-            f"SELECT src,dst,type FROM edges WHERE type IN ({placeholders})",
+            f"SELECT src,dst,type FROM edges WHERE type IN ({placeholders}) LIMIT 100001",
             relationship_types).fetchall()
+        edge_truncated = len(edge_rows) > 100000
+        edge_rows = edge_rows[:100000]
         adjacency: dict[str, list[str]] = {node: [] for node in allowed}
         for src, dst, _kind in edge_rows:
             if src in allowed and dst in allowed:
@@ -297,7 +299,9 @@ class KnowledgeGraph:
                 "paths": sorted({path_by_id[node] for node in component}),
             } for component in components],
             "indexed_node_count": len(allowed),
-            "truncated": truncated,
+            "truncated": truncated or edge_truncated,
+            "node_truncated": truncated,
+            "edge_truncated": edge_truncated,
             "limitations": [
                 "Only selected graph relationships are analyzed.",
                 "Unresolved imports and dependencies absent from the index are not inferred.",
@@ -368,8 +372,10 @@ class KnowledgeGraph:
         allowed = set(sorted(path_by_id)[:max_nodes])
         placeholders = ",".join("?" for _ in relationship_types)
         edges = self._conn.execute(
-            f"SELECT src,dst,type FROM edges WHERE type IN ({placeholders})",
+            f"SELECT src,dst,type FROM edges WHERE type IN ({placeholders}) LIMIT 100001",
             relationship_types).fetchall()
+        edge_truncated = len(edges) > 100000
+        edges = edges[:100000]
         violations = []
         for src, dst, edge_type in edges:
             if src not in allowed or dst not in allowed:
@@ -401,7 +407,9 @@ class KnowledgeGraph:
             "violation_count": len(violations),
             "violations": violations,
             "indexed_node_count": len(allowed),
-            "truncated": truncated,
+            "truncated": truncated or edge_truncated,
+            "node_truncated": truncated,
+            "edge_truncated": edge_truncated,
             "limitations": [
                 "Rules are caller-supplied path-prefix constraints, not inferred architecture policy.",
                 "Only selected graph relationships with repository-local provenance are checked.",
