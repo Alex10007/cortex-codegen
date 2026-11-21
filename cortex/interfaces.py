@@ -52,7 +52,7 @@ class ModelConfig:
     def theoretical_param_count(self) -> int:
         """Exact parameter arithmetic; verified against a live model in tests."""
         d = self.dim
-        per_layer = 12 * d * d + 13 * d            # 2 LN + attn(qkvo) + 2 LN + mlp, weights+biases
+        per_layer = 12 * d * d + 13 * d
         emb = self.vocab_size * d
         head = 0 if self.tie_word_embeddings else emb
         return emb + head + 2 * d + self.n_layers * per_layer
@@ -75,7 +75,7 @@ class Provenance:
 @dataclass
 class KnowledgeItem:
     item_id: str
-    kind: str                  # module | class | function | doc | pattern
+    kind: str
     language: str
     text: str
     provenance: Provenance
@@ -115,7 +115,7 @@ class ExecutionResult:
 @dataclass
 class SecurityFinding:
     rule_id: str
-    severity: str              # low | medium | high | critical
+    severity: str
     file: str
     line: int
     message: str
@@ -136,6 +136,7 @@ class Plan:
     repo_path: str
     steps: list[PlanStep]
     repository_map: dict[str, Any]
+    assessment: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -143,12 +144,13 @@ class Plan:
             "repo_path": self.repo_path,
             "steps": [s.__dict__ for s in self.steps],
             "repository_map": self.repository_map,
+            "assessment": self.assessment,
         }
 
 
 @dataclass
 class ServiceReport:
     engine: str
-    status: str                # operational | declared-only | degraded
+    status: str
     evidence: str
     metrics: dict[str, Any] = field(default_factory=dict)
