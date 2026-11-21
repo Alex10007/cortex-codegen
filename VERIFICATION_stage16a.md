@@ -631,3 +631,22 @@ Verification status:
 - This is a repository cleanliness check, not a complete filesystem snapshot and not a security boundary against privileged host modification.
 
 **Status:** workflow source committed; runtime execution remains pending. No test result is inferred from the workflow definition.
+
+
+## Stage 16A.31 — explicit authorization gate for laptop CI
+
+Static security review found that a branch-restricted push trigger still allowed every new commit on the remediation branch to execute on the self-hosted laptop runner. Actor and branch checks alone do not provide an explicit per-run authorization boundary.
+
+Changes:
+- Removed the automatic `push` trigger. The workflow now supports manual `workflow_dispatch` only.
+- Added a required boolean input, `authorize_self_hosted_execution`, defaulting to false.
+- The job runs only when the triggering actor is `Alex10007`, the selected ref is exactly `fibonera/cortex-remediation-stage16a`, and the explicit authorization input is true.
+- Kept the pull-request trigger absent, third-party actions pinned by commit SHA, checkout credentials disabled, and read-only repository permissions.
+
+Verification:
+- Workflow source committed at `bb4006ec77862fd29f60997ddc42c9246573676e`.
+- This is a static workflow-policy correction; GitHub has not yet executed the manually authorized workflow.
+- Earlier push-triggered run `44872516561` was created before this change and must be cancelled in GitHub Actions. Do not allow it to consume the laptop runner.
+- Manual dispatch still executes repository code with the dedicated runner account's permissions. It is not a substitute for a disposable VM/container boundary, and the operator must review the selected commit before authorizing it.
+
+**Stage 16A.31 status: workflow authorization tightened; runtime CI and sandbox qualification remain NOT VERIFIED.** No training, checkpoint mutation, benchmark promotion, PR merge, or main-branch change occurred.
