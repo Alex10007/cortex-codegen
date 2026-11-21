@@ -460,3 +460,117 @@ def test_delegated_root_component_open_rejects_swap_after_lstat(tmp_path, monkey
             delegated.unlink()
         if backup.exists():
             backup.rename(delegated)
+
+
+
+def test_directory_descriptor_cleanup_attempts_both_fds_after_first_close_error(
+        tmp_path, monkeypatch):
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    group_path = root / "cortex-owned"
+    group_path.mkdir()
+    group = CgroupV2(group_path)
+    child_fd, parent_fd = group._dir_fd, group._parent_fd
+    real_close = os.close
+    attempted = []
+
+    def flaky_close(descriptor):
+        attempted.append(descriptor)
+        if descriptor == child_fd:
+            real_close(descriptor)
+            raise OSError("injected close failure")
+        real_close(descriptor)
+
+    monkeypatch.setattr(os, "close", flaky_close)
+    failures = group._close_directory_fds()
+
+    assert attempted == [child_fd, parent_fd]
+    assert len(failures) == 1
+    assert "injected close failure" in failures[0]
+    assert group._dir_fd == -1
+    assert group._parent_fd == -1
+    with pytest.raises(OSError):
+        os.fstat(child_fd)
+    with pytest.raises(OSError):
+        os.fstat(parent_fd)
+
+
+def test_constructor_identity_failure_closes_both_transferred_descriptors(
+        tmp_path, monkeypatch):
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    group_path = root / "cortex-owned"
+    group_path.mkdir()
+    parent_fd = os.open(root, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+    child_fd = os.open(group_path, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+    real_close = os.close
+    closed = []
+
+    def recording_close(descriptor):
+        closed.append(descriptor)
+        real_close(descriptor)
+
+    monkeypatch.setattr(os, "close", recording_close)
+    with pytest.raises(CgroupUnavailable, match="changed while opening"):
+        CgroupV2(
+            group_path, expected_identity=(0, 0),
+            parent_fd=parent_fd, directory_fd=child_fd)
+
+    assert set(closed) == {parent_fd, child_fd}
+    with pytest.raises(OSError):
+        os.fstat(parent_fd)
+    with pytest.raises(OSError):
+        os.fstat(child_fd)
+
+
+def test_delegated_root_walk_closes_new_descriptor_if_previous_close_fails(
+        tmp_path, monkeypatch):
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    real_close_fd = CgroupV2._close_fd
+    closed_traversal = []
+    injected = False
+
+    def flaky_close_fd(descriptor, label):
+        nonlocal injected
+        error = real_close_fd(descriptor, label)
+        if label.startswith("previous delegated-root") and not injected:
+            injected = True
+            return "injected previous-descriptor close failure"
+        if label == "delegated-root traversal":
+            closed_traversal.append(descriptor)
+        return error
+
+    monkeypatch.setattr(
+        CgroupV2, "_close_fd", staticmethod(flaky_close_fd))
+    with pytest.raises(CgroupUnavailable, match="cannot release previous delegated-root"):
+        CgroupV2._open_delegated_root(root)
+
+    assert injected
+    assert len(closed_traversal) == 1
+    with pytest.raises(OSError):
+        os.fstat(closed_traversal[0])
+
+
+def test_close_is_idempotent_after_successful_removal(tmp_path, monkeypatch):
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    group_path = root / "cortex-owned"
+    group_path.mkdir()
+    (group_path / "cgroup.events").write_text("populated 0\\n")
+    group = CgroupV2(group_path)
+    real_rmdir = os.rmdir
+    removals = []
+
+    def rmdir(name, *, dir_fd=None):
+        if name == group_path.name:
+            removals.append(name)
+            for item in group_path.iterdir():
+                item.unlink()
+        return real_rmdir(name, dir_fd=dir_fd)
+
+    monkeypatch.setattr(os, "rmdir", rmdir)
+    group.close()
+    group.close()
+
+    assert removals == [group_path.name]
+    assert group._closed is True
+    assert group._dir_fd == -1
+    assert group._parent_fd == -1
+    assert not group_path.exists()
