@@ -378,3 +378,27 @@ Verification:
 - Strict sandbox remains **NOT RUNTIME-VERIFIED** pending an actual Linux runner with delegated cgroup v2 and Bubblewrap.
 
 No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or `main` update occurred.
+
+
+## Stage 16A.18 — delegated-root and cgroup-name ownership safety
+
+Static review examined delegated-root path resolution and exclusive cgroup creation.
+
+Changes:
+- Delegated cgroup roots must now be absolute, resolvable existing directories.
+- Reject paths that traverse symlink aliases in any component, rather than checking only whether the final path component itself is a symlink.
+- Use the canonical resolved root for subsequent child-path construction.
+- Added a symlink-root regression test.
+- Added a deterministic UUID-collision regression: when the generated cgroup name already exists, creation fails and the pre-existing directory plus its ownership sentinel remain untouched.
+
+Safety boundary:
+- Path.mkdir() remains the exclusive creation operation; a collision is not treated as permission to reuse an existing cgroup.
+- Setup rollback only attempts to remove the path after this invocation successfully created it.
+- This increment does not claim descriptor-relative protection against a privileged administrator concurrently renaming/replacing the delegated mount/root after validation. A dirfd/openat-based implementation and live concurrent stress testing remain potential hardening work.
+- It does not certify cgroup kernel behavior or delegated-root mount identity.
+
+Verification:
+- Source and regression tests committed; **no Python tests have been executed**. GitHub Actions has not produced usable runner step records/logs.
+- Strict sandbox remains **NOT RUNTIME-VERIFIED** pending a functioning Linux runner with delegated cgroup v2 and Bubblewrap.
+
+No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or main update occurred.
