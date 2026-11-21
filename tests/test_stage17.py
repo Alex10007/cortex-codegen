@@ -1130,14 +1130,14 @@ def test_stage17r_resolves_callable_alias_of_imported_function(tmp_path):
     root = tmp_path / "imported-callable-alias"
     root.mkdir()
     (root / "service.py").write_text(
-        "def execute():\\n"
-        "    return 9\\n"
+        "def execute():\n"
+        "    return 9\n"
     )
     (root / "consumer.py").write_text(
-        "from service import execute\\n"
-        "def invoke():\\n"
-        "    selected = execute\\n"
-        "    return selected()\\n"
+        "from service import execute\n"
+        "def invoke():\n"
+        "    selected = execute\n"
+        "    return selected()\n"
     )
     store = VectorStore(str(tmp_path / "imported-alias-vector.db"))
     graph = KnowledgeGraph(str(tmp_path / "imported-alias-graph.db"))
