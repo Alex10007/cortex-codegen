@@ -888,3 +888,70 @@ def test_stage17n_class_body_import_does_not_leak_into_method_scope(tmp_path):
     index_code_root(str(root), store, graph, version="stage17n-class")
     consumer = f"py:{root.name}/consumer.py:stage17n-class:func:Container.method"
     assert graph.neighbors(consumer, etype="calls") == []
+
+def test_compiler_scope_graph_captures_nested_free_global_and_special_scopes(tmp_path):
+    root = tmp_path / "compiler-scopes"
+    root.mkdir()
+    (root / "scope_cases.py").write_text(
+        "module_global = 0\\n"
+        "def outer(argument):\\n"
+        "    captured = 1\\n"
+        "    def inner():\\n"
+        "        nonlocal captured\\n"
+        "        global module_global\\n"
+        "        module_global = 2\\n"
+        "        return argument + captured\\n"
+        "    return inner\\n"
+        "def with_lambda(values):\\n"
+        "    return list(map(lambda entry: entry + 1, values))\\n"
+        "def with_comprehension(values):\\n"
+        "    return [entry for entry in values]\\n"
+        "def with_exception_target():\\n"
+        "    try:\\n"
+        "        raise ValueError('fixture')\\n"
+        "    except ValueError as error:\\n"
+        "        return str(error)\\n"
+    )
+    store = VectorStore(str(tmp_path / "compiler-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "compiler-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="compiler-scope-test")
+
+    module = f"py:{root.name}/scope_cases.py:compiler-scope-test"
+    scopes = graph._conn.execute(
+        "SELECT id, label FROM nodes WHERE type='python_compiler_scope'"
+    ).fetchall()
+    labels = {label for _node_id, label in scopes}
+    assert any("function:outer@" in label for label in labels)
+    assert any("function:inner@" in label for label in labels)
+    assert any("function:lambda@" in label for label in labels)
+    assert any("listcomp" in label for label in labels)
+
+    def scope_id(fragment):
+        matches = [node_id for node_id, label in scopes if fragment in label]
+        assert len(matches) == 1
+        return matches[0]
+
+    inner = scope_id("function:inner@")
+    inner_nonlocals = graph.neighbors(inner, etype="compiler_nonlocal")
+    inner_globals = graph.neighbors(inner, etype="compiler_global")
+    binding_labels = {
+        row[0]: row[1] for row in graph._conn.execute(
+            "SELECT id, label FROM nodes WHERE type='python_compiler_symbol'"
+        ).fetchall()
+    }
+    assert any(binding_labels[row["node"]].endswith("::captured")
+               for row in inner_nonlocals)
+    assert any(binding_labels[row["node"]].endswith("::module_global")
+               for row in inner_globals)
+
+    handler = scope_id("function:with_exception_target@")
+    handler_locals = graph.neighbors(handler, etype="compiler_local")
+    assert any(binding_labels[row["node"]].endswith("::error")
+               for row in handler_locals)
+    assert graph.neighbors(module, etype="has_compiler_scope")
+    assert counts["compiler_scopes"] == len(scopes)
+    assert counts["compiler_symbols"] > counts["compiler_scopes"]
+    assert counts["compiler_free_symbols"] >= 1
+    assert counts["compiler_nonlocal_symbols"] >= 1
+    assert counts["compiler_global_symbols"] >= 1
+    assert counts["compiler_scope_parse_errors"] == 0
