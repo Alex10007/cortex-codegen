@@ -112,7 +112,7 @@ def assess_objective(objective: str, repo_map: dict[str, Any]) -> dict[str, Any]
     if len(words) <= 3:
         ambiguity += 0.25
     if ambiguous_hits:
-        ambiguity += min(0.35, 0.15 * len(ambiguous_hits))
+        ambiguity += min(0.35, 0.25 * len(ambiguous_hits))
     if not has_target:
         ambiguity += 0.15
     ambiguity = min(1.0, round(ambiguity, 3))
