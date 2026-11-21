@@ -535,7 +535,7 @@ def test_dependency_cycle_analysis_reports_strongly_connected_components(tmp_pat
     (root / "pkg").mkdir(parents=True)
     files = [root / "pkg" / name for name in ("a.py", "b.py", "c.py", "outside.py")]
     for path in files:
-        path.write_text("# indexed fixture\\n")
+        path.write_text("# indexed fixture\n")
     graph = KnowledgeGraph(str(tmp_path / "cycles.sqlite"))
     provenance = lambda path: Provenance(
         source_uri=path.as_uri(), license="project-local", version="test",
@@ -560,7 +560,7 @@ def test_dependency_cycle_analysis_handles_self_loop_and_bounds(tmp_path):
     root = tmp_path / "repo"
     root.mkdir()
     source = root / "self.py"
-    source.write_text("# self cycle\\n")
+    source.write_text("# self cycle\n")
     graph = KnowledgeGraph(str(tmp_path / "self-cycle.sqlite"))
     provenance = Provenance(
         source_uri=source.as_uri(), license="project-local", version="test",
@@ -583,7 +583,7 @@ def test_architecture_boundary_rules_report_only_explicit_prefix_matches(tmp_pat
              root / "domain" / "model.py",
              root / "domain2" / "other.py"]
     for path in paths:
-        path.write_text("# architecture fixture\\n")
+        path.write_text("# architecture fixture\n")
     graph = KnowledgeGraph(str(tmp_path / "boundaries.sqlite"))
     provenance = lambda path: Provenance(
         source_uri=path.as_uri(), license="project-local", version="test",
@@ -617,17 +617,17 @@ def test_scope_aware_indexer_resolves_nested_and_instance_method_calls(tmp_path)
     root = tmp_path / "scope-repo"
     root.mkdir()
     (root / "mod.py").write_text(
-        "def outer():\\n"
-        "    def helper():\\n"
-        "        return 1\\n"
-        "    def inner():\\n"
-        "        return helper()\\n"
-        "    return inner()\\n"
-        "class Worker:\\n"
-        "    def helper(self):\\n"
-        "        return 2\\n"
-        "    def run(self):\\n"
-        "        return self.helper()\\n"
+        "def outer():\n"
+        "    def helper():\n"
+        "        return 1\n"
+        "    def inner():\n"
+        "        return helper()\n"
+        "    return inner()\n"
+        "class Worker:\n"
+        "    def helper(self):\n"
+        "        return 2\n"
+        "    def run(self):\n"
+        "        return self.helper()\n"
     )
     store = VectorStore(str(tmp_path / "scope-vector.db"))
     graph = KnowledgeGraph(str(tmp_path / "scope-graph.db"))
@@ -646,16 +646,16 @@ def test_scope_aware_indexer_does_not_resolve_shadowed_or_ambiguous_calls(tmp_pa
     root = tmp_path / "shadow-repo"
     root.mkdir()
     (root / "mod.py").write_text(
-        "def target():\\n"
-        "    return 1\\n"
-        "def caller(target):\\n"
-        "    return target()\\n"
-        "def duplicate():\\n"
-        "    return 2\\n"
-        "def duplicate():\\n"
-        "    return 3\\n"
-        "def ambiguous_caller():\\n"
-        "    return duplicate()\\n"
+        "def target():\n"
+        "    return 1\n"
+        "def caller(target):\n"
+        "    return target()\n"
+        "def duplicate():\n"
+        "    return 2\n"
+        "def duplicate():\n"
+        "    return 3\n"
+        "def ambiguous_caller():\n"
+        "    return duplicate()\n"
     )
     store = VectorStore(str(tmp_path / "shadow-vector.db"))
     graph = KnowledgeGraph(str(tmp_path / "shadow-graph.db"))
@@ -673,10 +673,10 @@ def test_scope_aware_indexer_links_python_type_annotations(tmp_path):
     root = tmp_path / "types-repo"
     root.mkdir()
     (root / "models.py").write_text(
-        "class Model:\\n"
-        "    pass\\n"
-        "def consume(value: Model) -> Model:\\n"
-        "    return value\\n"
+        "class Model:\n"
+        "    pass\n"
+        "def consume(value: Model) -> Model:\n"
+        "    return value\n"
     )
     store = VectorStore(str(tmp_path / "types-vector.db"))
     graph = KnowledgeGraph(str(tmp_path / "types-graph.db"))
@@ -1033,13 +1033,13 @@ def test_stage17q_resolves_nested_package_module_attribute_call_chains(tmp_path)
     (package / "__init__.py").write_text("")
     (services / "__init__.py").write_text("")
     (services / "worker.py").write_text(
-        "def run():\\n"
-        "    return 'ok'\\n"
+        "def run():\n"
+        "    return 'ok'\n"
     )
     (root / "consumer.py").write_text(
-        "import pkg as p\\n"
-        "def invoke():\\n"
-        "    return p.services.worker.run()\\n"
+        "import pkg as p\n"
+        "def invoke():\n"
+        "    return p.services.worker.run()\n"
     )
     store = VectorStore(str(tmp_path / "nested-chain-vector.db"))
     graph = KnowledgeGraph(str(tmp_path / "nested-chain-graph.db"))
@@ -1057,15 +1057,15 @@ def test_stage17q_resolves_scoped_nested_module_alias_without_leaking(tmp_path):
     root = tmp_path / "scoped-module-chain"
     root.mkdir()
     (root / "service.py").write_text(
-        "def run():\\n"
-        "    return 1\\n"
+        "def run():\n"
+        "    return 1\n"
     )
     (root / "consumer.py").write_text(
-        "def inside():\\n"
-        "    import service as selected\\n"
-        "    return selected.run()\\n"
-        "def outside():\\n"
-        "    return selected.run()\\n"
+        "def inside():\n"
+        "    import service as selected\n"
+        "    return selected.run()\n"
+        "def outside():\n"
+        "    return selected.run()\n"
     )
     store = VectorStore(str(tmp_path / "scoped-chain-vector.db"))
     graph = KnowledgeGraph(str(tmp_path / "scoped-chain-graph.db"))
