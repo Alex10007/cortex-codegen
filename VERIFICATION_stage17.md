@@ -394,3 +394,35 @@ exception-target bindings. The test is
 committed but has **not been executed**; the current branch has no verified
 runtime test result. No model training, checkpoint modification, benchmark
 promotion, or Stage 12 champion change occurred.
+
+## Stage 17P — Compiler-reconciled lexical name resolution
+
+Stage 17O's compiler symbol tables are now reconciled with the existing AST
+scope identities before import, call, inheritance, and type-reference
+resolution. For matched Python function and class scopes, compiler-reported
+local and parameter bindings augment the existing lexical binding map.
+Compiler-reported explicit `global` and `nonlocal` declarations are retained
+as scope metadata.
+
+The existing resolver now honors those declarations:
+- A `global name` reference resolves from module scope rather than accidentally
+  binding to a same-named enclosing function.
+- A `nonlocal name` reference searches the nearest enclosing non-class scope
+  that actually binds the name.
+- Imported-module attribute resolution uses the same effective lexical scope.
+- If a nonlocal binding cannot be established uniquely from indexed evidence,
+  the resolver leaves it unresolved instead of guessing.
+
+This reuses the canonical AST symbol definitions, import maps, and knowledge
+graph. It does not introduce a second resolver. Compiler scopes that cannot be
+matched unambiguously to an AST scope are retained in Stage 17O's compiler
+inventory but are not used to alter existing resolution. Dynamic execution,
+runtime monkey-patching, descriptor dispatch, and full compiler/type-checker
+semantics remain outside this static analysis.
+
+Added regression tests where a nested function's explicit global reference
+must bypass a shadowing enclosing function, and where nonlocal must select the
+nearest enclosing binding instead of a module-level name. Tests are committed
+but have **not been executed**; no current-head runtime verification is claimed.
+No model training, checkpoint modification, benchmark promotion, or Stage 12
+champion change occurred.
