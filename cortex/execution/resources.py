@@ -11,6 +11,7 @@ import uuid
 import time
 import math
 import stat
+import threading
 from pathlib import Path
 
 
@@ -25,6 +26,7 @@ class CgroupV2:
                  parent_fd: int | None = None, directory_fd: int | None = None):
         self.path = path
         self._closed = False
+        self._close_lock = threading.Lock()
         self._identity = expected_identity or self._path_identity(path)
         self._parent_fd = -1
         self._dir_fd = -1
@@ -110,10 +112,25 @@ class CgroupV2:
         return info.st_dev, info.st_ino
 
     def _assert_owned_path(self) -> None:
-        """Fail closed if the pathname no longer resolves to this execution's directory."""
-        if self._path_identity(self.path) != self._identity:
+        """Verify the entry through the pinned parent, not a re-resolved ancestor path."""
+        if self._closed or self._parent_fd < 0 or self._dir_fd < 0:
+            raise CgroupUnavailable("execution cgroup descriptors are closed")
+        try:
+            parent_info = os.fstat(self._parent_fd)
+            entry = os.stat(
+                self.path.name, dir_fd=self._parent_fd, follow_symlinks=False)
+            directory_info = os.fstat(self._dir_fd)
+        except OSError as exc:
             raise CgroupUnavailable(
-                "execution cgroup path identity changed; refusing operation on an unowned cgroup")
+                f"cannot verify execution cgroup through its pinned parent: {exc}") from exc
+        entry_identity = (entry.st_dev, entry.st_ino)
+        descriptor_identity = (directory_info.st_dev, directory_info.st_ino)
+        if (not stat.S_ISDIR(parent_info.st_mode)
+                or not stat.S_ISDIR(entry.st_mode)
+                or entry_identity != self._identity
+                or descriptor_identity != self._identity):
+            raise CgroupUnavailable(
+                "execution cgroup entry or descriptor identity changed; refusing operation")
 
     @staticmethod
     def _resolve_delegated_root(root: str | os.PathLike[str]) -> Path:
@@ -469,25 +486,29 @@ class CgroupV2:
         }
 
     def close(self) -> None:
-        if self._closed:
-            return
-        self._assert_owned_path()
-        self.wait_empty()
-        self._assert_owned_path()
-        try:
-            current = os.stat(
-                self.path.name, dir_fd=self._parent_fd, follow_symlinks=False)
-            if (current.st_dev, current.st_ino) != self._identity:
+        # Serialize teardown: two callers must never race through the final
+        # identity check and directory removal for the same manager instance.
+        with self._close_lock:
+            if self._closed:
+                return
+            self._assert_owned_path()
+            self.wait_empty()
+            self._assert_owned_path()
+            try:
+                current = os.stat(
+                    self.path.name, dir_fd=self._parent_fd, follow_symlinks=False)
+                if (not stat.S_ISDIR(current.st_mode)
+                        or (current.st_dev, current.st_ino) != self._identity):
+                    raise CgroupUnavailable(
+                        "execution cgroup entry identity changed; refusing descriptor-relative removal")
+                os.rmdir(self.path.name, dir_fd=self._parent_fd)
+            except OSError as exc:
                 raise CgroupUnavailable(
-                    "execution cgroup path identity changed; refusing descriptor-relative removal")
-            os.rmdir(self.path.name, dir_fd=self._parent_fd)
-        except OSError as exc:
-            raise CgroupUnavailable(
-                f"execution cgroup is not empty or could not be removed: {exc}") from exc
-        self._closed = True
-        failures = self._close_directory_fds()
-        self._raise_cleanup_failures(
-            "cgroup was removed but descriptor closure reported errors: ", failures)
+                    f"execution cgroup is not empty or could not be removed: {exc}") from exc
+            self._closed = True
+            failures = self._close_directory_fds()
+            self._raise_cleanup_failures(
+                "cgroup was removed but descriptor closure reported errors: ", failures)
 
 
 def configured_cgroup_root() -> str | None:
