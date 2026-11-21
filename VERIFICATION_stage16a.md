@@ -501,3 +501,26 @@ Stage 16A.22 follow-up verification note:
 - The main cgroup creation success fixture now emulates cgroupfs pseudo-file teardown so `close()` can perform its own final `cgroup.events` check before directory removal.
 - UUID collision handling is scoped specifically to the descriptor-relative mkdir operation; a later `FileExistsError` during setup now enters the ordinary owned-directory rollback path.
 - Latest Actions run `44843634159` failed with the test job reporting `steps: null` and no logs. This remains a pre-step runner/workflow failure; it does not provide a Python test result.
+
+
+## Stage 16A.23 — component-by-component delegated-root acquisition
+
+Changes:
+- Added `CgroupV2._open_delegated_root()`, which starts from an opened filesystem root directory and walks each canonical delegated-root component using directory descriptors.
+- Each component is inspected relative to the currently pinned parent with `follow_symlinks=False`, must be a directory, and is then opened with `O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC`.
+- The opened component's `fstat` device/inode identity must match the no-follow directory-entry metadata captured immediately before opening. A replacement or symlink swap during acquisition fails closed.
+- The final delegated-root descriptor is returned and used directly for controller reads and child cgroup creation; create no longer reopens the resolved root pathname.
+- `probe_cgroup_v2()` now uses the same component-walk acquisition and descriptor-relative controller reads, so probe and create share the same root-acquisition policy.
+- Added regression tests for an intermediate symlink alias and a deterministic directory-to-symlink swap between entry inspection and open.
+
+Scope and residual risks:
+- The existing canonical-path policy remains: a root whose supplied path resolves through symlink aliases is rejected. The new component walk adds race-resistant acquisition after canonicalization.
+- The walk pins each opened directory while advancing; it does not prevent a privileged actor from renaming/mounting ancestors or changing cgroup delegation after acquisition. Kernel hierarchy mutation and privileged adversaries are not certified.
+- Tests have been authored but not executed. The race test uses a local filesystem and verifies `O_NOFOLLOW` acquisition behavior; it is not a live cgroupfs test.
+
+Verification:
+- Source and 27 regression tests are committed; no test execution or CI pass is claimed.
+- Live delegated cgroup v2 and Bubblewrap qualification remains outstanding. Strict sandbox remains **NOT RUNTIME-VERIFIED**.
+- Latest Actions run status must be checked after this commit; earlier runs failed before job steps and provided no Python test evidence.
+
+No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or `main` branch update occurred.
