@@ -475,8 +475,8 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                 self.generic_visit(node)
 
             def visit_Assign(self, node: ast.Assign) -> None:
-                if len(node.targets) == 1:
-                    target_key = self._instance_target(node.targets[0])
+                for target in node.targets:
+                    target_key = self._instance_target(target)
                     if target_key:
                         pending_instance_assignments.append((
                             source_id, tuple(self.scope_names), target_key,
@@ -491,7 +491,29 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                         self.conditional_depth > 0))
                 self.generic_visit(node)
 
+            def visit_AugAssign(self, node: ast.AugAssign) -> None:
+                target_key = self._instance_target(node.target)
+                if target_key:
+                    pending_instance_assignments.append((
+                        source_id, tuple(self.scope_names), target_key, None,
+                        self.conditional_depth > 0))
+                self.generic_visit(node)
+
+            def visit_Delete(self, node: ast.Delete) -> None:
+                for target in node.targets:
+                    target_key = self._instance_target(target)
+                    if target_key:
+                        pending_instance_assignments.append((
+                            source_id, tuple(self.scope_names), target_key, None,
+                            self.conditional_depth > 0))
+                self.generic_visit(node)
+
             def visit_NamedExpr(self, node: ast.NamedExpr) -> None:
+                target_key = self._instance_target(node.target)
+                if target_key:
+                    pending_instance_assignments.append((
+                        source_id, tuple(self.scope_names), target_key,
+                        self._instance_class(node.value), self.conditional_depth > 0))
                 if isinstance(node.target, ast.Name) and isinstance(node.value, ast.Name):
                     pending_callable_aliases.append((
                         source_id, tuple(self.scope_names),
@@ -1082,6 +1104,11 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
         return _resolve_inherited_method(class_id, method_name)
 
     for caller_id, module_id, scope, receiver_key, method_name in pending_instance_calls:
+        # Imported module aliases are resolved by the dedicated module-chain
+        # resolver below; do not count them as unknown instance receivers.
+        if len(receiver_key) == 1 and _resolve_imported_module(
+                module_id, scope, receiver_key[0]):
+            continue
         classes, ambiguous_type = _resolve_instance_class(module_id, scope, receiver_key)
         if len(classes) != 1:
             if ambiguous_type:
