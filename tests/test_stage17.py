@@ -768,3 +768,85 @@ def test_python_import_resolution_reports_unresolved_and_ambiguous_without_guess
     assert graph.neighbors(consumer, etype="calls") == []
     assert counts["ambiguous_imports"] == 1
     assert counts["unresolved_imports"] >= 1
+
+
+def test_stage17n_resolves_function_local_import_without_leaking_scope(tmp_path):
+    root = tmp_path / "local-import"
+    root.mkdir()
+    (root / "service.py").write_text("def run():\n    return 1\n")
+    (root / "consumer.py").write_text(
+        "def inside():\n"
+        "    from service import run as local_run\n"
+        "    return local_run()\n"
+        "def outside():\n"
+        "    return local_run()\n"
+    )
+    store = VectorStore(str(tmp_path / "local-import-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "local-import-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="stage17n-local")
+    consumer = f"py:{root.name}/consumer.py:stage17n-local"
+    service_run = f"py:{root.name}/service.py:stage17n-local:func:run"
+    assert graph.neighbors(consumer + ":func:inside", etype="calls")[0]["node"] == service_run
+    assert graph.neighbors(consumer + ":func:outside", etype="calls") == []
+    assert counts["cross_module_calls"] == 1
+
+
+def test_stage17n_nonlocal_import_binding_resolves_in_enclosing_function(tmp_path):
+    root = tmp_path / "nonlocal-import"
+    root.mkdir()
+    (root / "service.py").write_text("def run():\n    return 1\n")
+    (root / "consumer.py").write_text(
+        "def outer():\n"
+        "    from service import run as selected\n"
+        "    def inner():\n"
+        "        nonlocal selected\n"
+        "        return selected()\n"
+        "    return inner()\n"
+    )
+    store = VectorStore(str(tmp_path / "nonlocal-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "nonlocal-graph.db"))
+    index_code_root(str(root), store, graph, version="stage17n-nonlocal")
+    consumer = f"py:{root.name}/consumer.py:stage17n-nonlocal"
+    service_run = f"py:{root.name}/service.py:stage17n-nonlocal:func:run"
+    assert graph.neighbors(consumer + ":func:outer.inner", etype="calls")[0]["node"] == service_run
+
+
+def test_stage17n_package_reexports_resolve_consumer_import(tmp_path):
+    root = tmp_path / "reexport-repo"
+    package = root / "pkg"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text("from .service import run as public_run\n")
+    (package / "service.py").write_text("def run():\n    return 1\n")
+    (root / "consumer.py").write_text(
+        "from pkg import public_run\n"
+        "def invoke():\n"
+        "    return public_run()\n"
+    )
+    store = VectorStore(str(tmp_path / "reexport-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "reexport-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="stage17n-reexport")
+    consumer = f"py:{root.name}/consumer.py:stage17n-reexport:func:invoke"
+    service_run = f"py:{root.name}/pkg/service.py:stage17n-reexport:func:run"
+    assert graph.neighbors(consumer, etype="calls")[0]["node"] == service_run
+    assert counts["resolved_reexports"] >= 1
+
+
+def test_stage17n_conditional_import_is_distinguished(tmp_path):
+    root = tmp_path / "conditional-import"
+    root.mkdir()
+    (root / "service.py").write_text("def run():\n    return 1\n")
+    (root / "consumer.py").write_text(
+        "if True:\n"
+        "    from service import run\n"
+        "def invoke():\n"
+        "    return run()\n"
+    )
+    store = VectorStore(str(tmp_path / "conditional-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "conditional-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="stage17n-conditional")
+    consumer_module = f"py:{root.name}/consumer.py:stage17n-conditional"
+    consumer_call = consumer_module + ":func:invoke"
+    service_run = f"py:{root.name}/service.py:stage17n-conditional:func:run"
+    assert graph.neighbors(consumer_call, etype="calls")[0]["node"] == service_run
+    assert counts["conditional_imports"] == 1
+    assert counts["resolved_imports"] >= 1
