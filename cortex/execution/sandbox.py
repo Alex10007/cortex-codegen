@@ -181,6 +181,18 @@ def _copy_workspace_no_symlinks(source: str, destination: str) -> None:
 
 
 
+
+def _close_launch_fd(fd: int | None, label: str) -> str | None:
+    """Close one launch-gate descriptor without interrupting later cleanup."""
+    if fd is None:
+        return None
+    try:
+        os.close(fd)
+    except OSError as exc:
+        return f"{label} close failed: {exc}"
+    return None
+
+
 def _cleanup_unlaunched_cgroup(cgroup: CgroupV2) -> list[str]:
     """Best-effort cleanup when no child was launched into a new cgroup.
 
@@ -382,53 +394,75 @@ def run(code: str | None = None, argv: Sequence[str] | None = None,
                 bootstrap = _cgroup_bootstrap_source()
                 launch_cmd = [sys.executable, "-c", bootstrap, str(gate_read), *full_cmd]
             except BaseException as setup_error:
-                for fd in (gate_read, gate_write):
-                    if fd is not None:
-                        try:
-                            os.close(fd)
-                        except OSError as close_error:
-                            setup_error.add_note(
-                                f"launch pipe close also failed: {close_error}")
+                for fd, label in ((gate_read, "gate-read"), (gate_write, "gate-write")):
+                    close_error = _close_launch_fd(fd, label)
+                    if close_error:
+                        setup_error.add_note(close_error)
                 cleanup_failures = _cleanup_unlaunched_cgroup(cgroup)
                 if cleanup_failures:
                     setup_error.add_note(
                         "cgroup cleanup after launch preparation failure was incomplete: "
                         + "; ".join(cleanup_failures))
                 raise
+
             try:
+                proc = subprocess.Popen(
+                    launch_cmd, cwd=(td if not bwrap else "/"), env=env,
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                    preexec_fn=_limits(
+                        cpu_s, mem_mb, nproc,
+                        aggregate_process_limit=True),
+                    start_new_session=(os.name == "posix"),
+                    pass_fds=(gate_read,),
+                )
+            except BaseException as launch_error:
+                for fd, label in ((gate_read, "gate-read"), (gate_write, "gate-write")):
+                    close_error = _close_launch_fd(fd, label)
+                    if close_error:
+                        launch_error.add_note(close_error)
+                cleanup_failures = _cleanup_unlaunched_cgroup(cgroup)
+                if cleanup_failures:
+                    launch_error.add_note(
+                        "cgroup cleanup after launch failure was incomplete: "
+                        + "; ".join(cleanup_failures))
+                raise
+
+            # The child inherits gate_read; the parent must close its copy.
+            close_error = _close_launch_fd(gate_read, "gate-read")
+            gate_read = None
+            if close_error:
+                gate_error = OSError(close_error)
+                extra = _close_launch_fd(gate_write, "gate-write")
+                gate_write = None
+                if extra:
+                    gate_error.add_note(extra)
                 try:
-                    proc = subprocess.Popen(
-                        launch_cmd, cwd=(td if not bwrap else "/"), env=env,
-                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                        preexec_fn=_limits(
-                            cpu_s, mem_mb, nproc,
-                            aggregate_process_limit=True),
-                        start_new_session=(os.name == "posix"),
-                        pass_fds=(gate_read,),
-                    )
-                except Exception as launch_error:
-                    os.close(gate_write)
-                    cleanup_failures = _cleanup_unlaunched_cgroup(cgroup)
-                    if cleanup_failures:
-                        launch_error.add_note(
-                            "cgroup cleanup after launch failure was incomplete: "
-                            + "; ".join(cleanup_failures))
-                    raise
-            finally:
-                os.close(gate_read)
+                    _cleanup_execution(proc, cgroup, [], (proc.stdout, proc.stderr))
+                except Exception as cleanup_error:
+                    gate_error.add_note(
+                        f"sandbox cleanup after gate-read close failure also failed: {cleanup_error}")
+                raise NetworkIsolationUnavailable(
+                    f"could not close parent launch-gate descriptor: {gate_error}") from gate_error
+
             try:
                 cgroup.attach(proc.pid)
                 os.write(gate_write, b"1")
-            except Exception as exc:
-                os.close(gate_write)
+                close_error = _close_launch_fd(gate_write, "gate-write")
+                gate_write = None
+                if close_error:
+                    raise OSError(close_error)
+            except BaseException as gate_error:
+                extra = _close_launch_fd(gate_write, "gate-write")
+                gate_write = None
+                if extra:
+                    gate_error.add_note(extra)
                 try:
-                    _cleanup_execution(proc, cgroup, [], ())
+                    _cleanup_execution(proc, cgroup, [], (proc.stdout, proc.stderr))
                 except Exception as cleanup_error:
-                    exc.add_note(
-                        f"sandbox cleanup after cgroup-attach failure also failed: {cleanup_error}")
+                    gate_error.add_note(
+                        f"sandbox cleanup after cgroup-attach/release failure also failed: {cleanup_error}")
                 raise NetworkIsolationUnavailable(
-                    f"could not attach sandbox launcher to cgroup before execution: {exc}") from exc
-            os.close(gate_write)
+                    f"could not safely attach and release sandbox launcher: {gate_error}") from gate_error
         else:
             proc = subprocess.Popen(
                 full_cmd, cwd=(td if not bwrap else "/"), env=env,
