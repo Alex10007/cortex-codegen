@@ -1102,6 +1102,8 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
         facts = factory_facts.get(factory_id, [])
         if not facts or any(conditional or not class_name for
                             class_name, _mid, _scope, conditional in facts):
+            if facts:
+                counts["ambiguous_factory_returns"] += 1
             counts["unresolved_calls"] += 1
             continue
         class_names = {class_name for class_name, _mid, _scope, _conditional in facts}
