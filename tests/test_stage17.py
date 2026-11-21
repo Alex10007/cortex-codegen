@@ -1153,17 +1153,17 @@ def test_stage17s_resolves_inherited_method_and_preserves_override(tmp_path):
     root = tmp_path / "inherited-methods"
     root.mkdir()
     (root / "mod.py").write_text(
-        "class Base:\\n"
-        "    def run(self):\\n"
-        "        return 1\\n"
-        "class Child(Base):\\n"
-        "    def invoke(self):\\n"
-        "        return self.run()\\n"
-        "class Override(Base):\\n"
-        "    def run(self):\\n"
-        "        return 2\\n"
-        "    def invoke(self):\\n"
-        "        return self.run()\\n"
+        "class Base:\n"
+        "    def run(self):\n"
+        "        return 1\n"
+        "class Child(Base):\n"
+        "    def invoke(self):\n"
+        "        return self.run()\n"
+        "class Override(Base):\n"
+        "    def run(self):\n"
+        "        return 2\n"
+        "    def invoke(self):\n"
+        "        return self.run()\n"
     )
     store = VectorStore(str(tmp_path / "stage17s-vector.db"))
     graph = KnowledgeGraph(str(tmp_path / "stage17s-graph.db"))
@@ -1181,12 +1181,12 @@ def test_stage17s_rejects_conditional_callable_alias(tmp_path):
     root = tmp_path / "conditional-alias"
     root.mkdir()
     (root / "mod.py").write_text(
-        "def implementation():\\n"
-        "    return 1\\n"
-        "def invoke(flag):\\n"
-        "    if flag:\\n"
-        "        selected = implementation\\n"
-        "    return selected()\\n"
+        "def implementation():\n"
+        "    return 1\n"
+        "def invoke(flag):\n"
+        "    if flag:\n"
+        "        selected = implementation\n"
+        "    return selected()\n"
     )
     store = VectorStore(str(tmp_path / "conditional-alias-vector.db"))
     graph = KnowledgeGraph(str(tmp_path / "conditional-alias-graph.db"))
@@ -1201,15 +1201,15 @@ def test_stage17s_rejects_ambiguous_multiple_inheritance_dispatch(tmp_path):
     root = tmp_path / "ambiguous-inheritance"
     root.mkdir()
     (root / "mod.py").write_text(
-        "class Left:\\n"
-        "    def run(self):\\n"
-        "        return 1\\n"
-        "class Right:\\n"
-        "    def run(self):\\n"
-        "        return 2\\n"
-        "class Child(Left, Right):\\n"
-        "    def invoke(self):\\n"
-        "        return self.run()\\n"
+        "class Left:\n"
+        "    def run(self):\n"
+        "        return 1\n"
+        "class Right:\n"
+        "    def run(self):\n"
+        "        return 2\n"
+        "class Child(Left, Right):\n"
+        "    def invoke(self):\n"
+        "        return self.run()\n"
     )
     store = VectorStore(str(tmp_path / "ambiguous-inheritance-vector.db"))
     graph = KnowledgeGraph(str(tmp_path / "ambiguous-inheritance-graph.db"))
@@ -1218,3 +1218,74 @@ def test_stage17s_rejects_ambiguous_multiple_inheritance_dispatch(tmp_path):
     invoke = module + ":func:Child.invoke"
     assert graph.neighbors(invoke, etype="calls") == []
     assert counts["ambiguous_calls"] >= 1
+
+
+def test_stage17t_resolves_constructor_typed_instance_method(tmp_path):
+    root = tmp_path / "typed-instance"
+    root.mkdir()
+    (root / "mod.py").write_text(
+        "class Service:\n"
+        "    def execute(self):\n"
+        "        return 1\n"
+        "def invoke():\n"
+        "    service = Service()\n"
+        "    return service.execute()\n"
+    )
+    store = VectorStore(str(tmp_path / "stage17t-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "stage17t-graph.db"))
+    index_code_root(str(root), store, graph, version="stage17t-instance")
+    module = f"py:{root.name}/mod.py:stage17t-instance"
+    invoke = module + ":func:invoke"
+    execute = module + ":func:Service.execute"
+    assert {row["node"] for row in graph.neighbors(invoke, etype="calls")} == {execute}
+
+
+def test_stage17t_resolves_self_attribute_constructor_type(tmp_path):
+    root = tmp_path / "self-attribute-type"
+    root.mkdir()
+    (root / "mod.py").write_text(
+        "class Worker:\n"
+        "    def run(self):\n"
+        "        return 1\n"
+        "class Controller:\n"
+        "    def __init__(self):\n"
+        "        self.worker = Worker()\n"
+        "    def invoke(self):\n"
+        "        return self.worker.run()\n"
+    )
+    store = VectorStore(str(tmp_path / "stage17t-self-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "stage17t-self-graph.db"))
+    index_code_root(str(root), store, graph, version="stage17t-self")
+    module = f"py:{root.name}/mod.py:stage17t-self"
+    invoke = module + ":func:Controller.invoke"
+    run = module + ":func:Worker.run"
+    assert {row["node"] for row in graph.neighbors(invoke, etype="calls")} == {run}
+
+
+def test_stage17t_uses_annotation_and_rejects_conflicting_reassignment(tmp_path):
+    root = tmp_path / "annotated-instance"
+    root.mkdir()
+    (root / "mod.py").write_text(
+        "class First:\n"
+        "    def run(self):\n"
+        "        return 1\n"
+        "class Second:\n"
+        "    def run(self):\n"
+        "        return 2\n"
+        "def annotated(service: First):\n"
+        "    return service.run()\n"
+        "def conflicting():\n"
+        "    service = First()\n"
+        "    service = Second()\n"
+        "    return service.run()\n"
+    )
+    store = VectorStore(str(tmp_path / "stage17t-annotated-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "stage17t-annotated-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="stage17t-annotated")
+    module = f"py:{root.name}/mod.py:stage17t-annotated"
+    annotated = module + ":func:annotated"
+    first_run = module + ":func:First.run"
+    conflicting = module + ":func:conflicting"
+    assert {row["node"] for row in graph.neighbors(annotated, etype="calls")} == {first_run}
+    assert graph.neighbors(conflicting, etype="calls") == []
+    assert counts["unresolved_calls"] >= 1
