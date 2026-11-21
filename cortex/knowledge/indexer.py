@@ -208,7 +208,7 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
     symbol_definitions: dict[tuple[str, tuple[str, ...], str], list[tuple[str, str]]] = {}
     scope_bindings: dict[tuple[str, tuple[str, ...]], set[str]] = {}
     pending_calls: list[tuple[str, str, tuple[str, ...], str, str | None]] = []
-    pending_callable_aliases: list[tuple[str, tuple[str, ...], str, str]] = []
+    pending_callable_aliases: list[tuple[str, tuple[str, ...], str, str, bool]] = []
     pending_inheritance: list[tuple[str, tuple[str, ...], str]] = []
     pending_type_refs: list[tuple[str, tuple[str, ...], str]] = []
 
@@ -313,6 +313,45 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
             def __init__(self):
                 self.scope_names: list[str] = []
                 self.scope_ids = [source_id]
+                self.conditional_depth = 0
+
+            def _visit_conditional(self, statements: list[ast.stmt]) -> None:
+                self.conditional_depth += 1
+                for statement in statements:
+                    self.visit(statement)
+                self.conditional_depth -= 1
+
+            def visit_If(self, node: ast.If) -> None:
+                self.visit(node.test)
+                self._visit_conditional(node.body)
+                self._visit_conditional(node.orelse)
+
+            def visit_For(self, node: ast.For) -> None:
+                self.visit(node.iter)
+                self._visit_conditional(node.body)
+                self._visit_conditional(node.orelse)
+
+            visit_AsyncFor = visit_For
+
+            def visit_While(self, node: ast.While) -> None:
+                self.visit(node.test)
+                self._visit_conditional(node.body)
+                self._visit_conditional(node.orelse)
+
+            def visit_Try(self, node: ast.Try) -> None:
+                self._visit_conditional(node.body)
+                for handler in node.handlers:
+                    self._visit_conditional(handler.body)
+                self._visit_conditional(node.orelse)
+                self._visit_conditional(node.finalbody)
+
+            def visit_TryStar(self, node: ast.Try) -> None:
+                self.visit_Try(node)
+
+            def visit_Match(self, node: ast.Match) -> None:
+                self.visit(node.subject)
+                for case in node.cases:
+                    self._visit_conditional(case.body)
 
             def _record(self, name: str, kind: str, qualified: str) -> str:
                 symbol_id = source_id + ":" + kind + ":" + qualified
@@ -390,7 +429,8 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                         isinstance(node.value, ast.Name)):
                     pending_callable_aliases.append((
                         source_id, tuple(self.scope_names),
-                        node.target.id, node.value.id))
+                        node.target.id, node.value.id,
+                        self.conditional_depth > 0))
                 self.generic_visit(node)
 
             def visit_Assign(self, node: ast.Assign) -> None:
@@ -399,14 +439,16 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                         isinstance(node.value, ast.Name)):
                     pending_callable_aliases.append((
                         source_id, tuple(self.scope_names),
-                        node.targets[0].id, node.value.id))
+                        node.targets[0].id, node.value.id,
+                        self.conditional_depth > 0))
                 self.generic_visit(node)
 
             def visit_NamedExpr(self, node: ast.NamedExpr) -> None:
                 if isinstance(node.target, ast.Name) and isinstance(node.value, ast.Name):
                     pending_callable_aliases.append((
                         source_id, tuple(self.scope_names),
-                        node.target.id, node.value.id))
+                        node.target.id, node.value.id,
+                        self.conditional_depth > 0))
                 self.generic_visit(node)
 
             def visit_Call(self, node: ast.Call) -> None:
@@ -851,17 +893,22 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
     # branch assumptions. The canonical lexical/import resolver supplies the
     # target; no independent symbol table is introduced.
     alias_assignments: dict[tuple[str, tuple[str, ...], str], list[str]] = {}
-    for module_id, scope, alias_name, source_name in pending_callable_aliases:
+    for module_id, scope, alias_name, source_name, conditional in pending_callable_aliases:
         effective_scope = _effective_resolution_scope(module_id, scope, alias_name)
         if effective_scope is None:
             continue
         key = (module_id, effective_scope, alias_name)
-        alias_assignments.setdefault(key, []).append(source_name)
+        # A branch/loop/exception/match assignment is not guaranteed to bind
+        # the alias on every path; retain it as invalid evidence.
+        alias_assignments.setdefault(key, []).append(
+            "<conditional>" if conditional else source_name)
 
     callable_aliases: dict[tuple[str, tuple[str, ...], str],
                             list[tuple[str, str]]] = {}
     for key, source_names in alias_assignments.items():
         if len(source_names) != 1:
+            continue
+        if source_names[0] == "<conditional>":
             continue
         module_id, scope, _alias_name = key
         definitions, _ = _resolve_lexical(module_id, scope, source_names[0])
@@ -883,6 +930,42 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                 return callable_aliases.get(key, []), key not in callable_aliases
             if name in scope_bindings.get((module_id, current_scope), set()):
                 return [], False
+        return [], False
+
+    # Build a conservative local inheritance map before call resolution. This
+    # reuses the same pending base declarations and lexical resolver as the
+    # canonical inherits edges emitted below.
+    class_bases: dict[str, list[str]] = {}
+    for child_id, base_scope, base_name in pending_inheritance:
+        base_module = child_id.split(":class:", 1)[0]
+        base_defs, _ = _resolve_lexical(base_module, base_scope, base_name)
+        base_classes = [item[0] for item in base_defs if item[1] == "class"]
+        if len(base_classes) == 1:
+            class_bases.setdefault(child_id, []).append(base_classes[0])
+
+    def _resolve_inherited_method(class_id: str, method_name: str):
+        frontier = sorted(set(class_bases.get(class_id, [])))
+        visited = {class_id}
+        while frontier:
+            candidates = []
+            next_frontier = []
+            for base_id in frontier:
+                if base_id in visited:
+                    continue
+                visited.add(base_id)
+                base_module = base_id.split(":class:", 1)[0]
+                base_qual = base_id.split(":class:", 1)[1]
+                base_scope = tuple(base_qual.split("."))
+                declarations = symbol_definitions.get(
+                    (base_module, base_scope, method_name), [])
+                candidates.extend(item for item in declarations if item[1] == "func")
+                next_frontier.extend(class_bases.get(base_id, []))
+            unique = sorted({item[0]: item for item in candidates}.values())
+            if len(unique) == 1:
+                return unique, False
+            if len(unique) > 1:
+                return [], True
+            frontier = sorted(set(next_frontier))
         return [], False
 
     for caller_id, module_id, scope, target_name, receiver in pending_calls:
@@ -914,6 +997,13 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                 counts["unresolved_calls"] += 1
                 continue
             definitions = symbol_definitions.get((module_id, class_scope, target_name), [])
+            if not definitions:
+                definitions, inherited_ambiguous = _resolve_inherited_method(
+                    module_id + ":class:" + ".".join(class_scope), target_name)
+                if inherited_ambiguous:
+                    counts["ambiguous_calls"] += 1
+                    counts["unresolved_calls"] += 1
+                    continue
         else:
             definitions, _ = _resolve_lexical(module_id, scope, target_name)
         unique = sorted({item[0] for item in definitions})
