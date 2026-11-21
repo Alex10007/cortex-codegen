@@ -371,3 +371,103 @@ def test_regression_selector_never_returns_partial_targeted_suite_when_over_limi
     assert selected["targets"] == []
     assert selected["truncated"] is True
     assert selected["full_suite_command"] == ["python", "-m", "pytest", "-q"]
+
+
+def test_pipeline_attaches_change_impact_without_skipping_full_suite(monkeypatch):
+    from cortex.core import CortexAgent
+    from types import SimpleNamespace
+
+    audit_events = []
+
+    class Audit:
+        def record(self, event, payload):
+            audit_events.append((event, payload))
+
+    class Memory:
+        def record(self, *args, **kwargs):
+            return None
+
+    agent = CortexAgent.__new__(CortexAgent)
+    agent.audit = Audit()
+    agent.memory = Memory()
+    impact = {
+        "kind": "cortex-change-impact",
+        "impacted_nodes": [{"path": "src/consumer.py"}],
+        "unresolved_paths": [],
+        "regression_test_selection": {
+            "mode": "targeted_static_recommendation",
+            "targets": ["tests/test_consumer.py"],
+        },
+    }
+    calls = []
+
+    def analyze_change_impact(paths, root):
+        calls.append((paths, root))
+        return impact
+
+    agent.analyze_change_impact = analyze_change_impact
+
+    def fake_pipeline(objective, repo_path, patcher=None, **kwargs):
+        edits = patcher(SimpleNamespace()) if patcher else {}
+        return {
+            "status": "changes-tested-not-objective-verified",
+            "files_changed": sorted(edits),
+            "tests": {"ok": True, "command": ["python", "-m", "pytest", "-q"]},
+            "verified": False,
+        }
+
+    monkeypatch.setattr("cortex.pipeline.engineer.run_engineering_pipeline",
+                        fake_pipeline)
+    monkeypatch.setattr("cortex.core.record_project", lambda _path: "project")
+
+    report = agent.run_pipeline(
+        "change a module", "/repo",
+        patcher=lambda _plan: {"src/consumer.py": "value = 1\n"})
+
+    assert calls == [(["src/consumer.py"], "/repo")]
+    assert report["change_impact"] == impact
+    assert report["tests"]["command"] == ["python", "-m", "pytest", "-q"]
+    event = next(payload for name, payload in audit_events
+                 if name == "pipeline.change_impact")
+    assert event["execution_policy"] == "full_configured_suite_unchanged"
+
+
+def test_pipeline_keeps_going_when_advisory_impact_analysis_fails(monkeypatch):
+    from cortex.core import CortexAgent
+    from types import SimpleNamespace
+
+    class Audit:
+        def record(self, event, payload):
+            return None
+
+    class Memory:
+        def record(self, *args, **kwargs):
+            return None
+
+    agent = CortexAgent.__new__(CortexAgent)
+    agent.audit = Audit()
+    agent.memory = Memory()
+
+    def fail_impact(_paths, _root):
+        raise RuntimeError("graph unavailable")
+
+    agent.analyze_change_impact = fail_impact
+    observed = {}
+
+    def fake_pipeline(objective, repo_path, patcher=None, **kwargs):
+        observed["edits"] = patcher(SimpleNamespace()) if patcher else {}
+        return {"status": "tests-failed", "files_changed": [],
+                "tests": {"ok": False}, "verified": False}
+
+    monkeypatch.setattr("cortex.pipeline.engineer.run_engineering_pipeline",
+                        fake_pipeline)
+    monkeypatch.setattr("cortex.core.record_project", lambda _path: "project")
+
+    report = agent.run_pipeline(
+        "change a module", "/repo",
+        patcher=lambda _plan: {"src/a.py": "value = 2\n"})
+
+    assert observed["edits"] == {"src/a.py": "value = 2\n"}
+    assert report["change_impact"]["status"] == "unavailable"
+    assert report["change_impact"]["verification_policy"] == (
+        "full_configured_suite_unchanged")
