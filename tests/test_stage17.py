@@ -1087,11 +1087,11 @@ def test_stage17r_resolves_unique_callable_alias_to_local_function(tmp_path):
     root = tmp_path / "callable-alias"
     root.mkdir()
     (root / "mod.py").write_text(
-        "def implementation():\\n"
-        "    return 7\\n"
-        "def invoke():\\n"
-        "    selected = implementation\\n"
-        "    return selected()\\n"
+        "def implementation():\n"
+        "    return 7\n"
+        "def invoke():\n"
+        "    selected = implementation\n"
+        "    return selected()\n"
     )
     store = VectorStore(str(tmp_path / "callable-alias-vector.db"))
     graph = KnowledgeGraph(str(tmp_path / "callable-alias-graph.db"))
@@ -1108,14 +1108,14 @@ def test_stage17r_rejects_reassigned_callable_alias(tmp_path):
     root = tmp_path / "reassigned-callable-alias"
     root.mkdir()
     (root / "mod.py").write_text(
-        "def first():\\n"
-        "    return 1\\n"
-        "def second():\\n"
-        "    return 2\\n"
-        "def invoke():\\n"
-        "    selected = first\\n"
-        "    selected = second\\n"
-        "    return selected()\\n"
+        "def first():\n"
+        "    return 1\n"
+        "def second():\n"
+        "    return 2\n"
+        "def invoke():\n"
+        "    selected = first\n"
+        "    selected = second\n"
+        "    return selected()\n"
     )
     store = VectorStore(str(tmp_path / "reassigned-alias-vector.db"))
     graph = KnowledgeGraph(str(tmp_path / "reassigned-alias-graph.db"))
