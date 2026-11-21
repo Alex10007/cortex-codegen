@@ -1147,3 +1147,74 @@ def test_stage17r_resolves_callable_alias_of_imported_function(tmp_path):
     targets = {item["node"] for item in graph.neighbors(consumer, etype="calls")}
     assert targets == {execute}
     assert counts["cross_module_calls"] == 1
+
+
+def test_stage17s_resolves_inherited_method_and_preserves_override(tmp_path):
+    root = tmp_path / "inherited-methods"
+    root.mkdir()
+    (root / "mod.py").write_text(
+        "class Base:\\n"
+        "    def run(self):\\n"
+        "        return 1\\n"
+        "class Child(Base):\\n"
+        "    def invoke(self):\\n"
+        "        return self.run()\\n"
+        "class Override(Base):\\n"
+        "    def run(self):\\n"
+        "        return 2\\n"
+        "    def invoke(self):\\n"
+        "        return self.run()\\n"
+    )
+    store = VectorStore(str(tmp_path / "stage17s-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "stage17s-graph.db"))
+    index_code_root(str(root), store, graph, version="stage17s-inherit")
+    module = f"py:{root.name}/mod.py:stage17s-inherit"
+    base_run = module + ":func:Base.run"
+    child_invoke = module + ":func:Child.invoke"
+    override_run = module + ":func:Override.run"
+    override_invoke = module + ":func:Override.invoke"
+    assert {row["node"] for row in graph.neighbors(child_invoke, etype="calls")} == {base_run}
+    assert {row["node"] for row in graph.neighbors(override_invoke, etype="calls")} == {override_run}
+
+
+def test_stage17s_rejects_conditional_callable_alias(tmp_path):
+    root = tmp_path / "conditional-alias"
+    root.mkdir()
+    (root / "mod.py").write_text(
+        "def implementation():\\n"
+        "    return 1\\n"
+        "def invoke(flag):\\n"
+        "    if flag:\\n"
+        "        selected = implementation\\n"
+        "    return selected()\\n"
+    )
+    store = VectorStore(str(tmp_path / "conditional-alias-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "conditional-alias-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="stage17s-conditional")
+    module = f"py:{root.name}/mod.py:stage17s-conditional"
+    invoke = module + ":func:invoke"
+    assert graph.neighbors(invoke, etype="calls") == []
+    assert counts["unresolved_calls"] >= 1
+
+
+def test_stage17s_rejects_ambiguous_multiple_inheritance_dispatch(tmp_path):
+    root = tmp_path / "ambiguous-inheritance"
+    root.mkdir()
+    (root / "mod.py").write_text(
+        "class Left:\\n"
+        "    def run(self):\\n"
+        "        return 1\\n"
+        "class Right:\\n"
+        "    def run(self):\\n"
+        "        return 2\\n"
+        "class Child(Left, Right):\\n"
+        "    def invoke(self):\\n"
+        "        return self.run()\\n"
+    )
+    store = VectorStore(str(tmp_path / "ambiguous-inheritance-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "ambiguous-inheritance-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="stage17s-ambiguous")
+    module = f"py:{root.name}/mod.py:stage17s-ambiguous"
+    invoke = module + ":func:Child.invoke"
+    assert graph.neighbors(invoke, etype="calls") == []
+    assert counts["ambiguous_calls"] >= 1
