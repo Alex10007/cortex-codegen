@@ -471,3 +471,59 @@ def test_pipeline_keeps_going_when_advisory_impact_analysis_fails(monkeypatch):
     assert report["change_impact"]["status"] == "unavailable"
     assert report["change_impact"]["verification_policy"] == (
         "full_configured_suite_unchanged")
+
+
+def test_cross_language_indexer_adds_symbols_to_canonical_graph(tmp_path):
+    from cortex.knowledge.graph import KnowledgeGraph
+    from cortex.knowledge.indexer import index_code_root
+    from cortex.knowledge.vector_store import VectorStore
+
+    root = tmp_path / "multi"
+    (root / "src").mkdir(parents=True)
+    (root / "src" / "util.ts").write_text(
+        "export interface User {}\nexport function normalizeUser() {}\n")
+    (root / "src" / "main.ts").write_text(
+        "import { normalizeUser } from './util';\n"
+        "export class UserService {}\n")
+    (root / "src" / "lib.rs").write_text(
+        "pub struct Engine;\npub fn execute() {}\n")
+    (root / "src" / "main.go").write_text(
+        "package main\nfunc Run() {}\ntype Runner struct {}\n")
+    (root / "src" / "Main.java").write_text(
+        "public class Main {}\npublic interface Service {}\n")
+
+    store = VectorStore(str(tmp_path / "cross-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "cross-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="cross-test")
+
+    assert counts["foreign_files"] == 5
+    assert counts["foreign_symbols"] >= 8
+    assert counts["foreign_local_imports"] == 1
+
+    module_id = "typescript:multi/src/main.ts:cross-test"
+    outgoing = graph.neighbors(module_id, etype="imports_local")
+    assert len(outgoing) == 1
+    assert outgoing[0]["node"] == "typescript:multi/src/util.ts:cross-test"
+
+    rust_module = "rust:multi/src/lib.rs:cross-test"
+    assert graph.neighbors(rust_module, etype="defines")
+    go_module = "go:multi/src/main.go:cross-test"
+    assert graph.neighbors(go_module, etype="defines")
+    java_module = "java:multi/src/Main.java:cross-test"
+    assert graph.neighbors(java_module, etype="defines")
+
+
+def test_cross_language_indexer_reports_unresolved_relative_imports(tmp_path):
+    from cortex.knowledge.graph import KnowledgeGraph
+    from cortex.knowledge.indexer import index_code_root
+    from cortex.knowledge.vector_store import VectorStore
+
+    root = tmp_path / "unresolved"
+    root.mkdir()
+    (root / "main.ts").write_text("import { missing } from './not-present';\n")
+    store = VectorStore(str(tmp_path / "unresolved-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "unresolved-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="unresolved-test")
+    assert counts["foreign_files"] == 1
+    assert counts["foreign_local_imports"] == 0
+    assert counts["foreign_unresolved_imports"] == 1
