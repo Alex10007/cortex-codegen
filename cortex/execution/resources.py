@@ -108,24 +108,49 @@ class CgroupV2:
             return
         self._write(self.path / "cgroup.kill", "1")
 
+    @staticmethod
+    def _read_events(path: Path) -> dict[str, int]:
+        """Parse cgroup.events without accepting ambiguous or partial evidence."""
+        try:
+            lines = path.read_text(encoding="ascii").splitlines()
+        except OSError as exc:
+            raise CgroupUnavailable(f"cannot read cgroup.events: {exc}") from exc
+        fields: dict[str, int] = {}
+        for line in lines:
+            parts = line.split()
+            if len(parts) != 2 or not parts[1].isascii() or not parts[1].isdecimal():
+                raise CgroupUnavailable(
+                    f"malformed event in cgroup.events: {line!r}")
+            key, raw_value = parts
+            if key in fields:
+                raise CgroupUnavailable(
+                    f"duplicate event in cgroup.events: {key!r}")
+            value = int(raw_value)
+            if key in {"populated", "frozen"} and value not in {0, 1}:
+                raise CgroupUnavailable(
+                    f"invalid boolean event in cgroup.events: {key}={value}")
+            fields[key] = value
+        if "populated" not in fields:
+            raise CgroupUnavailable(
+                "cgroup.events is missing required populated field")
+        return fields
+
     def wait_empty(self, timeout_s: float = 5.0) -> None:
         events = self.path / "cgroup.events"
         if not events.exists():
             raise CgroupUnavailable("cgroup.events is unavailable; cannot verify process-tree exit")
+        if type(timeout_s) not in (int, float) or timeout_s <= 0:
+            raise ValueError("timeout_s must be a positive number")
         deadline = time.monotonic() + timeout_s
-        while time.monotonic() < deadline:
-            try:
-                fields = dict(
-                    line.split(maxsplit=1)
-                    for line in events.read_text(encoding="ascii").splitlines()
-                    if len(line.split(maxsplit=1)) == 2
-                )
-            except OSError as exc:
-                raise CgroupUnavailable(f"cannot read cgroup.events: {exc}") from exc
-            if fields.get("populated") == "0":
+        while True:
+            fields = self._read_events(events)
+            if fields["populated"] == 0:
                 return
-            time.sleep(0.02)
-        raise CgroupUnavailable("cgroup still contains processes after cgroup.kill")
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise CgroupUnavailable(
+                    "cgroup still contains processes after cgroup.kill")
+            time.sleep(min(0.02, remaining))
 
     @staticmethod
     def _read_counters(path: Path) -> dict[str, int]:
