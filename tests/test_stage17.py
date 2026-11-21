@@ -938,6 +938,7 @@ def test_compiler_scope_graph_captures_nested_free_global_and_special_scopes(tmp
     inner = scope_id("function:inner@")
     inner_nonlocals = graph.neighbors(inner, etype="compiler_nonlocal")
     inner_globals = graph.neighbors(inner, etype="compiler_global")
+    inner_declared_globals = graph.neighbors(inner, etype="compiler_declared_global")
     binding_labels = {
         row[0]: row[1] for row in graph._conn.execute(
             "SELECT id, label FROM nodes WHERE type='python_compiler_symbol'"
@@ -947,6 +948,8 @@ def test_compiler_scope_graph_captures_nested_free_global_and_special_scopes(tmp
                for row in inner_nonlocals)
     assert any(binding_labels[row["node"]].endswith("::module_global")
                for row in inner_globals)
+    assert any(binding_labels[row["node"]].endswith("::module_global")
+               for row in inner_declared_globals)
 
     comprehension = (scope_id("listcomp") if has_dedicated_comprehension
                     else scope_id("function:with_comprehension@"))
