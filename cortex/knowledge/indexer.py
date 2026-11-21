@@ -877,7 +877,9 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
         unique = sorted({item[0]: item for item in definitions}.values())
         if len(definitions) == 1 and len(unique) == 1:
             return unique, False
-        return unique, len(unique) > 1
+        # Multiple declarations remain ambiguous even if duplicate source
+        # locations collapse to the same canonical graph node ID.
+        return unique, len(definitions) > 1 or len(unique) > 1
 
     for caller_id, scope, alias_name, attributes, module_id in pending_module_attribute_calls:
         definitions, ambiguous = _resolve_module_attribute_chain(
