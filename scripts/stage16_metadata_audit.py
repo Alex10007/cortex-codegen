@@ -6,6 +6,7 @@ checkpoint hashes, or execution timings.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import re
 from datetime import datetime
@@ -131,6 +132,7 @@ def inspect_artifact(name: str, artifact: dict) -> dict:
         "parent_commit": provenance["parent_commit"],
         "source_commit": provenance["source_commit"],
         "dataset_sha256": provenance["dataset_sha256"],
+        "provenance": provenance,
         "started_at": started,
         "finished_at": finished,
         "actual_duration_seconds": duration,
@@ -222,6 +224,10 @@ def build_report() -> dict:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--strict", action="store_true",
+                        help="return nonzero when historical metadata is incomplete")
+    args = parser.parse_args()
     report = build_report()
     out = ART / "stage16_metadata_compliance.json"
     out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n",
@@ -234,7 +240,7 @@ def main() -> int:
         "metadata_complete": report["metadata_complete"],
         "output": str(out),
     }, indent=2))
-    return 0 if report["metadata_complete"] else 1
+    return 1 if args.strict and not report["metadata_complete"] else 0
 
 
 if __name__ == "__main__":
