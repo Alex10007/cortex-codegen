@@ -200,3 +200,11 @@ as a reason to fall back to the full discovered suite. Changed-path inputs are
 bounded to 4,096 characters. The static capability audit now checks both the
 impact endpoint and the existing adaptive-generation API in one canonical
 API-file entry.
+
+
+### Stage 17D retrieval-context formatting correction
+
+Corrected escaped newline literals in the retrieval-context formatter so
+verified facts, hierarchical events, and evidence sections are separated by
+actual line breaks in the model prompt. No stored memory records or facts were
+modified.
