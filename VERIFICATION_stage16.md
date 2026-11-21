@@ -199,3 +199,23 @@ Deliverable: `artifacts/stage16_independent_audit.json` — **13 PASS / 0 FAIL**
 - Stage-16 checkpoints (`artifacts/runs/cortex-sft-stage10/cortex-sft-stage16-*.pt`) are gitignored per existing convention and recoverable from the recovery audit; nothing previous was deleted or overwritten.
 - Compute: CPU-only, ~2 h real training/evaluation wall time, **$0.00**, **0.0 GPU hours**. 2B training remains BLOCKED.
 - **Status: Stage 16 executed and independently audited; engineering investigation successful (root causes identified and tested); coding-capability improvement NOT PROMOTED (2/8 gates) — negative results preserved for the next stage.**
+
+
+## Supplemental metadata-compliance audit (integration follow-up)
+
+A separate, non-destructive audit was added as `scripts/stage16_metadata_audit.py`.
+It checks the 11 workstream artifacts against the directive's per-artifact
+metadata contract and writes `artifacts/stage16_metadata_compliance.json`.
+It does not rewrite historical experiment artifacts or manufacture missing
+seeds, configurations, checkpoint hashes, timestamps, or provenance.
+
+The Stage 16 artifacts already contain experiment identifiers, parent/source
+commit fields, dataset checksums, timestamps, decisions and raw workstream
+records. However, metadata is not uniformly complete: some workstreams do not
+persist a random seed, a full configuration, or a checkpoint hash. This is a
+historical evidence gap, not something that can be safely repaired by guessing.
+The supplemental report must be executed on the repository checkout to record
+the exact per-artifact missing fields. The original Stage 16 report and
+independent-audit artifact remain unchanged.
+
+Stage 16 remains **NOT PROMOTED**. Stage 12 remains the retained champion.
