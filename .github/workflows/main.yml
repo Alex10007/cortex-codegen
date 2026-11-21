@@ -37,6 +37,7 @@ jobs:
           set -euxo pipefail
           python -m venv "$RUNNER_TEMP/cortex-venv"
           echo "$RUNNER_TEMP/cortex-venv/bin" >> "$GITHUB_PATH"
+          echo "VIRTUAL_ENV=$RUNNER_TEMP/cortex-venv" >> "$GITHUB_ENV"
 
       - name: Runner preflight
         run: |
@@ -57,7 +58,7 @@ jobs:
             exit 1
           fi
           test -n "$VIRTUAL_ENV"
-          python -c 'import sys; assert sys.prefix == sys.base_prefix or sys.prefix != sys.base_prefix'
+          python -c 'import sys; assert sys.prefix != sys.base_prefix, sys.prefix'
 
       - name: Record immutable evidence baseline
         run: |
