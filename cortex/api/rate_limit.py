@@ -62,7 +62,7 @@ class SQLiteRateLimiter:
         now = time.time()
         cutoff = now - window_s
         key = self._digest(bucket)
-        with self._connect() as connection:
+        with closing(self._connect()) as connection:
             connection.execute("BEGIN IMMEDIATE")
             try:
                 # Prune globally so stale buckets do not accumulate forever.
