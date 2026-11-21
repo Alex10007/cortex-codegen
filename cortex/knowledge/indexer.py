@@ -277,6 +277,7 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
         if tree is None:
             continue
         source_id = module_ids[module_key(relative)]
+        scope_bindings[(source_id, ())] = _bindings_for(tree)
 
         class ScopedSymbolVisitor(ast.NodeVisitor):
             def __init__(self):
@@ -331,9 +332,9 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                     arguments.append(node.args.kwarg)
                 for argument in arguments:
                     if argument.annotation:
-                        self._record_type_names(argument.annotation)
+                        self._record_type_names(argument.annotation, function_id)
                 if node.returns:
-                    self._record_type_names(node.returns)
+                    self._record_type_names(node.returns, function_id)
                 function_scope = tuple([*self.scope_names, node.name])
                 scope_bindings[(source_id, function_scope)] = _bindings_for(node)
                 self.scope_names.append(node.name)
@@ -343,11 +344,13 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                 self.scope_ids.pop()
                 self.scope_names.pop()
 
-            def _record_type_names(self, expression: ast.AST) -> None:
+            def _record_type_names(self, expression: ast.AST,
+                                   owner_id: str | None = None) -> None:
                 for item in ast.walk(expression):
                     if isinstance(item, ast.Name):
                         pending_type_refs.append(
-                            (self.scope_ids[-1], tuple(self.scope_names), item.id))
+                            (owner_id or self.scope_ids[-1],
+                             tuple(self.scope_names), item.id))
 
             def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
                 self._record_type_names(node.annotation)
@@ -387,9 +390,9 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
     for caller_id, module_id, scope, target_name, receiver in pending_calls:
         if receiver in {"self", "cls"}:
             class_scope = next(
-                (scope[:index + 1] for index, part in enumerate(scope)
-                 if part and index < len(scope) - 1 and
-                 symbol_definitions.get((module_id, scope[:index], part))),
+                (scope[:index + 1] for index in range(len(scope) - 2, -1, -1)
+                 if symbol_definitions.get(
+                     (module_id, scope[:index], scope[index]))),
                 None)
             if class_scope is None:
                 counts["unresolved_calls"] += 1
