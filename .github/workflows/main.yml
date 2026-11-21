@@ -1,24 +1,25 @@
-name: Cortex Legacy Safety CI
+name: Cortex CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "vibe/**", "fibonera/**"]
   pull_request:
-    branches: [main]
+    branches: [main, "vibe/**"]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: cortex-legacy-ci-${{ github.head_ref || github.ref }}
-  cancel-in-progress: true
+  group: cortex-ci-${{ github.head_ref || github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  syntax:
+  test:
     runs-on: ubuntu-22.04
-    timeout-minutes: 10
+    timeout-minutes: 45
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -26,5 +27,28 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify legacy entrypoint syntax only
-        run: python -m py_compile app.py
+      - name: Runner preflight
+        run: |
+          set -euxo pipefail
+          uname -a
+          python --version
+          python -m pip --version
+          df -h .
+          python - <<'PY'
+          import os
+          print("CPU count:", os.cpu_count())
+          with open("/proc/meminfo", encoding="utf-8") as f:
+              print("\n".join(line.rstrip() for line in f if line.startswith(("MemTotal:", "MemAvailable:"))))
+          PY
+
+      - name: Install dependencies and run available validation
+        run: |
+          set -euxo pipefail
+          if [ -d tests ]; then
+            python -m pip install --upgrade pip
+            python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+            python -m pip install -r requirements.txt
+            python -m pytest -q tests/
+          else
+            python -m py_compile app.py
+          fi
