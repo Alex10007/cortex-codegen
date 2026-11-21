@@ -274,6 +274,129 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
             graph.upsert_edge(child_id, targets[0], "inherits", version)
             counts["inherits"] += 1
 
+    # Cross-language declaration inventory on the canonical graph. This
+    # intentionally records syntax-level declarations and only resolves
+    # unambiguous relative module paths; it does not claim semantic parsing.
+    import re
+
+    language_specs = {
+        ".js": ("javascript", [
+            (r"\\b(?:export\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)", "function"),
+            (r"\\b(?:export\\s+)?class\\s+([A-Za-z_$][\\w$]*)", "class"),
+            (r"\\b(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*=", "value"),
+        ]),
+        ".jsx": ("javascript", [
+            (r"\\b(?:export\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)", "function"),
+            (r"\\b(?:export\\s+)?class\\s+([A-Za-z_$][\\w$]*)", "class"),
+        ]),
+        ".ts": ("typescript", [
+            (r"\\b(?:export\\s+)?(?:declare\\s+)?(?:abstract\\s+)?class\\s+([A-Za-z_$][\\w$]*)", "class"),
+            (r"\\b(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)", "interface"),
+            (r"\\b(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)", "type"),
+            (r"\\b(?:export\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)", "function"),
+            (r"\\b(?:export\\s+)?(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*=", "value"),
+        ]),
+        ".tsx": ("typescript", [
+            (r"\\b(?:export\\s+)?(?:declare\\s+)?(?:abstract\\s+)?class\\s+([A-Za-z_$][\\w$]*)", "class"),
+            (r"\\b(?:export\\s+)?interface\\s+([A-Za-z_$][\\w$]*)", "interface"),
+            (r"\\b(?:export\\s+)?type\\s+([A-Za-z_$][\\w$]*)", "type"),
+            (r"\\b(?:export\\s+)?(?:async\\s+)?function\\s+([A-Za-z_$][\\w$]*)", "function"),
+        ]),
+        ".rs": ("rust", [
+            (r"\\b(?:pub\\s+)?(?:async\\s+)?fn\\s+([A-Za-z_][\\w]*)", "function"),
+            (r"\\b(?:pub\\s+)?struct\\s+([A-Za-z_][\\w]*)", "struct"),
+            (r"\\b(?:pub\\s+)?enum\\s+([A-Za-z_][\\w]*)", "enum"),
+            (r"\\b(?:pub\\s+)?trait\\s+([A-Za-z_][\\w]*)", "trait"),
+        ]),
+        ".go": ("go", [
+            (r"\\bfunc\\s+(?:\\([^)]*\\)\\s*)?([A-Za-z_][\\w]*)\\s*\\(", "function"),
+            (r"\\btype\\s+([A-Za-z_][\\w]*)\\s+(?:struct|interface)\\b", "type"),
+        ]),
+        ".java": ("java", [
+            (r"\\b(?:public|protected|private)?\\s*(?:abstract\\s+)?class\\s+([A-Za-z_$][\\w$]*)", "class"),
+            (r"\\b(?:public|protected|private)?\\s*interface\\s+([A-Za-z_$][\\w$]*)", "interface"),
+            (r"\\b(?:public|protected|private)?\\s*enum\\s+([A-Za-z_$][\\w$]*)", "enum"),
+        ]),
+    }
+    ignored_dirs = {".git", ".venv", "venv", "node_modules", "vendor",
+                    "dist", "build", "__pycache__", ".cortex-state"}
+    foreign_files = [
+        path for path in root_path.rglob("*")
+        if path.is_file() and path.suffix in language_specs
+        and not any(part in ignored_dirs for part in path.relative_to(root_path).parts)
+        and path.stat().st_size <= max_file_bytes
+    ]
+    counts.update({"foreign_files": 0, "foreign_symbols": 0,
+                   "foreign_local_imports": 0, "foreign_unresolved_imports": 0})
+    foreign_modules: dict[str, str] = {}
+    foreign_records: list[tuple[Path, str, str, str]] = []
+    for source_path in foreign_files:
+        rel = source_path.relative_to(root_path).as_posix()
+        lang, _patterns = language_specs[source_path.suffix]
+        module_id = f"{lang}:{root_path.name}/{rel}:{version}"
+        foreign_modules[rel] = module_id
+        foreign_records.append((source_path, rel, lang, module_id))
+        prov = _provenance(source_path, version, license_tag,
+                           "cortex.knowledge.indexer")
+        graph.upsert_node(module_id, "module", rel, prov)
+        counts["foreign_files"] += 1
+
+    foreign_by_stem: dict[str, list[str]] = {}
+    for _path, rel, _lang, module_id in foreign_records:
+        stem = str(Path(rel).with_suffix(""))
+        foreign_by_stem.setdefault(stem, []).append(module_id)
+        foreign_by_stem.setdefault(Path(stem).name, []).append(module_id)
+
+    for source_path, rel, lang, module_id in foreign_records:
+        try:
+            source = source_path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            counts["skipped"] += 1
+            continue
+        prov = _provenance(source_path, version, license_tag,
+                           "cortex.knowledge.indexer")
+        _lang, patterns = language_specs[source_path.suffix]
+        seen_symbols: set[tuple[str, str]] = set()
+        for pattern, symbol_type in patterns:
+            for match in re.finditer(pattern, source):
+                name = match.group(1)
+                if (symbol_type, name) in seen_symbols:
+                    continue
+                seen_symbols.add((symbol_type, name))
+                symbol_id = f"{module_id}:{symbol_type}:{name}"
+                graph.upsert_node(symbol_id, symbol_type, f"{rel}::{name}", prov)
+                graph.upsert_edge(module_id, symbol_id, "defines", version)
+                counts["foreign_symbols"] += 1
+
+        # Resolve only relative JS/TS imports and Rust path modules when the
+        # destination maps to exactly one indexed source file.
+        import_specs = []
+        if lang in {"javascript", "typescript"}:
+            import_specs = re.findall(
+                r"""\\b(?:import|export)\\s+(?:[^;]*?\\s+from\\s+)?["'](\\.[^"']+)["']""",
+                source)
+            import_specs += re.findall(r"""\\bimport\\s*\\(\\s*["'](\\.[^"']+)["']""", source)
+        elif lang == "rust":
+            import_specs = ["::".join(parts.split("::")[:-1])
+                            for parts in re.findall(r"\\buse\\s+([A-Za-z_][\\w:]*)", source)
+                            if "::" in parts]
+            import_specs += re.findall(r"\\bmod\\s+([A-Za-z_][\\w]*)\\s*;", source)
+        for spec in sorted(set(import_specs)):
+            if spec.startswith("."):
+                base = (source_path.parent / spec).relative_to(root_path).as_posix()
+                candidates = [base + ext for ext in (".ts", ".tsx", ".js", ".jsx")]
+                candidates += [base + "/index" + ext for ext in (".ts", ".tsx", ".js", ".jsx")]
+                candidates += [base]
+            else:
+                candidates = [str(source_path.parent.relative_to(root_path) / spec / "mod.rs"),
+                              str(source_path.parent.relative_to(root_path) / (spec + ".rs"))]
+            matches = sorted({foreign_modules[c] for c in candidates if c in foreign_modules})
+            if len(matches) == 1 and matches[0] != module_id:
+                graph.upsert_edge(module_id, matches[0], "imports_local", version)
+                counts["foreign_local_imports"] += 1
+            else:
+                counts["foreign_unresolved_imports"] += 1
+
     store.flush()
     graph.commit()
     return counts
