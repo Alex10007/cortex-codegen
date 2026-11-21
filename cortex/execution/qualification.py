@@ -30,6 +30,7 @@ def qualify_sandbox() -> dict[str, Any]:
         "runtime_readonly": "NOT_RUN",
         "proc_dev_available": "NOT_RUN",
         "network_unreachable": "NOT_RUN",
+        "cgroup_filesystem_inaccessible": "NOT_RUN",
     }
     if checks["bwrap_available"] != "PASS" or checks["cgroup_v2_delegation"] != "PASS":
         return {"passed": False, "checks": checks,
@@ -47,6 +48,18 @@ def qualify_sandbox() -> dict[str, Any]:
 import json, os, socket, subprocess, sys
 host_path = __HOST_SENTINEL__
 result = {}
+try:
+    with open("/proc/self/mountinfo", encoding="utf-8") as f:
+        mount_lines = f.read().splitlines()
+    cgroup_mount_visible = any(" - cgroup " in line or " - cgroup2 " in line for line in mount_lines)
+except OSError:
+    cgroup_mount_visible = True
+try:
+    with open("/sys/fs/cgroup/cgroup.procs", "r+", encoding="ascii"):
+        cgroup_control_accessible = True
+except OSError:
+    cgroup_control_accessible = False
+result["cgroup_filesystem_inaccessible"] = not cgroup_mount_visible and not cgroup_control_accessible
 try:
     with open(".cortex-workspace-probe", "w", encoding="utf-8") as f: f.write("ok")
     with open(".cortex-workspace-probe", encoding="utf-8") as f:
@@ -121,7 +134,8 @@ print(json.dumps(result, sort_keys=True))
         except (ValueError, IndexError):
             observed = {}
         for name in ("workspace_writable", "host_path_inaccessible",
-                     "runtime_readonly", "proc_dev_available", "network_unreachable"):
+                     "runtime_readonly", "proc_dev_available", "network_unreachable",
+                     "cgroup_filesystem_inaccessible"):
             checks[name] = "PASS" if observed.get(name) is True else "FAIL"
         checks["detached_descendant_cleanup"] = (
             "PASS"
@@ -185,7 +199,8 @@ print(json.dumps(result, sort_keys=True))
             "RLIMIT_NPROC is not a reliable aggregate process cap for privileged/root execution.",
             "CPU throttling and aggregate memory OOM checks require a live delegated Linux cgroup and are accepted only from kernel event counters.",
             "Disk I/O bandwidth/IOPS limits are not configured.",
-            "Detached descendants are checked through cgroup-wide cleanup; deliberate cgroup migration or kernel-level escape resistance is not certified.",
+            "The strict Bubblewrap probe requires no cgroup v1/v2 mount to be visible to untrusted code; this blocks ordinary filesystem-based self-migration but does not certify kernel escape resistance or privileged host actors.",
+            "Detached descendants are checked through cgroup-wide cleanup; deliberate kernel-level escape resistance is not certified.",
             "Network reachability is probed against 1.1.1.1:53 only.",
         ],
     }
