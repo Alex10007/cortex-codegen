@@ -20,9 +20,26 @@ class CgroupUnavailable(RuntimeError):
 class CgroupV2:
     REQUIRED_CONTROLLERS = frozenset({"cpu", "memory", "pids"})
 
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, *, expected_identity: tuple[int, int] | None = None):
         self.path = path
         self._closed = False
+        self._identity = expected_identity or self._path_identity(path)
+
+    @staticmethod
+    def _path_identity(path: Path) -> tuple[int, int]:
+        try:
+            info = path.lstat()
+        except OSError as exc:
+            raise CgroupUnavailable(f"cannot inspect execution cgroup identity: {exc}") from exc
+        if not path.is_dir() or path.is_symlink():
+            raise CgroupUnavailable("execution cgroup path is not the original directory")
+        return info.st_dev, info.st_ino
+
+    def _assert_owned_path(self) -> None:
+        """Fail closed if the pathname no longer resolves to this execution's directory."""
+        if self._path_identity(self.path) != self._identity:
+            raise CgroupUnavailable(
+                "execution cgroup path identity changed; refusing operation on an unowned cgroup")
 
     @staticmethod
     def _resolve_delegated_root(root: str | os.PathLike[str]) -> Path:
@@ -80,6 +97,7 @@ class CgroupV2:
             path.mkdir(mode=0o700)
         except OSError as exc:
             raise CgroupUnavailable(f"cannot create delegated execution cgroup: {exc}") from exc
+        created_identity = cls._path_identity(path)
 
         try:
             cls._write(path / "cpu.max", f"{cpu_quota_us} {cpu_period_us}")
@@ -99,13 +117,16 @@ class CgroupV2:
                 raise CgroupUnavailable("cgroup.kill is unavailable; process-tree cleanup cannot be guaranteed")
             if not (path / "cgroup.events").exists():
                 raise CgroupUnavailable("cgroup.events is unavailable; process-tree exit cannot be verified")
-            return cls(path)
+            return cls(path, expected_identity=created_identity)
         except Exception as setup_error:
             try:
+                if cls._path_identity(path) != created_identity:
+                    raise CgroupUnavailable(
+                        "partially configured cgroup path identity changed; refusing removal")
                 path.rmdir()
-            except OSError as cleanup_error:
+            except (OSError, CgroupUnavailable) as cleanup_error:
                 setup_error.add_note(
-                    f"failed to remove partially configured cgroup {path}: {cleanup_error}")
+                    f"failed to safely remove partially configured cgroup {path}: {cleanup_error}")
             raise
 
     @staticmethod
@@ -116,11 +137,13 @@ class CgroupV2:
             raise CgroupUnavailable(f"cannot configure {path.name}: {exc}") from exc
 
     def attach(self, pid: int) -> None:
+        self._assert_owned_path()
         if self._closed:
             raise CgroupUnavailable("execution cgroup is already closed")
         self._write(self.path / "cgroup.procs", str(pid))
 
     def kill(self) -> None:
+        self._assert_owned_path()
         if self._closed:
             return
         self._write(self.path / "cgroup.kill", "1")
@@ -153,6 +176,7 @@ class CgroupV2:
         return fields
 
     def wait_empty(self, timeout_s: float = 5.0) -> None:
+        self._assert_owned_path()
         events = self.path / "cgroup.events"
         if not events.exists():
             raise CgroupUnavailable("cgroup.events is unavailable; cannot verify process-tree exit")
@@ -205,6 +229,7 @@ class CgroupV2:
 
     def snapshot(self) -> dict[str, object]:
         """Capture kernel-maintained resource events before the cgroup is removed."""
+        self._assert_owned_path()
         cpu = self._read_counters(self.path / "cpu.stat")
         memory_events = self._read_counters(self.path / "memory.events")
         pids_events = self._read_counters(self.path / "pids.events")
@@ -226,7 +251,9 @@ class CgroupV2:
     def close(self) -> None:
         if self._closed:
             return
+        self._assert_owned_path()
         self.wait_empty()
+        self._assert_owned_path()
         try:
             self.path.rmdir()
         except OSError as exc:
