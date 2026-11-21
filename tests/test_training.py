@@ -11,7 +11,7 @@ from cortex.model.configs import MODEL_STATUS, get_config
 from cortex.tokenizer.cortex_tokenizer import load_tokenizer, train_tokenizer
 from cortex.training.engine import pack_corpus, train
 
-STD_SUBSET = str(Path(sysconfig.get_paths()["stdlib"]) / "json"
+STD_SUBSET = str(Path(sysconfig.get_paths()["stdlib"]) / "json")
 
 
 @pytest.fixture(scope="module")
