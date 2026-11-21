@@ -584,7 +584,7 @@ def test_cgroup_operations_remain_bound_to_pinned_parent_after_path_replacement(
     root = make_fake_cgroup_root(tmp_path / "delegated")
     group_path = root / "cortex-owned"
     group_path.mkdir()
-    (group_path / "cgroup.events").write_text("populated 0\\n")
+    (group_path / "cgroup.events").write_text("populated 0\n")
     group = CgroupV2(group_path)
 
     moved_root = tmp_path / "delegated-original"
@@ -618,7 +618,7 @@ def test_concurrent_close_calls_are_serialized(tmp_path, monkeypatch):
     root = make_fake_cgroup_root(tmp_path / "delegated")
     group_path = root / "cortex-owned"
     group_path.mkdir()
-    (group_path / "cgroup.events").write_text("populated 0\\n")
+    (group_path / "cgroup.events").write_text("populated 0\n")
     group = CgroupV2(group_path)
 
     first_waiting = threading.Event()
