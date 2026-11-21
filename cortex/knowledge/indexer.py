@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import hashlib
 import platform
+import symtable
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -53,7 +54,10 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
               "edges": 0, "skipped": 0, "local_imports": 0, "calls": 0,
               "unresolved_calls": 0, "ambiguous_calls": 0, "inherits": 0,
               "ambiguous_inheritance": 0, "type_references": 0,
-              "ambiguous_type_references": 0}
+              "ambiguous_type_references": 0,
+              "compiler_scopes": 0, "compiler_symbols": 0,
+              "compiler_free_symbols": 0, "compiler_global_symbols": 0,
+              "compiler_nonlocal_symbols": 0, "compiler_scope_parse_errors": 0}
 
     py_files = [p for p in root_path.rglob("*.py")
                 if p.stat().st_size <= max_file_bytes]
@@ -764,6 +768,77 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
             counts["type_references"] += 1
         elif len(type_definitions) > 1:
             counts["ambiguous_type_references"] += 1
+
+    # Compiler-derived scope and binding inventory. Python's own symbol-table
+    # compiler is authoritative for lexical classification, including scopes
+    # the AST binding collector intentionally does not model (lambdas and
+    # comprehensions). This is additive evidence in the existing graph; it does
+    # not silently rewrite the conservative call resolver above.
+    for source_path in py_files:
+        relative = source_path.relative_to(root_path).as_posix()
+        source_id = module_ids[module_key(relative)]
+        try:
+            source_text = source_path.read_text(encoding="utf-8", errors="replace")
+            compiler_root = symtable.symtable(source_text, str(source_path), "exec")
+        except (OSError, SyntaxError, ValueError):
+            counts["compiler_scope_parse_errors"] += 1
+            continue
+        provenance = _provenance(source_path, version, license_tag,
+                                 "cortex.knowledge.indexer.symtable")
+
+        def index_compiler_table(table, parent_id: str | None,
+                                 path_parts: tuple[str, ...]) -> None:
+            table_type = table.get_type()
+            table_name = table.get_name()
+            line = table.get_lineno()
+            scope_id = source_id + ":compiler_scope:" + (
+                "/".join(path_parts) if path_parts else "module:top:0:0")
+            label = f"{relative}::{table_type}:{table_name}@{line}"
+            graph.upsert_node(scope_id, "python_compiler_scope", label, provenance)
+            graph.upsert_edge(
+                source_id if parent_id is None else parent_id,
+                scope_id,
+                "has_compiler_scope" if parent_id is None else "contains_compiler_scope",
+                version,
+            )
+            counts["compiler_scopes"] += 1
+
+            for symbol in table.get_symbols():
+                name = symbol.get_name()
+                binding_id = scope_id + ":symbol:" + name
+                graph.upsert_node(
+                    binding_id, "python_compiler_symbol",
+                    f"{label}::{name}", provenance)
+                graph.upsert_edge(scope_id, binding_id, "compiler_symbol", version)
+                counts["compiler_symbols"] += 1
+                role_methods = (
+                    ("local", "is_local"),
+                    ("global", "is_global"),
+                    ("nonlocal", "is_nonlocal"),
+                    ("free", "is_free"),
+                    ("parameter", "is_parameter"),
+                    ("imported", "is_imported"),
+                    ("assigned", "is_assigned"),
+                    ("referenced", "is_referenced"),
+                    ("namespace", "is_namespace"),
+                )
+                for role, method_name in role_methods:
+                    method = getattr(symbol, method_name, None)
+                    if callable(method) and method():
+                        graph.upsert_edge(
+                            scope_id, binding_id, "compiler_" + role, version)
+                        if role in {"free", "global", "nonlocal"}:
+                            counts["compiler_" + role + "_symbols"] += 1
+
+            child_ordinals: dict[tuple[str, str, int], int] = {}
+            for child in table.get_children():
+                child_key = (child.get_type(), child.get_name(), child.get_lineno())
+                ordinal = child_ordinals.get(child_key, 0)
+                child_ordinals[child_key] = ordinal + 1
+                token = f"{child_key[0]}:{child_key[1]}:{child_key[2]}:{ordinal}"
+                index_compiler_table(child, scope_id, (*path_parts, token))
+
+        index_compiler_table(compiler_root, None, ())
 
     # Cross-language declaration inventory on the canonical graph. This
     # intentionally records syntax-level declarations and only resolves
