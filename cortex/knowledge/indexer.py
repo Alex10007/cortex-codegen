@@ -353,6 +353,21 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                 for case in node.cases:
                     self._visit_conditional(case.body)
 
+            def visit_IfExp(self, node: ast.IfExp) -> None:
+                self.visit(node.test)
+                self.conditional_depth += 1
+                self.visit(node.body)
+                self.visit(node.orelse)
+                self.conditional_depth -= 1
+
+            def visit_BoolOp(self, node: ast.BoolOp) -> None:
+                if node.values:
+                    self.visit(node.values[0])
+                    self.conditional_depth += 1
+                    for value in node.values[1:]:
+                        self.visit(value)
+                    self.conditional_depth -= 1
+
             def _record(self, name: str, kind: str, qualified: str) -> str:
                 symbol_id = source_id + ":" + kind + ":" + qualified
                 key = (source_id, tuple(self.scope_names), name)
