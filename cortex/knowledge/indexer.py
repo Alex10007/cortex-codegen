@@ -504,7 +504,7 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
     imported_symbols: dict[tuple[str, tuple[str, ...], str], list[tuple[str, str]]] = {}
     imported_modules: dict[tuple[str, tuple[str, ...], str], list[str]] = {}
     import_records: list[tuple[str, tuple[str, ...], str, str, str, bool]] = []
-    pending_module_attribute_calls: list[tuple[str, tuple[str, ...], str, str, str]] = []
+    pending_module_attribute_calls: list[tuple[str, tuple[str, ...], str, tuple[str, ...], str]] = []
     class_scopes: set[tuple[str, tuple[str, ...]]] = set()
 
     for module_id, scope in scope_bindings:
@@ -746,11 +746,18 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
             self.scope.pop()
 
         def visit_Call(self, node: ast.Call) -> None:
-            func = node.func
-            if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
+            # Preserve the complete attribute chain so package/module aliases
+            # such as "import pkg as p; p.services.worker.run()" can be
+            # resolved without treating arbitrary object attributes as modules.
+            attributes: list[str] = []
+            value = node.func
+            while isinstance(value, ast.Attribute):
+                attributes.append(value.attr)
+                value = value.value
+            if isinstance(value, ast.Name) and attributes:
                 pending_module_attribute_calls.append(
-                    (self.source_id, tuple(self.scope), func.value.id,
-                     func.attr, self.source_id))
+                    (self.source_id, tuple(self.scope), value.id,
+                     tuple(reversed(attributes)), self.source_id))
             self.generic_visit(node)
 
     for source_path in py_files:
@@ -833,26 +840,49 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
         else:
             counts["unresolved_calls"] += 1
 
-    for caller_id, scope, alias_name, member_name, module_id in pending_module_attribute_calls:
+    module_keys_by_id = {module_id: key for key, module_id in module_ids.items()}
+
+    def _resolve_module_attribute_chain(module_id: str, scope: tuple[str, ...],
+                                        alias_name: str,
+                                        attributes: tuple[str, ...]) -> tuple[list[tuple[str, str]], bool]:
         targets = _resolve_imported_module(module_id, scope, alias_name)
         if not targets:
             # Most attribute calls are ordinary object/member calls, not
-            # imported-module calls. Do not misclassify them as import failures.
-            continue
-        if len(targets) != 1:
-            counts["ambiguous_calls"] += 1
-            counts["unresolved_calls"] += 1
-            continue
-        definitions = symbol_definitions.get((targets[0], (), member_name), [])
-        unique_defs = sorted({item[0]: item for item in definitions}.values())
-        if len(definitions) == 1 and len(unique_defs) == 1 and unique_defs[0][0] != caller_id:
-            graph.upsert_edge(caller_id, unique_defs[0][0], "calls", version)
+            # imported-module calls. Leave them to a future type-aware resolver.
+            return [], False
+        if len(targets) != 1 or not attributes:
+            return [], True
+        target_module = targets[0]
+        for component in attributes[:-1]:
+            target_key = module_keys_by_id.get(target_module)
+            child_id = module_ids.get(f"{target_key}.{component}") if target_key else None
+            if child_id is None:
+                # The chain may be an object/class attribute rather than a
+                # submodule. Do not guess a dispatch target.
+                return [], False
+            target_module = child_id
+        member_name = attributes[-1]
+        definitions = symbol_definitions.get((target_module, (), member_name), [])
+        if not definitions:
+            definitions = imported_symbols.get((target_module, (), member_name), [])
+        unique = sorted({item[0]: item for item in definitions}.values())
+        if len(definitions) == 1 and len(unique) == 1:
+            return unique, False
+        return unique, len(unique) > 1
+
+    for caller_id, scope, alias_name, attributes, module_id in pending_module_attribute_calls:
+        definitions, ambiguous = _resolve_module_attribute_chain(
+            module_id, scope, alias_name, attributes)
+        if len(definitions) == 1 and definitions[0][0] != caller_id:
+            graph.upsert_edge(caller_id, definitions[0][0], "calls", version)
             counts["calls"] += 1
             counts["cross_module_calls"] += 1
-        elif len(unique_defs) > 1:
+        elif ambiguous:
             counts["ambiguous_calls"] += 1
             counts["unresolved_calls"] += 1
-        else:
+        elif definitions:
+            counts["unresolved_calls"] += 1
+        elif _resolve_imported_module(module_id, scope, alias_name):
             counts["unresolved_calls"] += 1
 
     for child_id, scope, base_name in pending_inheritance:
