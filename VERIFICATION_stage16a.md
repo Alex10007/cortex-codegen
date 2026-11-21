@@ -443,3 +443,29 @@ Verification:
 - Strict sandbox remains **NOT RUNTIME-VERIFIED** pending a functioning Linux runner with delegated cgroup v2 and Bubblewrap.
 
 No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or `main` update occurred.
+
+
+## Stage 16A.21 — descriptor-bound cgroup control operations
+
+Static review of Stage 16A.20 identified a residual path-resolution window: checking a cgroup pathname's inode and then opening a control file by pathname still allowed the directory entry to be swapped between those operations.
+
+Changes:
+- CgroupV2 now opens and retains a file descriptor for the parent directory and the owned execution-cgroup directory.
+- The child directory is opened relative to the retained parent descriptor with O_DIRECTORY and O_NOFOLLOW, then its fstat device/inode is checked against the captured identity.
+- Runtime control writes (cgroup.procs, cgroup.kill) and event/counter reads (cgroup.events, cpu.stat, memory.events, pids.events, memory.current) use os.open(..., dir_fd=owned_directory_fd) and O_NOFOLLOW.
+- Teardown checks the child entry's identity relative to the retained parent descriptor and removes it with descriptor-relative os.rmdir.
+- Directory descriptors are closed after successful teardown; failed teardown retains descriptors so cleanup can be retried.
+- Added regression tests for symlinked control-file rejection and retained descriptor identity/lifecycle.
+
+Scope and residual risks:
+- Initial delegated-root resolution and creation/configuration of the new cgroup directory and its initial limits still use path-based operations. This increment hardens subsequent runtime control I/O and removal; it is not a complete descriptor-relative creation transaction.
+- The retained parent descriptor anchors operations to the opened parent directory, but does not prevent a privileged actor from moving/remounting cgroup hierarchy objects or changing kernel delegation.
+- The existing pathname identity check remains as an additional fail-closed guard; descriptor-relative access ensures a successful file operation is addressed within the opened directory rather than a newly substituted child pathname.
+- Unit fixtures use ordinary filesystem files. They do not prove that the target Linux cgroupfs supports every open mode or that kernel resource enforcement works.
+
+Verification:
+- Source and regression tests committed; **not executed** in this increment.
+- No CI pass or live cgroup/Bubblewrap qualification is claimed.
+- Strict sandbox remains **NOT RUNTIME-VERIFIED**.
+
+No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or main-branch update occurred.
