@@ -582,6 +582,8 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
             if imported_name == "*":
                 counts["unresolved_imports"] += 1
                 continue
+            module_relation = "conditional_imports_module" if conditional else "imports_module"
+            graph.upsert_edge(source_id, target_id, module_relation, version)
             definitions = symbol_definitions.get((target_id, (), imported_name), [])
             if not definitions:
                 definitions = imported_symbols.get((target_id, (), imported_name), [])
