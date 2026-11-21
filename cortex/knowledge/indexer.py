@@ -770,9 +770,9 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
             counts["ambiguous_type_references"] += 1
 
     # Compiler-derived scope and binding inventory. Python's own symbol-table
-    # compiler is authoritative for lexical classification, including scopes
-    # the AST binding collector intentionally does not model (lambdas and
-    # comprehensions). This is additive evidence in the existing graph; it does
+    # compiler is authoritative for lexical classification, including lambda
+    # scopes and comprehension bindings (which may be dedicated scopes or
+    # inlined, depending on the interpreter). This is additive graph evidence; it does
     # not silently rewrite the conservative call resolver above.
     for source_path in py_files:
         relative = source_path.relative_to(root_path).as_posix()
