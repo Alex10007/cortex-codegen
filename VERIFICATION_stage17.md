@@ -208,3 +208,12 @@ Corrected escaped newline literals in the retrieval-context formatter so
 verified facts, hierarchical events, and evidence sections are separated by
 actual line breaks in the model prompt. No stored memory records or facts were
 modified.
+
+
+## Stage 17I — Engineering-pipeline change-impact integration
+
+The existing CortexAgent.run_pipeline now wraps the caller's existing patcher at the integration boundary. When a non-empty edit set is proposed, it passes the changed paths to the canonical analyze_change_impact facade before the pipeline publishes edits. The resulting impact report and conservative regression-test recommendation are attached to the pipeline result and summarized in the existing audit log.
+
+The recommendation is advisory only. The existing configured test command and full-suite behavior are unchanged; the pipeline does not silently replace full-suite verification with a partial targeted run. If graph analysis fails, the pipeline records an explicit change_impact.status=unavailable result and continues under the unchanged test/security verification policy. No second impact engine, dependency graph, or test selector was introduced.
+
+Added integration tests for successful report propagation, audit metadata, unchanged full-suite command, and impact-analysis failure behavior. These tests are committed but have not yet been executed. The implementation does not claim complete dependency coverage, automatic test selection, or runtime qualification.
