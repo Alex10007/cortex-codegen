@@ -196,9 +196,81 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                     graph.upsert_edge(source_id, target_id, "imports_local", version)
                     counts["local_imports"] += 1
 
-    symbol_index: dict[str, list[str]] = {}
-    pending_calls: list[tuple[str, str]] = []
-    pending_inheritance: list[tuple[str, str]] = []
+    # Scope-aware Python symbol resolution. Only lexical declarations and
+    # explicit self/cls member references are resolved; arbitrary same-name
+    # matches elsewhere in the repository are never treated as evidence.
+    symbol_definitions: dict[tuple[str, tuple[str, ...], str], list[tuple[str, str]]] = {}
+    scope_bindings: dict[tuple[str, tuple[str, ...]], set[str]] = {}
+    pending_calls: list[tuple[str, str, tuple[str, ...], str, str | None]] = []
+    pending_inheritance: list[tuple[str, tuple[str, ...], str]] = []
+    pending_type_refs: list[tuple[str, tuple[str, ...], str]] = []
+
+    class _BindingCollector(ast.NodeVisitor):
+        def __init__(self, root_node: ast.AST):
+            self.root_node = root_node
+            self.names: set[str] = set()
+
+        def visit_Name(self, node: ast.Name) -> None:
+            if isinstance(node.ctx, (ast.Store, ast.Del)):
+                self.names.add(node.id)
+
+        def visit_Import(self, node: ast.Import) -> None:
+            for alias in node.names:
+                self.names.add(alias.asname or alias.name.split(".")[0])
+
+        def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+            for alias in node.names:
+                if alias.name != "*":
+                    self.names.add(alias.asname or alias.name)
+
+        def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+            if node is not self.root_node:
+                self.names.add(node.name)
+                return
+            self._visit_function_body(node)
+
+        def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+            if node is not self.root_node:
+                self.names.add(node.name)
+                return
+            self._visit_function_body(node)
+
+        def _visit_function_body(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+            for arg in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs):
+                self.names.add(arg.arg)
+            if node.args.vararg:
+                self.names.add(node.args.vararg.arg)
+            if node.args.kwarg:
+                self.names.add(node.args.kwarg.arg)
+            for statement in node.body:
+                self.visit(statement)
+
+        def visit_ClassDef(self, node: ast.ClassDef) -> None:
+            if node is not self.root_node:
+                self.names.add(node.name)
+                return
+            for statement in node.body:
+                self.visit(statement)
+
+        def visit_Lambda(self, node: ast.Lambda) -> None:
+            return
+
+        def visit_ListComp(self, node: ast.ListComp) -> None:
+            return
+
+        visit_SetComp = visit_ListComp
+        visit_DictComp = visit_ListComp
+        visit_GeneratorExp = visit_ListComp
+
+    def _bindings_for(node: ast.Module | ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef) -> set[str]:
+        collector = _BindingCollector(node)
+        if isinstance(node, ast.Module):
+            for statement in node.body:
+                collector.visit(statement)
+        else:
+            collector.visit(node)
+        return collector.names
+
     for source_path in py_files:
         relative = source_path.relative_to(root_path).as_posix()
         tree = _parse_python(source_path)
@@ -206,26 +278,35 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
             continue
         source_id = module_ids[module_key(relative)]
 
-        class SymbolGraphVisitor(ast.NodeVisitor):
+        class ScopedSymbolVisitor(ast.NodeVisitor):
             def __init__(self):
                 self.scope_names: list[str] = []
                 self.scope_ids = [source_id]
-                self.symbol_ids: dict[str, list[str]] = {}
-                self.calls: list[tuple[str, str]] = []
-                self.inheritance: list[tuple[str, str]] = []
+
+            def _record(self, name: str, kind: str, qualified: str) -> str:
+                symbol_id = source_id + ":" + kind + ":" + qualified
+                key = (source_id, tuple(self.scope_names), name)
+                symbol_definitions.setdefault(key, []).append((symbol_id, kind))
+                return symbol_id
 
             def visit_ClassDef(self, node: ast.ClassDef) -> None:
                 qualified = ".".join([*self.scope_names, node.name])
-                symbol_id = source_id + ":class:" + qualified
-                self.symbol_ids.setdefault(node.name, []).append(symbol_id)
+                class_id = self._record(node.name, "class", qualified)
                 for base in node.bases:
                     base_name = (base.id if isinstance(base, ast.Name) else
                                  base.attr if isinstance(base, ast.Attribute) else None)
                     if base_name:
-                        self.inheritance.append((symbol_id, base_name))
+                        pending_inheritance.append(
+                            (class_id, tuple(self.scope_names), base_name))
+                # Decorators and base expressions execute in the enclosing scope.
+                for expression in [*node.decorator_list, *node.bases]:
+                    self.visit(expression)
+                class_scope = tuple([*self.scope_names, node.name])
+                scope_bindings[(source_id, class_scope)] = _bindings_for(node)
                 self.scope_names.append(node.name)
-                self.scope_ids.append(symbol_id)
-                self.generic_visit(node)
+                self.scope_ids.append(class_id)
+                for statement in node.body:
+                    self.visit(statement)
                 self.scope_ids.pop()
                 self.scope_names.pop()
 
@@ -235,44 +316,118 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
             def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
                 self._visit_function(node)
 
-            def _visit_function(self, node) -> None:
+            def _visit_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
                 qualified = ".".join([*self.scope_names, node.name])
-                symbol_id = source_id + ":func:" + qualified
-                self.symbol_ids.setdefault(node.name, []).append(symbol_id)
+                function_id = self._record(node.name, "func", qualified)
+                # Defaults, decorators and annotations are evaluated in the parent scope.
+                for expression in [*node.decorator_list, *node.args.defaults,
+                                   *[item for item in node.args.kw_defaults if item is not None]]:
+                    self.visit(expression)
+                arguments = [*node.args.posonlyargs, *node.args.args,
+                             *node.args.kwonlyargs]
+                if node.args.vararg:
+                    arguments.append(node.args.vararg)
+                if node.args.kwarg:
+                    arguments.append(node.args.kwarg)
+                for argument in arguments:
+                    if argument.annotation:
+                        self._record_type_names(argument.annotation)
+                if node.returns:
+                    self._record_type_names(node.returns)
+                function_scope = tuple([*self.scope_names, node.name])
+                scope_bindings[(source_id, function_scope)] = _bindings_for(node)
                 self.scope_names.append(node.name)
-                self.scope_ids.append(symbol_id)
-                self.generic_visit(node)
+                self.scope_ids.append(function_id)
+                for statement in node.body:
+                    self.visit(statement)
                 self.scope_ids.pop()
                 self.scope_names.pop()
 
-            def visit_Call(self, node: ast.Call) -> None:
-                target_name = (node.func.id if isinstance(node.func, ast.Name)
-                               else node.func.attr if isinstance(node.func, ast.Attribute)
-                               else None)
-                if target_name:
-                    self.calls.append((self.scope_ids[-1], target_name))
+            def _record_type_names(self, expression: ast.AST) -> None:
+                for item in ast.walk(expression):
+                    if isinstance(item, ast.Name):
+                        pending_type_refs.append(
+                            (self.scope_ids[-1], tuple(self.scope_names), item.id))
+
+            def visit_AnnAssign(self, node: ast.AnnAssign) -> None:
+                self._record_type_names(node.annotation)
                 self.generic_visit(node)
 
-        visitor = SymbolGraphVisitor()
-        visitor.visit(tree)
-        for name, ids in visitor.symbol_ids.items():
-            symbol_index.setdefault(name, []).extend(ids)
-        pending_calls.extend(visitor.calls)
-        pending_inheritance.extend(visitor.inheritance)
+            def visit_Call(self, node: ast.Call) -> None:
+                target_name = None
+                receiver = None
+                if isinstance(node.func, ast.Name):
+                    target_name = node.func.id
+                elif (isinstance(node.func, ast.Attribute) and
+                      isinstance(node.func.value, ast.Name) and
+                      node.func.value.id in {"self", "cls"}):
+                    target_name = node.func.attr
+                    receiver = node.func.value.id
+                if target_name:
+                    pending_calls.append((
+                        self.scope_ids[-1], source_id, tuple(self.scope_names),
+                        target_name, receiver))
+                self.generic_visit(node)
 
-    for caller_id, target_name in pending_calls:
-        targets = sorted(set(symbol_index.get(target_name, [])))
-        if len(targets) == 1 and targets[0] != caller_id:
-            graph.upsert_edge(caller_id, targets[0], "calls", version)
+        ScopedSymbolVisitor().visit(tree)
+
+    def _resolve_lexical(module_id: str, scope: tuple[str, ...],
+                         name: str) -> tuple[list[tuple[str, str]], bool]:
+        for depth in range(len(scope), -1, -1):
+            current_scope = scope[:depth]
+            key = (module_id, current_scope, name)
+            definitions = symbol_definitions.get(key, [])
+            if definitions:
+                return definitions, False
+            if name in scope_bindings.get((module_id, current_scope), set()):
+                # A local assignment/parameter/import shadows outer declarations.
+                return [], False
+        return [], False
+
+    for caller_id, module_id, scope, target_name, receiver in pending_calls:
+        if receiver in {"self", "cls"}:
+            class_scope = next(
+                (scope[:index + 1] for index, part in enumerate(scope)
+                 if part and index < len(scope) - 1 and
+                 symbol_definitions.get((module_id, scope[:index], part))),
+                None)
+            if class_scope is None:
+                counts["unresolved_calls"] += 1
+                continue
+            definitions = symbol_definitions.get((module_id, class_scope, target_name), [])
+        else:
+            definitions, _ = _resolve_lexical(module_id, scope, target_name)
+        unique = sorted({item[0] for item in definitions})
+        if len(unique) == 1 and unique[0] != caller_id:
+            graph.upsert_edge(caller_id, unique[0], "calls", version)
             counts["calls"] += 1
+        elif len(unique) > 1:
+            counts["ambiguous_calls"] = counts.get("ambiguous_calls", 0) + 1
+            counts["unresolved_calls"] += 1
         else:
             counts["unresolved_calls"] += 1
 
-    for child_id, base_name in pending_inheritance:
-        targets = sorted(set(symbol_index.get(base_name, [])))
+    for child_id, scope, base_name in pending_inheritance:
+        module_id = child_id.split(":class:", 1)[0]
+        definitions, _ = _resolve_lexical(module_id, scope, base_name)
+        targets = sorted({item[0] for item in definitions if item[1] == "class"})
         if len(targets) == 1 and targets[0] != child_id:
             graph.upsert_edge(child_id, targets[0], "inherits", version)
             counts["inherits"] += 1
+        elif len(targets) > 1:
+            counts["ambiguous_inheritance"] = counts.get("ambiguous_inheritance", 0) + 1
+
+    for source_id, scope, type_name in pending_type_refs:
+        module_id = source_id.split(":func:", 1)[0].split(":class:", 1)[0]
+        definitions, _ = _resolve_lexical(module_id, scope, type_name)
+        targets = sorted({item[0] for item in definitions
+                          if item[1] in {"class", "type"}})
+        if len(targets) == 1 and targets[0] != source_id:
+            graph.upsert_edge(source_id, targets[0], "type_uses", version)
+            counts["type_references"] = counts.get("type_references", 0) + 1
+        elif len(targets) > 1:
+            counts["ambiguous_type_references"] = (
+                counts.get("ambiguous_type_references", 0) + 1)
 
     # Cross-language declaration inventory on the canonical graph. This
     # intentionally records syntax-level declarations and only resolves
