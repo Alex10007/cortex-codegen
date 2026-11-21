@@ -549,3 +549,8 @@ Verification status:
 - The new tests have NOT been executed. No CI pass is claimed; prior GitHub Actions failures before step execution remain a runner/workflow issue, not Python test evidence.
 - These filesystem tests do not establish live cgroupfs compatibility or kernel enforcement. Strict sandbox remains NOT RUNTIME-VERIFIED pending full test execution and live delegated cgroup v2 + Bubblewrap qualification.
 - No model training, checkpoint/dataset changes, benchmark promotion, PR merge, or main update occurred.
+
+
+Stage 16A.24 test-fixture correction:
+- Review of the newly added idempotent-close test exposed three existing cgroup.events fixtures in this test module that encoded the newline escape literally rather than writing actual line breaks. Corrected all three fixtures, including the new test, so the strict event parser receives valid `populated 0` records.
+- This is a source-level fixture correction only; the tests remain unexecuted.
