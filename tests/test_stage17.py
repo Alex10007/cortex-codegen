@@ -1081,3 +1081,46 @@ def test_stage17q_resolves_scoped_nested_module_alias_without_leaking(tmp_path):
     assert inside_targets == {service_run}
     assert outside_targets == []
     assert counts["cross_module_calls"] == 1
+
+
+def test_stage17r_resolves_unique_callable_alias_to_local_function(tmp_path):
+    root = tmp_path / "callable-alias"
+    root.mkdir()
+    (root / "mod.py").write_text(
+        "def implementation():\\n"
+        "    return 7\\n"
+        "def invoke():\\n"
+        "    selected = implementation\\n"
+        "    return selected()\\n"
+    )
+    store = VectorStore(str(tmp_path / "callable-alias-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "callable-alias-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="stage17r-alias")
+    module = f"py:{root.name}/mod.py:stage17r-alias"
+    invoke = module + ":func:invoke"
+    implementation = module + ":func:implementation"
+    targets = {item["node"] for item in graph.neighbors(invoke, etype="calls")}
+    assert targets == {implementation}
+    assert counts["calls"] >= 1
+
+
+def test_stage17r_rejects_reassigned_callable_alias(tmp_path):
+    root = tmp_path / "reassigned-callable-alias"
+    root.mkdir()
+    (root / "mod.py").write_text(
+        "def first():\\n"
+        "    return 1\\n"
+        "def second():\\n"
+        "    return 2\\n"
+        "def invoke():\\n"
+        "    selected = first\\n"
+        "    selected = second\\n"
+        "    return selected()\\n"
+    )
+    store = VectorStore(str(tmp_path / "reassigned-alias-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "reassigned-alias-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="stage17r-reassigned")
+    module = f"py:{root.name}/mod.py:stage17r-reassigned"
+    invoke = module + ":func:invoke"
+    assert graph.neighbors(invoke, etype="calls") == []
+    assert counts["unresolved_calls"] >= 1
