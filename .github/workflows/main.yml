@@ -1,14 +1,23 @@
-name: CI + Deploy to Hugging Face Spaces
+name: Cortex CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "fibonera/**"]
   pull_request:
-    branches: [main]
+    branches: [main, "vibe/cortex-core-b71b2c"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cortex-ci-${{ github.head_ref || github.ref }}
+  cancel-in-progress: false
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -17,29 +26,30 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements.txt
 
-      - name: Install dependencies
+      - name: Runner preflight
+        run: |
+          set -euxo pipefail
+          uname -a
+          python --version
+          python -m pip --version
+          df -h .
+          python - <<'PY'
+          import os
+          print("CPU count:", os.cpu_count())
+          with open("/proc/meminfo", encoding="utf-8") as f:
+              print("\n".join(line.rstrip() for line in f if line.startswith(("MemTotal:", "MemAvailable:"))))
+          PY
+
+      - name: Install CPU PyTorch
         run: |
           python -m pip install --upgrade pip
-          pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install -r requirements.txt
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
 
       - name: Run test suite
         run: python -m pytest -q tests/
-
-  deploy:
-    needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to Hugging Face Spaces
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          git config --global user.name "Cortex Codegen"
-          git config --global user.email "cortex-codegen@agent.ai"
-          git remote set-url origin https://CortexCodegen:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/alex10007/cortex-codegen
-          git push origin main
