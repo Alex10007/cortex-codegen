@@ -211,10 +211,18 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
         def __init__(self, root_node: ast.AST):
             self.root_node = root_node
             self.names: set[str] = set()
+            self.global_names: set[str] = set()
+            self.nonlocal_names: set[str] = set()
 
         def visit_Name(self, node: ast.Name) -> None:
             if isinstance(node.ctx, (ast.Store, ast.Del)):
                 self.names.add(node.id)
+
+        def visit_Global(self, node: ast.Global) -> None:
+            self.global_names.update(node.names)
+
+        def visit_Nonlocal(self, node: ast.Nonlocal) -> None:
+            self.nonlocal_names.update(node.names)
 
         def visit_Import(self, node: ast.Import) -> None:
             for alias in node.names:
@@ -271,7 +279,21 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                 collector.visit(statement)
         else:
             collector.visit(node)
-        return collector.names
+        return collector.names - collector.global_names - collector.nonlocal_names
+
+    scope_global_names: dict[tuple[str, tuple[str, ...]], set[str]] = {}
+    scope_nonlocal_names: dict[tuple[str, tuple[str, ...]], set[str]] = {}
+
+    def _record_scope_declarations(source_id: str, scope: tuple[str, ...],
+                                   node: ast.AST) -> None:
+        collector = _BindingCollector(node)
+        if isinstance(node, ast.Module):
+            for statement in node.body:
+                collector.visit(statement)
+        else:
+            collector.visit(node)
+        scope_global_names[(source_id, scope)] = collector.global_names
+        scope_nonlocal_names[(source_id, scope)] = collector.nonlocal_names
 
     for source_path in py_files:
         relative = source_path.relative_to(root_path).as_posix()
@@ -280,6 +302,7 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
             continue
         source_id = module_ids[module_key(relative)]
         scope_bindings[(source_id, ())] = _bindings_for(tree)
+        _record_scope_declarations(source_id, (), tree)
 
         class ScopedSymbolVisitor(ast.NodeVisitor):
             def __init__(self):
@@ -306,6 +329,7 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                     self.visit(expression)
                 class_scope = tuple([*self.scope_names, node.name])
                 scope_bindings[(source_id, class_scope)] = _bindings_for(node)
+                _record_scope_declarations(source_id, class_scope, node)
                 self.scope_names.append(node.name)
                 self.scope_ids.append(class_id)
                 for statement in node.body:
@@ -339,6 +363,7 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                     self._record_type_names(node.returns, function_id)
                 function_scope = tuple([*self.scope_names, node.name])
                 scope_bindings[(source_id, function_scope)] = _bindings_for(node)
+                _record_scope_declarations(source_id, function_scope, node)
                 self.scope_names.append(node.name)
                 self.scope_ids.append(function_id)
                 for statement in node.body:
@@ -376,13 +401,24 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
 
         ScopedSymbolVisitor().visit(tree)
 
-    # Cross-module Python import resolution. Only repository-indexed targets
-    # are resolved; third-party and ambiguous references remain unresolved.
+    # Scope-aware import resolution over the existing Python AST index.
+    # Imports are keyed by lexical scope and only unique repository-local targets
+    # are resolved. Conditional imports retain distinct relationship types.
     counts.update({"resolved_imports": 0, "unresolved_imports": 0,
-                   "ambiguous_imports": 0, "cross_module_calls": 0})
-    imported_symbols: dict[tuple[str, str], list[tuple[str, str]]] = {}
-    imported_modules: dict[tuple[str, str], list[str]] = {}
-    pending_module_attribute_calls: list[tuple[str, str, str, str]] = []
+                   "ambiguous_imports": 0, "cross_module_calls": 0,
+                   "conditional_imports": 0, "resolved_reexports": 0})
+    imported_symbols: dict[tuple[str, tuple[str, ...], str], list[tuple[str, str]]] = {}
+    imported_modules: dict[tuple[str, tuple[str, ...], str], list[str]] = {}
+    import_records: list[tuple[str, tuple[str, ...], str, str, str, bool]] = []
+    pending_module_attribute_calls: list[tuple[str, tuple[str, ...], str, str, str]] = []
+    class_scopes: set[tuple[str, tuple[str, ...]]] = set()
+
+    for module_id, scope in scope_bindings:
+        for index in range(len(scope)):
+            parent = scope[:index]
+            declaration = symbol_definitions.get((module_id, parent, scope[index]), [])
+            if any(kind == "class" for _, kind in declaration):
+                class_scopes.add((module_id, scope[:index + 1]))
 
     def _python_import_target(relative: str, node: ast.ImportFrom) -> str | None:
         source_key = module_key(relative)
@@ -400,97 +436,262 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
         candidate = ".".join(base)
         return candidate if candidate in module_ids else None
 
-    for source_path in py_files:
-        relative = source_path.relative_to(root_path).as_posix()
-        tree = _parse_python(source_path)
-        if tree is None:
-            continue
-        source_id = module_ids[module_key(relative)]
-        for node in tree.body:
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    target_key = alias.name
-                    bound_name = alias.asname or alias.name.split(".")[0]
-                    if alias.asname is None and "." in alias.name:
-                        target_key = alias.name.split(".")[0]
-                    target_id = module_ids.get(target_key)
-                    if target_id and target_id != source_id:
-                        imported_modules.setdefault((source_id, bound_name), []).append(target_id)
-                        graph.upsert_edge(source_id, target_id, "imports_module", version)
-                        counts["resolved_imports"] += 1
-                    else:
-                        counts["unresolved_imports"] += 1
-            elif isinstance(node, ast.ImportFrom):
-                target_key = _python_import_target(relative, node)
-                target_id = module_ids.get(target_key) if target_key else None
-                if target_id is None:
-                    for alias in node.names:
-                        child_key = ".".join(part for part in (target_key or "", alias.name) if part)
-                        child_id = module_ids.get(child_key)
-                        if child_id:
-                            imported_modules.setdefault((source_id, alias.asname or alias.name), []).append(child_id)
-                            graph.upsert_edge(source_id, child_id, "imports_module", version)
-                            counts["resolved_imports"] += 1
-                        else:
-                            counts["unresolved_imports"] += 1
-                    continue
-                graph.upsert_edge(source_id, target_id, "imports_module", version)
-                for alias in node.names:
-                    if alias.name == "*":
-                        counts["unresolved_imports"] += 1
-                        continue
-                    bound_name = alias.asname or alias.name
-                    definitions = symbol_definitions.get((target_id, (), alias.name), [])
-                    unique_defs = sorted({item[0]: item for item in definitions}.values())
-                    if len(definitions) == 1 and len(unique_defs) == 1:
-                        imported_symbols.setdefault((source_id, bound_name), []).append(unique_defs[0])
-                        graph.upsert_edge(source_id, unique_defs[0][0], "imports_symbol", version)
-                        counts["resolved_imports"] += 1
-                    elif len(definitions) > 1:
-                        counts["ambiguous_imports"] += 1
-                    else:
-                        child_key = ".".join(part for part in (target_key, alias.name) if part)
-                        child_id = module_ids.get(child_key)
-                        if child_id and child_id != source_id:
-                            imported_modules.setdefault((source_id, bound_name), []).append(child_id)
-                            graph.upsert_edge(source_id, child_id, "imports_module", version)
-                            counts["resolved_imports"] += 1
-                        else:
-                            counts["unresolved_imports"] += 1
+    class ImportBindingVisitor(ast.NodeVisitor):
+        def __init__(self, source_id: str, relative: str):
+            self.source_id = source_id
+            self.relative = relative
+            self.scope: list[str] = []
+            self.conditional_depth = 0
+
+        def _visit_conditional(self, statements: list[ast.stmt]) -> None:
+            self.conditional_depth += 1
+            for statement in statements:
+                self.visit(statement)
+            self.conditional_depth -= 1
+
+        def visit_If(self, node: ast.If) -> None:
+            self.visit(node.test)
+            self._visit_conditional(node.body)
+            self._visit_conditional(node.orelse)
+
+        def visit_While(self, node: ast.While) -> None:
+            self.visit(node.test)
+            self._visit_conditional(node.body)
+            self._visit_conditional(node.orelse)
+
+        def visit_For(self, node: ast.For) -> None:
+            self.visit(node.iter)
+            self._visit_conditional(node.body)
+            self._visit_conditional(node.orelse)
+
+        visit_AsyncFor = visit_For
+
+        def visit_Try(self, node: ast.Try) -> None:
+            self._visit_conditional(node.body)
+            for handler in node.handlers:
+                self._visit_conditional(handler.body)
+            self._visit_conditional(node.orelse)
+            self._visit_conditional(node.finalbody)
+
+        def visit_TryStar(self, node: ast.Try) -> None:
+            self.visit_Try(node)
+
+        def visit_Match(self, node: ast.Match) -> None:
+            self.visit(node.subject)
+            for case in node.cases:
+                self._visit_conditional(case.body)
+
+        def visit_ClassDef(self, node: ast.ClassDef) -> None:
+            for expression in [*node.decorator_list, *node.bases, *node.keywords]:
+                self.visit(expression)
+            self.scope.append(node.name)
+            for statement in node.body:
+                self.visit(statement)
+            self.scope.pop()
+
+        def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+            self._visit_function(node)
+
+        def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+            self._visit_function(node)
+
+        def _visit_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+            for expression in [*node.decorator_list, *node.args.defaults,
+                               *[item for item in node.args.kw_defaults if item is not None]]:
+                self.visit(expression)
+            self.scope.append(node.name)
+            for statement in node.body:
+                self.visit(statement)
+            self.scope.pop()
+
+        def visit_Import(self, node: ast.Import) -> None:
+            for alias in node.names:
+                bound_name = alias.asname or alias.name.split(".")[0]
+                target_key = alias.name if alias.asname else alias.name.split(".")[0]
+                import_records.append((self.source_id, tuple(self.scope), bound_name,
+                                       target_key, "module", self.conditional_depth > 0))
+
+        def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+            target_key = _python_import_target(self.relative, node)
+            for alias in node.names:
+                import_records.append((self.source_id, tuple(self.scope),
+                                       alias.asname or alias.name,
+                                       target_key or "", alias.name,
+                                       self.conditional_depth > 0))
 
     for source_path in py_files:
         relative = source_path.relative_to(root_path).as_posix()
         tree = _parse_python(source_path)
-        if tree is None:
-            continue
-        source_id = module_ids[module_key(relative)]
-        class _ModuleAliasCallVisitor(ast.NodeVisitor):
-            def visit_Call(self, node: ast.Call) -> None:
-                func = node.func
-                if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
-                    pending_module_attribute_calls.append(
-                        (source_id, func.value.id, func.attr, source_id))
-                self.generic_visit(node)
-        _ModuleAliasCallVisitor().visit(tree)
+        if tree is not None:
+            ImportBindingVisitor(module_ids[module_key(relative)], relative).visit(tree)
 
+    def _effective_import_scope(module_id: str, scope: tuple[str, ...],
+                                name: str) -> tuple[str, ...]:
+        if name in scope_global_names.get((module_id, scope), set()):
+            return ()
+        if name in scope_nonlocal_names.get((module_id, scope), set()):
+            for depth in range(len(scope) - 1, -1, -1):
+                candidate = scope[:depth]
+                if candidate and (module_id, candidate) not in class_scopes:
+                    if name in scope_bindings.get((module_id, candidate), set()):
+                        return candidate
+            return scope
+        return scope
+
+    unresolved_records = list(import_records)
+    max_passes = max(1, len(module_ids) + 1)
+    for _pass in range(max_passes):
+        next_unresolved = []
+        progress = False
+        for source_id, lexical_scope, bound_name, target_key, imported_name, conditional in unresolved_records:
+            effective_scope = _effective_import_scope(source_id, lexical_scope, bound_name)
+            if imported_name == "module":
+                target_id = module_ids.get(target_key)
+                if target_id and target_id != source_id:
+                    key = (source_id, effective_scope, bound_name)
+                    values = imported_modules.setdefault(key, [])
+                    if target_id not in values:
+                        values.append(target_id)
+                        progress = True
+                    relation = "conditional_imports_module" if conditional else "imports_module"
+                    graph.upsert_edge(source_id, target_id, relation, version)
+                    counts["resolved_imports"] += 1
+                    if conditional:
+                        counts["conditional_imports"] += 1
+                else:
+                    counts["unresolved_imports"] += 1
+                continue
+
+            target_id = module_ids.get(target_key) if target_key else None
+            if not target_id:
+                child_key = ".".join(part for part in (target_key, imported_name) if part)
+                target_id = module_ids.get(child_key)
+                if target_id:
+                    key = (source_id, effective_scope, bound_name)
+                    imported_modules.setdefault(key, []).append(target_id)
+                    relation = "conditional_imports_module" if conditional else "imports_module"
+                    graph.upsert_edge(source_id, target_id, relation, version)
+                    counts["resolved_imports"] += 1
+                    if conditional:
+                        counts["conditional_imports"] += 1
+                    progress = True
+                else:
+                    counts["unresolved_imports"] += 1
+                continue
+
+            if imported_name == "*":
+                counts["unresolved_imports"] += 1
+                continue
+            definitions = symbol_definitions.get((target_id, (), imported_name), [])
+            if not definitions:
+                definitions = imported_symbols.get((target_id, (), imported_name), [])
+            unique = sorted({item[0]: item for item in definitions}.values())
+            if len(definitions) == 1 and len(unique) == 1:
+                key = (source_id, effective_scope, bound_name)
+                values = imported_symbols.setdefault(key, [])
+                if unique[0] not in values:
+                    values.append(unique[0])
+                    progress = True
+                relation = "conditional_imports_symbol" if conditional else "imports_symbol"
+                graph.upsert_edge(source_id, unique[0][0], relation, version)
+                if source_id.endswith("/__init__.py:" + version):
+                    graph.upsert_edge(source_id, unique[0][0],
+                                      "conditional_reexports" if conditional else "reexports",
+                                      version)
+                    counts["resolved_reexports"] += 1
+                counts["resolved_imports"] += 1
+                if conditional:
+                    counts["conditional_imports"] += 1
+            elif len(definitions) > 1:
+                counts["ambiguous_imports"] += 1
+            else:
+                child_key = ".".join(part for part in (target_key, imported_name) if part)
+                child_id = module_ids.get(child_key)
+                if child_id and child_id != source_id:
+                    key = (source_id, effective_scope, bound_name)
+                    imported_modules.setdefault(key, []).append(child_id)
+                    relation = "conditional_imports_module" if conditional else "imports_module"
+                    graph.upsert_edge(source_id, child_id, relation, version)
+                    counts["resolved_imports"] += 1
+                    if conditional:
+                        counts["conditional_imports"] += 1
+                    progress = True
+                else:
+                    next_unresolved.append((source_id, lexical_scope, bound_name,
+                                             target_key, imported_name, conditional))
+        if not progress:
+            unresolved_records = next_unresolved
+            break
+        unresolved_records = next_unresolved
+
+    counts["unresolved_imports"] += len(unresolved_records)
+
+    class ModuleAliasCallVisitor(ast.NodeVisitor):
+        def __init__(self, source_id: str):
+            self.source_id = source_id
+            self.scope: list[str] = []
+
+        def visit_ClassDef(self, node: ast.ClassDef) -> None:
+            self.scope.append(node.name)
+            for statement in node.body:
+                self.visit(statement)
+            self.scope.pop()
+
+        def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+            self._visit_function(node)
+
+        def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+            self._visit_function(node)
+
+        def _visit_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+            self.scope.append(node.name)
+            for statement in node.body:
+                self.visit(statement)
+            self.scope.pop()
+
+        def visit_Call(self, node: ast.Call) -> None:
+            func = node.func
+            if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
+                pending_module_attribute_calls.append(
+                    (self.source_id, tuple(self.scope), func.value.id,
+                     func.attr, self.source_id))
+            self.generic_visit(node)
+
+    for source_path in py_files:
+        relative = source_path.relative_to(root_path).as_posix()
+        tree = _parse_python(source_path)
+        if tree is not None:
+            ModuleAliasCallVisitor(module_ids[module_key(relative)]).visit(tree)
 
     def _resolve_lexical(module_id: str, scope: tuple[str, ...],
                          name: str) -> tuple[list[tuple[str, str]], bool]:
         for depth in range(len(scope), -1, -1):
             current_scope = scope[:depth]
+            if current_scope and (module_id, current_scope) in class_scopes and depth < len(scope):
+                continue
             key = (module_id, current_scope, name)
             definitions = symbol_definitions.get(key, [])
             if definitions:
                 return definitions, False
+            imported = imported_symbols.get((module_id, current_scope, name), [])
+            if imported:
+                return imported, False
             if name in scope_bindings.get((module_id, current_scope), set()):
-                # Module imports are canonical bindings; nearer local bindings
-                # still shadow them and are never guessed through.
-                if depth == 0:
-                    imported = imported_symbols.get((module_id, name), [])
-                    if imported:
-                        return imported, False
                 return [], False
         return [], False
+
+    def _resolve_imported_module(module_id: str, scope: tuple[str, ...],
+                                 name: str) -> list[str]:
+        for depth in range(len(scope), -1, -1):
+            current_scope = scope[:depth]
+            if current_scope and (module_id, current_scope) in class_scopes and depth < len(scope):
+                continue
+            targets = imported_modules.get((module_id, current_scope, name), [])
+            if targets:
+                return sorted(set(targets))
+            if name in scope_bindings.get((module_id, current_scope), set()):
+                return []
+        return []
 
     for caller_id, module_id, scope, target_name, receiver in pending_calls:
         if receiver in {"self", "cls"}:
@@ -517,8 +718,8 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
         else:
             counts["unresolved_calls"] += 1
 
-    for caller_id, alias_name, member_name, module_id in pending_module_attribute_calls:
-        targets = sorted(set(imported_modules.get((module_id, alias_name), [])))
+    for caller_id, scope, alias_name, member_name, module_id in pending_module_attribute_calls:
+        targets = _resolve_imported_module(module_id, scope, alias_name)
         if not targets:
             # Most attribute calls are ordinary object/member calls, not
             # imported-module calls. Do not misclassify them as import failures.
