@@ -1,3 +1,6 @@
+import sysconfig
+from pathlib import Path
+
 import pytest
 
 from cortex.interfaces import KnowledgeItem, Provenance
@@ -53,7 +56,7 @@ def test_knowledge_graph_edges(tmp_path):
 def test_indexer_indexes_real_stdlib(tmp_path):
     store = VectorStore(str(tmp_path / "kv.db"))
     graph = KnowledgeGraph(str(tmp_path / "kg.db"))
-    counts = index_code_root("/usr/local/lib/python3.12/json", store, graph,
+    counts = index_code_root(str(Path(sysconfig.get_paths()["stdlib"]) / "json"), store, graph,
                              license_tag="PSF")
     assert counts["files"] >= 3
     assert counts["modules"] >= 3
