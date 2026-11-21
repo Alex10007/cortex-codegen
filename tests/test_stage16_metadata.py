@@ -60,4 +60,5 @@ def test_negative_or_invalid_timing_is_not_accepted():
 def test_duplicate_dataset_hashes_remain_explicit_provenance():
     row = inspect_artifact("sample.json", _complete_artifact())
     assert len(row["dataset_fingerprint_records"]) >= 1
-    assert row["provenance"]["dataset_sha256"] == "b" * 64 if "provenance" in row else True
+    assert row["provenance"]["dataset_sha256"] == "b" * 64
+    assert row["provenance"]["parent_commit"] == "799a217"
