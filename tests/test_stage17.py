@@ -1124,3 +1124,26 @@ def test_stage17r_rejects_reassigned_callable_alias(tmp_path):
     invoke = module + ":func:invoke"
     assert graph.neighbors(invoke, etype="calls") == []
     assert counts["unresolved_calls"] >= 1
+
+
+def test_stage17r_resolves_callable_alias_of_imported_function(tmp_path):
+    root = tmp_path / "imported-callable-alias"
+    root.mkdir()
+    (root / "service.py").write_text(
+        "def execute():\\n"
+        "    return 9\\n"
+    )
+    (root / "consumer.py").write_text(
+        "from service import execute\\n"
+        "def invoke():\\n"
+        "    selected = execute\\n"
+        "    return selected()\\n"
+    )
+    store = VectorStore(str(tmp_path / "imported-alias-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "imported-alias-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="stage17r-imported")
+    consumer = f"py:{root.name}/consumer.py:stage17r-imported:func:invoke"
+    execute = f"py:{root.name}/service.py:stage17r-imported:func:execute"
+    targets = {item["node"] for item in graph.neighbors(consumer, etype="calls")}
+    assert targets == {execute}
+    assert counts["cross_module_calls"] == 1
