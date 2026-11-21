@@ -527,3 +527,86 @@ def test_cross_language_indexer_reports_unresolved_relative_imports(tmp_path):
     assert counts["foreign_files"] == 1
     assert counts["foreign_local_imports"] == 0
     assert counts["foreign_unresolved_imports"] == 1
+
+
+
+def test_dependency_cycle_analysis_reports_strongly_connected_components(tmp_path):
+    root = tmp_path / "repo"
+    (root / "pkg").mkdir(parents=True)
+    files = [root / "pkg" / name for name in ("a.py", "b.py", "c.py", "outside.py")]
+    for path in files:
+        path.write_text("# indexed fixture\\n")
+    graph = KnowledgeGraph(str(tmp_path / "cycles.sqlite"))
+    provenance = lambda path: Provenance(
+        source_uri=path.as_uri(), license="project-local", version="test",
+        content_sha256="fixture", collected_at="2026-11-21T00:00:00+00:00",
+        collector="stage17k-test")
+    ids = {path.name: "node:" + path.name for path in files}
+    for path in files:
+        graph.upsert_node(ids[path.name], "module", path.name, provenance(path))
+    graph.upsert_edge(ids["a.py"], ids["b.py"], "imports_local", "test")
+    graph.upsert_edge(ids["b.py"], ids["c.py"], "imports_local", "test")
+    graph.upsert_edge(ids["c.py"], ids["a.py"], "imports_local", "test")
+    graph.upsert_edge(ids["outside.py"], ids["a.py"], "imports_local", "test")
+    graph.commit()
+    report = graph.dependency_cycles(str(root))
+    assert report["cycle_count"] == 1
+    assert set(report["cycles"][0]["paths"]) == {
+        "pkg/a.py", "pkg/b.py", "pkg/c.py"}
+    assert report["truncated"] is False
+
+
+def test_dependency_cycle_analysis_handles_self_loop_and_bounds(tmp_path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    source = root / "self.py"
+    source.write_text("# self cycle\\n")
+    graph = KnowledgeGraph(str(tmp_path / "self-cycle.sqlite"))
+    provenance = Provenance(
+        source_uri=source.as_uri(), license="project-local", version="test",
+        content_sha256="fixture", collected_at="2026-11-21T00:00:00+00:00",
+        collector="stage17k-test")
+    graph.upsert_node("self", "module", "self.py", provenance)
+    graph.upsert_edge("self", "self", "imports_local", "test")
+    graph.commit()
+    assert graph.dependency_cycles(str(root))["cycle_count"] == 1
+    with pytest.raises(ValueError, match="max_nodes"):
+        graph.dependency_cycles(str(root), max_nodes=0)
+
+
+def test_architecture_boundary_rules_report_only_explicit_prefix_matches(tmp_path):
+    root = tmp_path / "repo"
+    (root / "presentation").mkdir(parents=True)
+    (root / "domain").mkdir()
+    (root / "domain2").mkdir()
+    paths = [root / "presentation" / "view.py",
+             root / "domain" / "model.py",
+             root / "domain2" / "other.py"]
+    for path in paths:
+        path.write_text("# architecture fixture\\n")
+    graph = KnowledgeGraph(str(tmp_path / "boundaries.sqlite"))
+    provenance = lambda path: Provenance(
+        source_uri=path.as_uri(), license="project-local", version="test",
+        content_sha256="fixture", collected_at="2026-11-21T00:00:00+00:00",
+        collector="stage17k-test")
+    for index, path in enumerate(paths):
+        graph.upsert_node(str(index), "module", path.name, provenance(path))
+    graph.upsert_edge("0", "1", "imports_local", "test")
+    graph.upsert_edge("0", "2", "imports_local", "test")
+    graph.commit()
+    report = graph.architecture_boundary_violations(
+        str(root), [{"source_prefix": "presentation",
+                     "forbidden_target_prefix": "domain"}])
+    assert report["violation_count"] == 1
+    assert report["violations"][0]["target_path"] == "domain/model.py"
+    assert report["truncated"] is False
+
+
+def test_architecture_boundary_rules_reject_path_traversal(tmp_path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    graph = KnowledgeGraph(str(tmp_path / "invalid-boundaries.sqlite"))
+    with pytest.raises(ValueError, match="repository-relative"):
+        graph.architecture_boundary_violations(
+            str(root), [{"source_prefix": "../src",
+                         "forbidden_target_prefix": "vendor"}])
