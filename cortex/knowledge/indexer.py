@@ -453,6 +453,15 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
                     return ("self", target.attr)
                 return None
 
+            def _instance_targets(self, target: ast.AST) -> list[tuple[str, ...]]:
+                direct = self._instance_target(target)
+                if direct:
+                    return [direct]
+                if isinstance(target, (ast.Tuple, ast.List)):
+                    return [item for child in target.elts
+                            for item in self._instance_targets(child)]
+                return []
+
             def _instance_class(self, value: ast.AST | None) -> str | None:
                 if (isinstance(value, ast.Call) and
                         isinstance(value.func, ast.Name)):
@@ -476,8 +485,7 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
 
             def visit_Assign(self, node: ast.Assign) -> None:
                 for target in node.targets:
-                    target_key = self._instance_target(target)
-                    if target_key:
+                    for target_key in self._instance_targets(target):
                         pending_instance_assignments.append((
                             source_id, tuple(self.scope_names), target_key,
                             self._instance_class(node.value),
@@ -501,8 +509,7 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
 
             def visit_Delete(self, node: ast.Delete) -> None:
                 for target in node.targets:
-                    target_key = self._instance_target(target)
-                    if target_key:
+                    for target_key in self._instance_targets(target):
                         pending_instance_assignments.append((
                             source_id, tuple(self.scope_names), target_key, None,
                             self.conditional_depth > 0))
