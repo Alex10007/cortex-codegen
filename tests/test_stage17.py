@@ -687,3 +687,84 @@ def test_scope_aware_indexer_links_python_type_annotations(tmp_path):
     references = graph.neighbors(consume, etype="type_uses")
     assert {item["node"] for item in references} == {model}
     assert counts["type_references"] == 2
+
+
+def test_cross_module_python_import_aliases_resolve_calls_and_types(tmp_path):
+    root = tmp_path / "cross-module"
+    package = root / "pkg"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text("")
+    (package / "service.py").write_text(
+        "class Model:\n"
+        "    pass\n"
+        "def execute(value):\n"
+        "    return value\n"
+    )
+    (root / "consumer.py").write_text(
+        "from pkg.service import execute as run, Model as Data\n"
+        "def consume(value: Data) -> Data:\n"
+        "    return run(value)\n"
+        "class Child(Data):\n"
+        "    pass\n"
+    )
+    store = VectorStore(str(tmp_path / "cross-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "cross-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="cross-test")
+    service = f"py:{root.name}/pkg/service.py:cross-test"
+    consumer = f"py:{root.name}/consumer.py:cross-test"
+    execute = service + ":func:execute"
+    model = service + ":class:Model"
+    consume = consumer + ":func:consume"
+    child = consumer + ":class:Child"
+    assert graph.neighbors(consume, etype="calls")[0]["node"] == execute
+    assert graph.neighbors(consume, etype="type_uses")[0]["node"] == model
+    assert graph.neighbors(child, etype="inherits")[0]["node"] == model
+    assert counts["resolved_imports"] >= 2
+    assert counts["cross_module_calls"] == 0
+
+
+def test_relative_python_imports_and_module_alias_calls_resolve(tmp_path):
+    root = tmp_path / "relative-imports"
+    package = root / "pkg"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text("")
+    (package / "shared.py").write_text("def work():\n    return 1\n")
+    (package / "consumer.py").write_text(
+        "from .shared import work\n"
+        "import pkg.shared as shared\n"
+        "def first():\n"
+        "    return work()\n"
+        "def second():\n"
+        "    return shared.work()\n"
+    )
+    store = VectorStore(str(tmp_path / "relative-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "relative-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="relative-test")
+    module = f"py:{root.name}/pkg/consumer.py:relative-test"
+    work = f"py:{root.name}/pkg/shared.py:relative-test:func:work"
+    assert graph.neighbors(module + ":func:first", etype="calls")[0]["node"] == work
+    assert graph.neighbors(module + ":func:second", etype="calls")[0]["node"] == work
+    assert counts["cross_module_calls"] == 1
+
+
+def test_python_import_resolution_reports_unresolved_and_ambiguous_without_guessing(tmp_path):
+    root = tmp_path / "ambiguous-imports"
+    package = root / "pkg"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text("")
+    (package / "dupe.py").write_text(
+        "def target():\n    return 1\n"
+        "def target():\n    return 2\n"
+    )
+    (root / "consumer.py").write_text(
+        "from pkg.dupe import target\n"
+        "import third_party_library\n"
+        "def call():\n    return target()\n"
+    )
+    store = VectorStore(str(tmp_path / "ambiguous-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "ambiguous-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="ambiguous-test")
+    consumer = f"py:{root.name}/consumer.py:ambiguous-test:func:call"
+    assert graph.neighbors(consumer, etype="calls") == []
+    assert counts["ambiguous_imports"] == 1
+    assert counts["unresolved_imports"] >= 1
