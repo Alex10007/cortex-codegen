@@ -1,12 +1,17 @@
 name: Cortex CI (restricted WSL runner)
 
 on:
-  push:
-    branches: ["fibonera/cortex-remediation-stage16a"]
+  # Manual dispatch only. Review the exact branch and commit before authorizing
+  # execution on the owner-controlled self-hosted laptop runner.
   workflow_dispatch:
+    inputs:
+      authorize_self_hosted_execution:
+        description: "I reviewed this branch and authorize code execution on the isolated WSL runner."
+        required: true
+        type: boolean
+        default: false
 
-# First qualification is limited to the owner-controlled remediation branch.
-# No pull_request trigger: never run untrusted PR code on the laptop runner.
+# No push or pull_request trigger. Never run untrusted PR code on the laptop runner.
 permissions:
   contents: read
 
@@ -16,7 +21,7 @@ concurrency:
 
 jobs:
   test:
-    if: github.actor == 'Alex10007' && github.ref == 'refs/heads/fibonera/cortex-remediation-stage16a'
+    if: github.actor == 'Alex10007' && github.ref == 'refs/heads/fibonera/cortex-remediation-stage16a' && inputs.authorize_self_hosted_execution
     runs-on: [self-hosted, linux, x64, cortex-wsl]
     timeout-minutes: 90
     steps:
