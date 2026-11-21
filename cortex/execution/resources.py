@@ -140,10 +140,15 @@ class CgroupV2:
         events = self.path / "cgroup.events"
         if not events.exists():
             raise CgroupUnavailable("cgroup.events is unavailable; cannot verify process-tree exit")
-        if (type(timeout_s) not in (int, float)
-                or not math.isfinite(timeout_s) or timeout_s <= 0):
+        if type(timeout_s) not in (int, float):
             raise ValueError("timeout_s must be a finite positive number")
-        deadline = time.monotonic() + timeout_s
+        try:
+            timeout_value = float(timeout_s)
+        except OverflowError as exc:
+            raise ValueError("timeout_s must be a finite positive number") from exc
+        if not math.isfinite(timeout_value) or timeout_value <= 0:
+            raise ValueError("timeout_s must be a finite positive number")
+        deadline = time.monotonic() + timeout_value
         while True:
             fields = self._read_events(events)
             if fields["populated"] == 0:
