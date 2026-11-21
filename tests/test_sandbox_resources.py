@@ -1,5 +1,5 @@
 """Unit tests for fail-closed cgroup v2 resource enforcement."""
-from pathlib import Path
+import os\nfrom pathlib import Path
 
 import pytest
 
@@ -306,3 +306,38 @@ def test_uuid_collision_does_not_reuse_or_remove_existing_cgroup(tmp_path, monke
 
     assert sentinel.read_text() == "owned by another execution"
     assert existing.is_dir()
+
+
+def test_cgroup_resource_operations_reject_symlinked_control_files(tmp_path):
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    group_path = root / "cortex-owned"
+    group_path.mkdir()
+    external = tmp_path / "external-control"
+    external.write_text("untouched")
+    (group_path / "cgroup.kill").symlink_to(external)
+
+    group = CgroupV2(group_path)
+
+    with pytest.raises(CgroupUnavailable, match="cannot configure cgroup.kill"):
+        group.kill()
+
+    assert external.read_text() == "untouched"
+    group._close_directory_fds()
+
+
+def test_cgroup_manager_retains_directory_descriptors_for_owned_inode(tmp_path):
+    root = make_fake_cgroup_root(tmp_path / "delegated")
+    group_path = root / "cortex-owned"
+    group_path.mkdir()
+    (group_path / "cgroup.events").write_text("populated 0\\n")
+
+    group = CgroupV2(group_path)
+    directory_identity = (group._identity[0], group._identity[1])
+    descriptor_identity = os.fstat(group._dir_fd)
+    assert (descriptor_identity.st_dev, descriptor_identity.st_ino) == directory_identity
+    assert os.fstat(group._parent_fd).st_ino == os.stat(root).st_ino
+
+    group.close()
+    assert group._dir_fd == -1
+    assert group._parent_fd == -1
+    assert not group_path.exists()
