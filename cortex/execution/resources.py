@@ -29,8 +29,20 @@ class CgroupV2:
                nproc: int, cpu_quota_us: int = 100_000,
                cpu_period_us: int = 100_000) -> "CgroupV2":
         base = Path(root)
-        if not base.is_absolute() or not base.is_dir() or base.is_symlink():
-            raise CgroupUnavailable("CORTEX_CGROUP_ROOT must be an existing absolute delegated cgroup v2 directory")
+        if not base.is_absolute():
+            raise CgroupUnavailable(
+                "CORTEX_CGROUP_ROOT must be an existing absolute delegated cgroup v2 directory")
+        try:
+            resolved_base = base.resolve(strict=True)
+        except (OSError, RuntimeError) as exc:
+            raise CgroupUnavailable(
+                f"CORTEX_CGROUP_ROOT cannot be resolved safely: {exc}") from exc
+        # Reject symlinks in every path component, not only at the final root
+        # component. All subsequent child paths use this canonical directory.
+        if base != resolved_base or not resolved_base.is_dir():
+            raise CgroupUnavailable(
+                "CORTEX_CGROUP_ROOT must not traverse symlink aliases and must be a directory")
+        base = resolved_base
         controllers_file = base / "cgroup.controllers"
         subtree_file = base / "cgroup.subtree_control"
         if not controllers_file.is_file() or not subtree_file.is_file():
