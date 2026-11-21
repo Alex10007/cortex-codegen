@@ -160,3 +160,18 @@ existing facade. This is not yet automatic selective-test execution: the
 engineering pipeline still runs its existing test command, and multi-language
 symbol resolution remains incomplete. Regression tests cover call/import/
 inheritance impact and path/bounds rejection; execution remains pending.
+
+
+## Stage 17G — Authenticated change-impact API
+
+The existing authenticated FastAPI surface now exposes `POST /repo/impact`.
+It accepts a repository path, a bounded list of changed paths, and explicit
+depth/node limits; repository access is constrained by the existing
+`CORTEX_ALLOWED_REPO_ROOTS` policy and the endpoint uses the existing
+expensive-operation rate limiter. It delegates to the canonical
+`CortexAgent.analyze_change_impact` method and returns the graph's unresolved
+paths rather than guessing when source provenance is missing.
+
+This endpoint reports impact; it does not modify files, run tests, or claim
+that affected tests were selected automatically. API tests and runtime
+qualification remain pending.

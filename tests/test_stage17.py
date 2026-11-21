@@ -303,3 +303,18 @@ def test_change_impact_rejects_path_escape_and_bounds(tmp_path):
         graph.impact_analysis(["../outside.py"], str(root))
     with pytest.raises(ValueError, match="bounds"):
         graph.impact_analysis(["inside.py"], str(root), max_depth=0)
+
+
+
+def test_impact_request_enforces_bounded_input():
+    from pydantic import ValidationError
+    from cortex.api.app import ImpactRequest
+
+    request = ImpactRequest(repo_path="/tmp/repo", changed_paths=["src/main.py"])
+    assert request.max_depth == 3
+    assert request.max_nodes == 500
+    with pytest.raises(ValidationError):
+        ImpactRequest(repo_path="/tmp/repo", changed_paths=[], max_depth=3)
+    with pytest.raises(ValidationError):
+        ImpactRequest(repo_path="/tmp/repo", changed_paths=["src/main.py"],
+                      max_depth=11)

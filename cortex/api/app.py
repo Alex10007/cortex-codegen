@@ -39,6 +39,12 @@ class PipelineRequest(RepoRequest):
     authorize_destructive: bool = False
 
 
+class ImpactRequest(RepoRequest):
+    changed_paths: list[str] = Field(..., min_length=1, max_length=200)
+    max_depth: int = Field(default=3, ge=1, le=10)
+    max_nodes: int = Field(default=500, ge=1, le=10000)
+
+
 class GenerateRequest(BaseModel):
     prompt: str = Field(..., min_length=1, max_length=20_000)
     project: str | None = Field(default=None, max_length=256)
@@ -206,6 +212,17 @@ def create_app(agent=None, api_token: str | None = None, *,
               dependencies=[Depends(require_auth), Depends(rate_limit_expensive)])
     def repo_analyze(req: RepoRequest) -> dict[str, Any]:
         return agent.analyze_repo(_resolve_allowed_repo_path(req.repo_path))
+
+    @app.post("/repo/impact",
+              dependencies=[Depends(require_auth), Depends(rate_limit_expensive)])
+    def repo_impact(req: ImpactRequest) -> dict[str, Any]:
+        root = _resolve_allowed_repo_path(req.repo_path)
+        try:
+            return agent.analyze_change_impact(
+                req.changed_paths, root,
+                max_depth=req.max_depth, max_nodes=req.max_nodes)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc))
 
     @app.post("/security/scan",
               dependencies=[Depends(require_auth), Depends(rate_limit_expensive)])
