@@ -485,3 +485,30 @@ committed but have **not been executed**; no runtime test result or current-head
 CI run is claimed. This increment changes repository static-analysis
 capabilities only. No model training, checkpoint modification, benchmark
 promotion, or Stage 12 champion change occurred.
+
+
+## Stage 17S — Conservative inherited-method dispatch and callable-alias safety
+
+Extended the existing Python call resolver in two bounded ways. First, callable
+aliases assigned inside conditional, loop, try/except/finally, or match branches
+are now rejected as call evidence. A branch assignment is not assumed to execute
+on every path; the resolver leaves the resulting call unresolved rather than
+publishing a potentially false edge. Straight-line, single-assignment aliases
+continue to use Stage 17R's canonical lexical/import resolver.
+
+Second, explicit `self.method()` and `cls.method()` calls first prefer a method
+defined on the enclosing class (preserving subclass overrides). When absent,
+the resolver searches uniquely indexed local base classes breadth-first by
+inheritance depth. A unique method at the nearest discovered depth is linked;
+multiple candidates at that depth are marked ambiguous. This is a conservative
+static ancestor search, not Python's complete C3 MRO implementation. It does
+not model metaclasses, descriptors, dynamic bases, imported external base
+classes, runtime monkey-patching, or arbitrary receiver types. Complex multiple
+inheritance may therefore remain unresolved even where runtime Python would
+select a C3 winner.
+
+Added regression tests for inherited method resolution, subclass override
+precedence, conditional alias rejection, and ambiguous multiple-inheritance
+refusal. Tests are committed but have not been executed; no current-head runtime
+or CI result is claimed. No model training, checkpoint changes, benchmark
+promotion, or Stage 12 champion change occurred.
