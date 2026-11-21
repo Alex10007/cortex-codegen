@@ -1,4 +1,4 @@
-name: CI + Deploy to Hugging Face Spaces
+name: Cortex CI
 
 on:
   push:
@@ -38,21 +38,3 @@ jobs:
 
       - name: Run test suite
         run: python -m pytest -q tests/
-
-  deploy:
-    needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to Hugging Face Spaces
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          git config --global user.name "Cortex Codegen"
-          git config --global user.email "cortex-codegen@agent.ai"
-          git remote set-url origin https://CortexCodegen:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/alex10007/cortex-codegen
-          git push origin main
