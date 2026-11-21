@@ -83,3 +83,19 @@ qualification remain future implementation work.
 The next increment should extend the existing knowledge indexer and graph into
 a repository-wide symbol/dependency model, then connect its impact analysis to
 the existing planner and verification pipeline.
+
+
+## Stage 17B — Repository-local dependency and symbol graph
+
+The existing `cortex.knowledge.indexer` now adds typed local-import,
+function-call, and class-inheritance edges to the existing SQLite knowledge
+graph. Resolution is conservative: call/inheritance edges are emitted only
+when a local symbol name resolves uniquely. Ambiguous and external calls are
+counted as unresolved rather than guessed. The existing vector store and
+graph remain the canonical stores; no second repository index was created.
+
+Tests were added for local import, call, and inheritance relationships.
+These tests are committed but have **not yet been executed** because the
+configured GitHub Actions runner has not been shown to execute workflow steps.
+The graph remains Python-AST-based; full TypeScript, JavaScript, Rust, Go and
+cross-language semantic resolution is still outstanding.

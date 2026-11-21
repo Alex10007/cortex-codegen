@@ -117,3 +117,34 @@ def test_legacy_memory_schema_migrates_additively(tmp_path):
     assert memory.events("p") == []
     columns = {row[1] for row in memory._conn.execute("PRAGMA table_info(events)")}
     assert {"memory_tier", "confidence", "source"}.issubset(columns)
+
+
+
+def test_indexer_adds_local_import_call_and_inheritance_edges(tmp_path):
+    root = tmp_path / "repo"
+    (root / "pkg").mkdir(parents=True)
+    (root / "pkg" / "__init__.py").write_text("")
+    (root / "pkg" / "base.py").write_text(
+        "class Base:\\n    pass\\n\\ndef helper():\\n    return 1\\n")
+    (root / "pkg" / "child.py").write_text(
+        "from .base import helper\\n\\n"
+        "class Child(Base):\\n    pass\\n\\n"
+        "def run():\\n    return helper()\\n")
+    store = VectorStore(str(tmp_path / "kg-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "kg-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="stage17-test")
+    module_child = f"py:{root.name}/pkg/child.py:stage17-test"
+    module_base = f"py:{root.name}/pkg/base.py:stage17-test"
+    run_id = module_child + ":func:run"
+    helper_id = module_base + ":func:helper"
+    child_id = module_child + ":class:Child"
+    base_id = module_base + ":class:Base"
+    assert any(edge["node"] == module_base for edge in
+               graph.neighbors(module_child, etype="imports_local"))
+    assert any(edge["node"] == helper_id for edge in
+               graph.neighbors(run_id, etype="calls"))
+    assert any(edge["node"] == base_id for edge in
+               graph.neighbors(child_id, etype="inherits"))
+    assert counts["local_imports"] >= 1
+    assert counts["calls"] >= 1
+    assert counts["inherits"] >= 1

@@ -48,6 +48,7 @@ REQUIRED = {
     "cortex/planning/engine.py": ("assess_objective",),
     "cortex/memory/engine.py": ("MEMORY_TIERS", "fact_history", "memory_summary"),
     "cortex/knowledge/graph.py": ("class KnowledgeGraph",),
+    "cortex/knowledge/indexer.py": ("imports_local", "calls", "inherits"),
     "cortex/evaluation/divergent.py": ("def divergent_eval",),
     "cortex/pipeline/engineer.py": ("def run_engineering_pipeline",),
     "cortex/execution/sandbox.py": ("def run",),
