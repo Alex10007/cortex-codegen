@@ -580,7 +580,7 @@ def test_close_is_idempotent_after_successful_removal(tmp_path, monkeypatch):
 
 
 def test_cgroup_operations_remain_bound_to_pinned_parent_after_path_replacement(
-        tmp_path):
+        tmp_path, monkeypatch):
     root = make_fake_cgroup_root(tmp_path / "delegated")
     group_path = root / "cortex-owned"
     group_path.mkdir()
@@ -594,6 +594,17 @@ def test_cgroup_operations_remain_bound_to_pinned_parent_after_path_replacement(
     replacement_group.mkdir()
     sentinel = replacement_group / "owner-sentinel"
     sentinel.write_text("replacement entry must survive")
+
+    # Emulate cgroupfs pseudo-files disappearing with the cgroup directory.
+    real_rmdir = os.rmdir
+    def remove_original(name, *, dir_fd=None):
+        if name == group_path.name:
+            original_entry = moved_root / name
+            if original_entry.exists():
+                for item in original_entry.iterdir():
+                    item.unlink()
+        return real_rmdir(name, dir_fd=dir_fd)
+    monkeypatch.setattr(os, "rmdir", remove_original)
 
     # The manager must operate only through its pinned original parent fd.
     group.close()
