@@ -554,3 +554,26 @@ Verification status:
 Stage 16A.24 test-fixture correction:
 - Review of the newly added idempotent-close test exposed three existing cgroup.events fixtures in this test module that encoded the newline escape literally rather than writing actual line breaks. Corrected all three fixtures, including the new test, so the strict event parser receives valid `populated 0` records.
 - This is a source-level fixture correction only; the tests remain unexecuted.
+
+## Stage 16A.25 — pinned-parent ownership checks and serialized teardown
+
+Static review identified two additional lifecycle hazards: ownership validation re-resolved the full cgroup path after retaining directory descriptors, so a replaced ancestor could make path-based checks disagree with the directory actually used by descriptor-relative operations; and two concurrent calls to close() on the same manager could both pass the initial open-state check and race toward removal.
+
+Changes:
+- _assert_owned_path() now verifies the child directory entry with os.stat(..., dir_fd=pinned_parent_fd, follow_symlinks=False) and compares it with both the manager's recorded identity and fstat(pinned_child_fd). It no longer re-resolves the ancestor pathname for runtime ownership checks.
+- The pinned parent descriptor is also verified as a directory before any owned operation.
+- Each manager now has a teardown lock. The complete close sequence (open-state check, empty wait, identity recheck, removal, descriptor closure) is serialized, making concurrent close() calls on the same manager idempotent rather than allowing competing removals.
+- The final removal check explicitly requires a real directory entry and matching device/inode identity immediately before descriptor-relative rmdir.
+- Added regression tests proving that replacing the parent pathname does not redirect cleanup into a replacement directory, and that concurrent close calls on one manager perform only one wait/removal.
+- Corrected the two new race-test cgroup.events fixtures to contain actual newline escapes.
+
+Residual race boundary:
+- Linux/POSIX directory removal is still name-based (rmdir/unlinkat); there is no portable inode-conditional rmdir operation. A privileged or otherwise authorized actor that can concurrently mutate the pinned parent directory could theoretically replace the child entry in the interval between the final statat identity check and rmdir. The descriptor-bound checks and per-manager lock reduce accidental and same-instance races but do NOT eliminate this adversarial cross-process TOCTOU window.
+- The delegated cgroup parent must therefore remain access-controlled so untrusted workloads cannot rename, replace, or create sibling cgroup entries. This increment does not claim resistance to a privileged actor with write access to the delegated parent.
+- A future hardening step should validate and document the delegated-parent ownership/permission model against the actual service deployment, and determine whether the supported cgroupfs/kernel environment provides a safe atomic removal strategy. Do not infer such support from ordinary filesystem unit tests.
+
+Verification:
+- Source changes and two new race/lifecycle regression tests are committed on the remediation branch.
+- Tests have NOT been executed. No CI pass is claimed and no live cgroupfs behavior is established.
+- Strict sandbox remains NOT RUNTIME-VERIFIED pending full test execution and live delegated cgroup v2 + Bubblewrap qualification.
+- No model training, checkpoint/dataset changes, benchmark promotion, PR merge, or main-branch update occurred.
