@@ -356,6 +356,22 @@ class CortexAgent:
         }
         return report
 
+    def analyze_architecture(self, repo_root: str,
+                             boundary_rules: list[dict[str, str]] | None = None,
+                             max_nodes: int = 10000) -> dict[str, Any]:
+        """Report dependency cycles and optional explicit boundary violations."""
+        cycles = self.graph.dependency_cycles(repo_root, max_nodes=max_nodes)
+        boundaries = None
+        if boundary_rules:
+            boundaries = self.graph.architecture_boundary_violations(
+                repo_root, boundary_rules, max_nodes=max_nodes)
+        return {
+            "kind": "cortex-repository-architecture-analysis",
+            "dependency_cycles": cycles,
+            "architecture_boundaries": boundaries,
+            "policy_mode": "explicit_rules_only" if boundary_rules else "cycle_analysis_only",
+        }
+
     def analyze_change_impact(self, changed_paths: list[str], repo_root: str,
                               max_depth: int = 3,
                               max_nodes: int = 500) -> dict[str, Any]:
