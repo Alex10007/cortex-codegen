@@ -478,8 +478,9 @@ global/nonlocal scope handling remain in force. Calls through expressions,
 attribute values, returned closures, containers, dynamic lookup, or aliases
 whose target cannot be uniquely established are not inferred.
 
-Added regression tests for a uniquely assigned local function alias and for
-a reassigned alias that must not create a false call edge. The tests are
+Added regression tests for a uniquely assigned local function alias, an alias
+of an imported function, and a reassigned alias that must not create a false
+call edge. The tests are
 committed but have **not been executed**; no runtime test result or current-head
 CI run is claimed. This increment changes repository static-analysis
 capabilities only. No model training, checkpoint modification, benchmark
