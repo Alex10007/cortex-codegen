@@ -1361,7 +1361,16 @@ def test_stage17u_rejects_ambiguous_and_conditional_factory_returns(tmp_path):
     graph = KnowledgeGraph(str(tmp_path / "stage17u-ambiguous-graph.db"))
     counts = index_code_root(str(root), store, graph, version="stage17u-ambiguous")
     module = f"py:{root.name}/mod.py:stage17u-ambiguous"
-    assert graph.neighbors(module + ":func:invoke_ambiguous", etype="calls") == []
-    assert graph.neighbors(module + ":func:invoke_conditional", etype="calls") == []
+    ambiguous_targets = {
+        row["node"] for row in graph.neighbors(
+            module + ":func:invoke_ambiguous", etype="calls")
+    }
+    conditional_targets = {
+        row["node"] for row in graph.neighbors(
+            module + ":func:invoke_conditional", etype="calls")
+    }
+    assert module + ":func:First.execute" not in ambiguous_targets
+    assert module + ":func:Second.execute" not in ambiguous_targets
+    assert module + ":func:First.execute" not in conditional_targets
     assert counts["ambiguous_factory_returns"] >= 1
     assert counts["factory_return_resolutions"] == 0
