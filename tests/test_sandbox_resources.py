@@ -419,3 +419,44 @@ def test_create_refuses_symlinked_initial_control_file_and_rolls_back(
     assert external.read_text() == "untouched"
     assert len(created) == 1
     assert not created[0].exists()
+
+
+def test_delegated_root_component_walk_rejects_intermediate_symlink(tmp_path):
+    real_root = tmp_path / "real"
+    real_root.mkdir()
+    delegated = make_fake_cgroup_root(real_root / "delegated")
+    alias = tmp_path / "alias"
+    alias.symlink_to(real_root, target_is_directory=True)
+
+    with pytest.raises(CgroupUnavailable, match="symlink aliases"):
+        CgroupV2._open_delegated_root(alias / "delegated")
+
+
+def test_delegated_root_component_open_rejects_swap_after_lstat(tmp_path, monkeypatch):
+    delegated = make_fake_cgroup_root(tmp_path / "delegated")
+    replacement = tmp_path / "replacement"
+    replacement.mkdir()
+    backup = tmp_path / "delegated-original"
+    real_open = os.open
+    swapped = False
+
+    def racing_open(path, flags, mode=0o777, *, dir_fd=None):
+        nonlocal swapped
+        if (not swapped and path == delegated.name and dir_fd is not None):
+            delegated.rename(backup)
+            delegated.symlink_to(replacement, target_is_directory=True)
+            swapped = True
+        return real_open(path, flags, mode, dir_fd=dir_fd)
+
+    monkeypatch.setattr(os, "open", racing_open)
+    try:
+        with pytest.raises(CgroupUnavailable, match="without following links"):
+            CgroupV2._open_delegated_root(delegated)
+        assert swapped
+        assert delegated.is_symlink()
+        assert backup.is_dir()
+    finally:
+        if delegated.is_symlink():
+            delegated.unlink()
+        if backup.exists():
+            backup.rename(delegated)
