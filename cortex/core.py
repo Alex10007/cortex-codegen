@@ -272,11 +272,50 @@ class CortexAgent:
                      require_full_isolation: bool = False) -> dict[str, Any]:
         from cortex.pipeline.engineer import run_engineering_pipeline
 
+        impact_context: dict[str, Any] = {}
+        effective_patcher = patcher
+        if patcher is not None:
+            def impact_aware_patcher(the_plan):
+                edits = patcher(the_plan)
+                if isinstance(edits, dict) and edits:
+                    changed_paths = list(edits)
+                    try:
+                        impact_context["report"] = self.analyze_change_impact(
+                            changed_paths, repo_path)
+                        self.audit.record("pipeline.change_impact", {
+                            "changed_path_count": len(changed_paths),
+                            "impacted_node_count": len(
+                                impact_context["report"].get("impacted_nodes", [])),
+                            "unresolved_path_count": len(
+                                impact_context["report"].get("unresolved_paths", [])),
+                            "regression_mode": impact_context["report"].get(
+                                "regression_test_selection", {}).get("mode"),
+                            "execution_policy": "full_configured_suite_unchanged",
+                        })
+                    except Exception as exc:
+                        # Impact analysis is advisory. Its failure must not
+                        # silently weaken or block the existing full-suite gate.
+                        impact_context["error"] = type(exc).__name__
+                        self.audit.record("pipeline.change_impact_unavailable", {
+                            "changed_path_count": len(changed_paths),
+                            "error_type": type(exc).__name__,
+                        })
+                return edits
+            effective_patcher = impact_aware_patcher
+
         report = run_engineering_pipeline(
-            objective, repo_path, patcher=patcher,
+            objective, repo_path, patcher=effective_patcher,
             authorize_destructive=authorize_destructive, audit=self.audit,
             objective_verifier=objective_verifier,
             require_full_isolation=require_full_isolation)
+        if "report" in impact_context:
+            report["change_impact"] = impact_context["report"]
+        elif "error" in impact_context:
+            report["change_impact"] = {
+                "status": "unavailable",
+                "error_type": impact_context["error"],
+                "verification_policy": "full_configured_suite_unchanged",
+            }
         self.memory.record(record_project(repo_path), "pipeline", {
             "objective": objective, "status": report["status"],
             "verified": report.get("verified", False),
