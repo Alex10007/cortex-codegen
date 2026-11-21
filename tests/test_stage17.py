@@ -610,3 +610,80 @@ def test_architecture_boundary_rules_reject_path_traversal(tmp_path):
         graph.architecture_boundary_violations(
             str(root), [{"source_prefix": "../src",
                          "forbidden_target_prefix": "vendor"}])
+
+
+
+def test_scope_aware_indexer_resolves_nested_and_instance_method_calls(tmp_path):
+    root = tmp_path / "scope-repo"
+    root.mkdir()
+    (root / "mod.py").write_text(
+        "def outer():\\n"
+        "    def helper():\\n"
+        "        return 1\\n"
+        "    def inner():\\n"
+        "        return helper()\\n"
+        "    return inner()\\n"
+        "class Worker:\\n"
+        "    def helper(self):\\n"
+        "        return 2\\n"
+        "    def run(self):\\n"
+        "        return self.helper()\\n"
+    )
+    store = VectorStore(str(tmp_path / "scope-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "scope-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="scope-test")
+    module = f"py:{root.name}/mod.py:scope-test"
+    inner = module + ":func:outer.inner"
+    helper = module + ":func:outer.helper"
+    worker_run = module + ":func:Worker.run"
+    worker_helper = module + ":func:Worker.helper"
+    assert graph.neighbors(inner, etype="calls")[0]["node"] == helper
+    assert graph.neighbors(worker_run, etype="calls")[0]["node"] == worker_helper
+    assert counts["calls"] >= 3
+
+
+def test_scope_aware_indexer_does_not_resolve_shadowed_or_ambiguous_calls(tmp_path):
+    root = tmp_path / "shadow-repo"
+    root.mkdir()
+    (root / "mod.py").write_text(
+        "def target():\\n"
+        "    return 1\\n"
+        "def caller(target):\\n"
+        "    return target()\\n"
+        "def duplicate():\\n"
+        "    return 2\\n"
+        "def duplicate():\\n"
+        "    return 3\\n"
+        "def ambiguous_caller():\\n"
+        "    return duplicate()\\n"
+    )
+    store = VectorStore(str(tmp_path / "shadow-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "shadow-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="shadow-test")
+    module = f"py:{root.name}/mod.py:shadow-test"
+    caller = module + ":func:caller"
+    ambiguous_caller = module + ":func:ambiguous_caller"
+    assert graph.neighbors(caller, etype="calls") == []
+    assert graph.neighbors(ambiguous_caller, etype="calls") == []
+    assert counts["ambiguous_calls"] == 1
+    assert counts["unresolved_calls"] >= 2
+
+
+def test_scope_aware_indexer_links_python_type_annotations(tmp_path):
+    root = tmp_path / "types-repo"
+    root.mkdir()
+    (root / "models.py").write_text(
+        "class Model:\\n"
+        "    pass\\n"
+        "def consume(value: Model) -> Model:\\n"
+        "    return value\\n"
+    )
+    store = VectorStore(str(tmp_path / "types-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "types-graph.db"))
+    counts = index_code_root(str(root), store, graph, version="types-test")
+    module = f"py:{root.name}/models.py:types-test"
+    consume = module + ":func:consume"
+    model = module + ":class:Model"
+    references = graph.neighbors(consume, etype="type_uses")
+    assert {item["node"] for item in references} == {model}
+    assert counts["type_references"] == 2
