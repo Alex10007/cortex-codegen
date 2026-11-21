@@ -359,3 +359,34 @@ Added tests for function-local import isolation, nonlocal import binding,
 package re-exports, and conditional-import classification. These tests are
 committed but have not been executed. No model training, checkpoint changes,
 benchmark promotion, or Stage 12 champion change occurred.
+
+## Stage 17O — Compiler-derived Python scope and binding graph
+
+Extended the existing Python indexer with the standard-library `symtable`
+compiler interface. For each indexed Python module, Cortex now records the
+compiler's lexical scope tree in the existing SQLite knowledge graph,
+including nested function/class scopes and compiler-created lambda and
+comprehension scopes. Scope nodes are connected to their parent scope (or the
+module node), and each compiler symbol is represented with typed relationships
+for the compiler-reported local, global, nonlocal, free, parameter, imported,
+assigned, referenced, and namespace classifications.
+
+The indexer returns additive counts for compiler scopes, compiler symbols,
+free/global/nonlocal symbols, and compiler scope parse failures. Scope IDs are
+derived from the source module and deterministic child-table paths; symbol
+nodes retain their scope identity, so same-name bindings in different scopes
+are not collapsed.
+
+This is compiler-derived scope evidence, not a replacement for the existing
+AST indexer or a claim of complete call/type resolution. Stage 17O does not
+change the current call, inheritance, import, or type-reference resolution
+policy. It does not infer runtime dispatch, execute imports, resolve dynamic
+attributes, or provide whole-program type checking. Compiler tables describe
+Python's static symbol classification for the source and interpreter version
+used during indexing; they do not prove runtime behavior.
+
+Added a regression test covering nested free/nonlocal/global bindings,
+lambda/comprehension scopes, and exception-target bindings. The test is
+committed but has **not been executed**; the current branch has no verified
+runtime test result. No model training, checkpoint modification, benchmark
+promotion, or Stage 12 champion change occurred.
