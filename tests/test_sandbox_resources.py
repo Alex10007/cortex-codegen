@@ -265,7 +265,7 @@ def test_cgroup_refuses_operations_after_path_replacement(tmp_path):
     moved = root / "cortex-original"
     group_path.rename(moved)
     group_path.mkdir()
-    (group_path / "cgroup.events").write_text("populated 0\\n")
+    (group_path / "cgroup.events").write_text("populated 0\n")
 
     with pytest.raises(CgroupUnavailable, match="identity changed"):
         group.kill()
@@ -338,7 +338,7 @@ def test_cgroup_manager_retains_directory_descriptors_for_owned_inode(tmp_path):
     root = make_fake_cgroup_root(tmp_path / "delegated")
     group_path = root / "cortex-owned"
     group_path.mkdir()
-    (group_path / "cgroup.events").write_text("populated 0\\n")
+    (group_path / "cgroup.events").write_text("populated 0\n")
 
     group = CgroupV2(group_path)
     directory_identity = (group._identity[0], group._identity[1])
@@ -553,7 +553,7 @@ def test_close_is_idempotent_after_successful_removal(tmp_path, monkeypatch):
     root = make_fake_cgroup_root(tmp_path / "delegated")
     group_path = root / "cortex-owned"
     group_path.mkdir()
-    (group_path / "cgroup.events").write_text("populated 0\\n")
+    (group_path / "cgroup.events").write_text("populated 0\n")
     group = CgroupV2(group_path)
     real_rmdir = os.rmdir
     removals = []
