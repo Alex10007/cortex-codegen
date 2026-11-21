@@ -365,9 +365,11 @@ benchmark promotion, or Stage 12 champion change occurred.
 Extended the existing Python indexer with the standard-library `symtable`
 compiler interface. For each indexed Python module, Cortex now records the
 compiler's lexical scope tree in the existing SQLite knowledge graph,
-including nested function/class scopes and compiler-created lambda and
-comprehension scopes. Scope nodes are connected to their parent scope (or the
-module node), and each compiler symbol is represented with typed relationships
+including nested function/class scopes and lambda scopes. Comprehension
+bindings are recorded according to the active interpreter's compiler model:
+some versions expose a dedicated comprehension scope, while newer versions
+may inline it into the containing scope. Scope nodes are connected to their
+parent scope (or the module node), and each compiler symbol is represented with typed relationships
 for the compiler-reported local, global, nonlocal, free, parameter, imported,
 assigned, referenced, and namespace classifications.
 
