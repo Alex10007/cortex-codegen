@@ -167,10 +167,14 @@ class CgroupV2:
         transferred = False
         try:
             # Pin the delegated root before reading controllers or creating the child.
+            expected_root = base.stat()
             parent_fd = os.open(base, directory_flags | nofollow)
             parent_info = os.fstat(parent_fd)
-            if not stat.S_ISDIR(parent_info.st_mode):
-                raise CgroupUnavailable("delegated cgroup root is not a directory")
+            if (not stat.S_ISDIR(parent_info.st_mode)
+                    or (parent_info.st_dev, parent_info.st_ino)
+                    != (expected_root.st_dev, expected_root.st_ino)):
+                raise CgroupUnavailable(
+                    "delegated cgroup root changed identity while opening")
 
             available = set(cls._read_from_fd(parent_fd, "cgroup.controllers").split())
             enabled = set(cls._read_from_fd(parent_fd, "cgroup.subtree_control").split())
@@ -197,8 +201,10 @@ class CgroupV2:
             for required in ("cgroup.procs", "cgroup.kill", "cgroup.events"):
                 cls._require_control_file(child_fd, required)
 
+            manager_parent_fd, manager_child_fd = parent_fd, child_fd
+            parent_fd = child_fd = -1
             manager = cls(path, expected_identity=child_identity,
-                          parent_fd=parent_fd, directory_fd=child_fd)
+                          parent_fd=manager_parent_fd, directory_fd=manager_child_fd)
             transferred = True
             return manager
         except FileExistsError as exc:
