@@ -495,3 +495,9 @@ Verification:
 - Live delegated-cgroup v2 and Bubblewrap qualification remains outstanding. Strict sandbox remains **NOT RUNTIME-VERIFIED**.
 
 No model training, checkpoint or dataset mutation, benchmark promotion, PR merge, or main-branch update occurred.
+
+
+Stage 16A.22 follow-up verification note:
+- The main cgroup creation success fixture now emulates cgroupfs pseudo-file teardown so `close()` can perform its own final `cgroup.events` check before directory removal.
+- UUID collision handling is scoped specifically to the descriptor-relative mkdir operation; a later `FileExistsError` during setup now enters the ordinary owned-directory rollback path.
+- Latest Actions run `44843634159` failed with the test job reporting `steps: null` and no logs. This remains a pre-step runner/workflow failure; it does not provide a Python test result.
