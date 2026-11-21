@@ -850,3 +850,38 @@ def test_stage17n_conditional_import_is_distinguished(tmp_path):
     assert graph.neighbors(consumer_call, etype="calls")[0]["node"] == service_run
     assert counts["conditional_imports"] == 1
     assert counts["resolved_imports"] >= 1
+
+
+def test_stage17n_global_import_binding_resolves_at_module_scope(tmp_path):
+    root = tmp_path / "global-import"
+    root.mkdir()
+    (root / "service.py").write_text("def run():\n    return 1\n")
+    (root / "consumer.py").write_text(
+        "def invoke():\n"
+        "    global global_run\n"
+        "    from service import run as global_run\n"
+        "    return global_run()\n"
+    )
+    store = VectorStore(str(tmp_path / "global-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "global-graph.db"))
+    index_code_root(str(root), store, graph, version="stage17n-global")
+    consumer = f"py:{root.name}/consumer.py:stage17n-global:func:invoke"
+    service_run = f"py:{root.name}/service.py:stage17n-global:func:run"
+    assert graph.neighbors(consumer, etype="calls")[0]["node"] == service_run
+
+
+def test_stage17n_class_body_import_does_not_leak_into_method_scope(tmp_path):
+    root = tmp_path / "class-local-import"
+    root.mkdir()
+    (root / "service.py").write_text("def run():\n    return 1\n")
+    (root / "consumer.py").write_text(
+        "class Container:\n"
+        "    from service import run as class_run\n"
+        "    def method(self):\n"
+        "        return class_run()\n"
+    )
+    store = VectorStore(str(tmp_path / "class-vector.db"))
+    graph = KnowledgeGraph(str(tmp_path / "class-graph.db"))
+    index_code_root(str(root), store, graph, version="stage17n-class")
+    consumer = f"py:{root.name}/consumer.py:stage17n-class:func:Container.method"
+    assert graph.neighbors(consumer, etype="calls") == []
