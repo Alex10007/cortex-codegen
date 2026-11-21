@@ -458,3 +458,29 @@ newline escaping. Tests are committed but have **not been executed**; the
 current branch still has no verified runtime test result. No model training,
 checkpoint modification, benchmark promotion, or Stage 12 champion change
 occurred.
+
+
+## Stage 17R — Conservative callable-alias resolution
+
+Extended the existing Python call resolver to recognize simple callable aliases
+when a local name is assigned directly from another name and subsequently
+called. The alias is resolved through the existing compiler-reconciled lexical
+scope and imported-symbol tables, then represented by the existing canonical
+`calls` edge. This supports direct aliases to uniquely resolved local
+functions and uniquely imported functions without adding a separate call graph.
+
+The resolver is deliberately conservative. It only accepts a single simple
+name-to-name assignment for an alias in its effective lexical scope. Multiple
+assignments invalidate the alias, including reassignment to another callable;
+the call remains unresolved rather than being attributed to whichever
+assignment happens to appear last. Existing local binding shadowing and
+global/nonlocal scope handling remain in force. Calls through expressions,
+attribute values, returned closures, containers, dynamic lookup, or aliases
+whose target cannot be uniquely established are not inferred.
+
+Added regression tests for a uniquely assigned local function alias and for
+a reassigned alias that must not create a false call edge. The tests are
+committed but have **not been executed**; no runtime test result or current-head
+CI run is claimed. This increment changes repository static-analysis
+capabilities only. No model training, checkpoint modification, benchmark
+promotion, or Stage 12 champion change occurred.
