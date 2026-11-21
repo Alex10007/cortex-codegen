@@ -405,6 +405,96 @@ def index_code_root(root: str, store: VectorStore, graph: KnowledgeGraph,
 
         ScopedSymbolVisitor().visit(tree)
 
+    # Reconcile AST lexical scopes with CPython's compiler symbol tables.
+    # This augments the existing scope-binding maps used by call/import
+    # resolution; it does not create a second resolver or guess dynamic names.
+    compiler_tables_by_module: dict[str, symtable.SymbolTable] = {}
+    for source_path in py_files:
+        relative = source_path.relative_to(root_path).as_posix()
+        tree = _parse_python(source_path)
+        if tree is None:
+            continue
+        source_id = module_ids[module_key(relative)]
+        try:
+            compiler_root = symtable.symtable(
+                source_path.read_text(encoding="utf-8", errors="replace"),
+                str(source_path), "exec")
+        except (OSError, SyntaxError, ValueError):
+            continue
+        compiler_tables_by_module[source_id] = compiler_root
+
+        def nested_scope_nodes(parent: ast.AST) -> list[ast.AST]:
+            found: list[ast.AST] = []
+            class ScopeFinder(ast.NodeVisitor):
+                def visit_FunctionDef(self, node):
+                    found.append(node)
+                visit_AsyncFunctionDef = visit_FunctionDef
+
+                def visit_ClassDef(self, node):
+                    found.append(node)
+
+                def visit_Lambda(self, node):
+                    found.append(node)
+
+                def visit_ListComp(self, node):
+                    found.append(node)
+                visit_SetComp = visit_ListComp
+                visit_DictComp = visit_ListComp
+                visit_GeneratorExp = visit_ListComp
+
+            for child in ast.iter_child_nodes(parent):
+                ScopeFinder().visit(child)
+            return found
+
+        def reconcile_scope(node: ast.AST, table: symtable.SymbolTable,
+                            parent_scope: tuple[str, ...]) -> None:
+            for child_node in nested_scope_nodes(node):
+                if isinstance(child_node, ast.ClassDef):
+                    expected_type, expected_name = "class", child_node.name
+                elif isinstance(child_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    expected_type, expected_name = "function", child_node.name
+                elif isinstance(child_node, ast.Lambda):
+                    expected_type, expected_name = "function", "lambda"
+                else:
+                    expected_type = "function"
+                    expected_name = {
+                        ast.ListComp: "listcomp", ast.SetComp: "setcomp",
+                        ast.DictComp: "dictcomp", ast.GeneratorExp: "genexpr",
+                    }[type(child_node)]
+                candidates = [
+                    candidate for candidate in table.get_children()
+                    if candidate.get_type() == expected_type
+                    and candidate.get_name() == expected_name
+                    and candidate.get_lineno() == getattr(child_node, "lineno", -1)
+                ]
+                if len(candidates) != 1:
+                    continue
+                child_table = candidates[0]
+                if isinstance(child_node, ast.ClassDef):
+                    child_scope = (*parent_scope, child_node.name)
+                elif isinstance(child_node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    child_scope = (*parent_scope, child_node.name)
+                else:
+                    # Lambda/comprehension scopes are inventoried by the
+                    # compiler graph; existing call records do not yet carry
+                    # distinct identities for these anonymous scopes.
+                    child_scope = parent_scope
+                if isinstance(child_node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+                    scope_key = (source_id, child_scope)
+                    bindings = scope_bindings.setdefault(scope_key, set())
+                    for symbol in child_table.get_symbols():
+                        if symbol.is_local() or symbol.is_parameter():
+                            bindings.add(symbol.get_name())
+                        if symbol.is_declared_global():
+                            scope_global_names.setdefault(scope_key, set()).add(
+                                symbol.get_name())
+                        if symbol.is_nonlocal():
+                            scope_nonlocal_names.setdefault(scope_key, set()).add(
+                                symbol.get_name())
+                reconcile_scope(child_node, child_table, child_scope)
+
+        reconcile_scope(tree, compiler_root, ())
+
     # Scope-aware import resolution over the existing Python AST index.
     # Imports are keyed by lexical scope and only unique repository-local targets
     # are resolved. Conditional imports retain distinct relationship types.
