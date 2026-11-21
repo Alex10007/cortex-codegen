@@ -186,7 +186,12 @@ class CgroupV2:
                     "administrator must delegate and enable cpu,memory,pids")
 
             # mkdirat semantics: collision fails without following or reusing an existing entry.
-            os.mkdir(child_name, mode=0o700, dir_fd=parent_fd)
+            try:
+                os.mkdir(child_name, mode=0o700, dir_fd=parent_fd)
+            except FileExistsError as exc:
+                raise CgroupUnavailable(
+                    "cannot create delegated execution cgroup without reusing an existing entry"
+                ) from exc
             entry_info = os.stat(child_name, dir_fd=parent_fd, follow_symlinks=False)
             if not stat.S_ISDIR(entry_info.st_mode):
                 raise CgroupUnavailable("new execution cgroup entry is not a directory")
@@ -212,9 +217,6 @@ class CgroupV2:
                           parent_fd=manager_parent_fd, directory_fd=manager_child_fd)
             transferred = True
             return manager
-        except FileExistsError as exc:
-            raise CgroupUnavailable(
-                f"cannot create delegated execution cgroup without reusing an existing entry: {exc}") from exc
         except Exception as setup_error:
             if child_fd >= 0:
                 try:
