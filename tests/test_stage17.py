@@ -744,7 +744,7 @@ def test_relative_python_imports_and_module_alias_calls_resolve(tmp_path):
     work = f"py:{root.name}/pkg/shared.py:relative-test:func:work"
     assert graph.neighbors(module + ":func:first", etype="calls")[0]["node"] == work
     assert graph.neighbors(module + ":func:second", etype="calls")[0]["node"] == work
-    assert counts["cross_module_calls"] == 1
+    assert counts["cross_module_calls"] == 2
 
 
 def test_python_import_resolution_reports_unresolved_and_ambiguous_without_guessing(tmp_path):
